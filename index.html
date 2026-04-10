@@ -317,7 +317,7 @@ select:focus,input:focus{
 }
 
 /* ═══════════════════════════════════════════════
-   WEEK GRID  (Meny page)
+   WEEK GRID  (Planlegg page)
 ═══════════════════════════════════════════════ */
 .week-grid{
   display:grid;
@@ -1486,6 +1486,38 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
 }
 
 /* ═══════════════════════════════════════════════
+   RECIPE CLOUD-SYNC SKELETON
+═══════════════════════════════════════════════ */
+.recipes-loading{
+  display:flex;flex-direction:column;gap:12px;padding:4px 0;
+}
+.recipe-skel{
+  background:var(--card);
+  border-radius:var(--rsm);
+  padding:16px;
+  border:1px solid var(--bd);
+  box-shadow:var(--sh);
+}
+.skel-line{
+  height:13px;background:var(--bd);border-radius:6px;
+  animation:skel-pulse 1.5s ease-in-out infinite;
+}
+.skel-line.title{height:16px;width:55%;margin-bottom:10px}
+.skel-line.short{width:35%;margin-bottom:7px}
+.skel-line.xshort{width:22%}
+@keyframes skel-pulse{
+  0%,100%{opacity:.5}
+  50%{opacity:1}
+}
+.recipes-loading-label{
+  text-align:center;font-size:.8rem;color:var(--t4);
+  margin-top:6px;display:flex;align-items:center;justify-content:center;gap:6px;
+}
+
+/* Save/sync badge on recipe form button */
+.recipe-save-syncing{opacity:.7;pointer-events:none}
+
+/* ═══════════════════════════════════════════════
    FIREBASE SYNC
 ═══════════════════════════════════════════════ */
 /* Sync toast — slides in from top */
@@ -1626,6 +1658,83 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
   padding:6px;text-decoration:underline;text-underline-offset:3px;
   margin-top:4px;display:block;
 }
+.hh-name-input{
+  width:100%;padding:12px 14px;
+  font-size:1rem;font-weight:600;
+  border:2px solid var(--bd);border-radius:var(--rsm);
+  background:var(--bg);color:var(--t1);font-family:inherit;
+  margin-bottom:4px;outline:none;
+  transition:border-color .2s;
+  text-align:left;
+}
+.hh-name-input:focus{border-color:var(--g)}
+
+/* ═══════════════════════════════════════════════
+   APPROVAL SYSTEM
+═══════════════════════════════════════════════ */
+/* Fullscreen approval overlay (pending / rejected / revoked) */
+.approval-overlay{
+  position:fixed;inset:0;z-index:10002;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  padding:32px 24px;
+}
+.approval-overlay.hidden{display:none}
+.approval-sheet{
+  text-align:center;max-width:360px;width:100%;
+  animation:slide-up .3s cubic-bezier(.34,1.2,.64,1);
+}
+.approval-icon{font-size:3.2rem;display:block;margin-bottom:14px;line-height:1}
+.approval-sheet h2{font-size:1.25rem;font-weight:800;color:var(--t1);margin-bottom:10px}
+.approval-sheet p{font-size:.88rem;color:var(--t3);line-height:1.65;margin-bottom:8px}
+.approval-spinner{
+  width:36px;height:36px;margin:18px auto;
+  border:3px solid var(--bd);border-top-color:var(--g);
+  border-radius:50%;animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.approval-sub{font-size:.74rem;color:var(--t4) !important;margin-top:4px !important}
+/* Spinner inside the modal waiting step */
+.hh-spinner{
+  width:30px;height:30px;margin:14px auto;
+  border:3px solid var(--bd);border-top-color:var(--g);
+  border-radius:50%;animation:spin .8s linear infinite;
+}
+
+/* ─── Admin page ─────────────────────────────────── */
+.admin-user-card{
+  background:var(--card);border:1px solid var(--bd);
+  border-radius:var(--rsm);padding:13px 15px;
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:8px;box-shadow:var(--sh);
+}
+.admin-user-info{flex:1;min-width:0}
+.admin-user-name{font-weight:700;color:var(--t1);font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.admin-user-meta{font-size:.73rem;color:var(--t4);margin-top:3px}
+.admin-user-actions{display:flex;gap:6px;flex-shrink:0}
+.admin-user-actions .btn{font-size:.75rem;padding:5px 11px;min-height:30px}
+.btn-danger{background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca}
+.btn-danger:active{background:#fee2e2}
+.admin-empty{font-size:.84rem;color:var(--t4);padding:14px 0;text-align:center}
+.admin-rules-pre{
+  background:var(--bg);border:1px solid var(--bd);
+  border-radius:var(--rxs);padding:12px;
+  font-size:.68rem;overflow-x:auto;white-space:pre;
+  color:var(--t2);line-height:1.6;
+  font-family:'Courier New',monospace;
+  margin-bottom:10px;max-height:220px;overflow-y:auto;
+}
+
+/* Nav badge (number badge on admin nav button) */
+.nav-badge{
+  position:absolute;top:4px;right:calc(50% - 22px);
+  background:#ef4444;color:white;
+  font-size:.58rem;font-weight:800;line-height:1;
+  padding:2px 5px;border-radius:10px;
+  min-width:16px;text-align:center;
+  border:1.5px solid white;display:none;
+}
+.nav-badge.on{display:block}
 </style>
 </head>
 <body>
@@ -1636,7 +1745,7 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
   <div class="hdr-inner">
     <div class="hdr-title">
       <span class="hdr-emoji" id="hdr-emoji">📅</span>
-      <span id="hdr-lbl">Meny</span>
+      <span id="hdr-lbl">Planlegg</span>
     </div>
     <div style="display:flex;align-items:center;gap:6px">
       <button class="hh-indicator" id="hh-indicator" onclick="toggleHHPopover()" style="display:none" aria-label="Husstand"></button>
@@ -1711,15 +1820,15 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
         <div class="empty-state">
           <span class="empty-icon">🛍️</span>
           <h2>Handlelisten er tom</h2>
-          <p>Velg middager for uken på Meny-siden og trykk «Generer handleliste» for å lage listen automatisk.</p>
-          <button class="btn btn-gen" style="max-width:280px;min-height:52px" onclick="showPage('meny')">📅 Gå til Meny</button>
+          <p>Velg middager for uken på Planlegg-siden og trykk «Generer handleliste» for å lage listen automatisk.</p>
+          <button class="btn btn-gen" style="max-width:280px;min-height:52px" onclick="showPage('meny')">📅 Gå til Planlegg</button>
         </div>
       </div>
       <!-- Generated list -->
       <div id="shopping-list" style="display:none">
         <div class="list-hero">
           <div class="list-hdr">
-            <div class="list-title">🛍️ Handleliste</div>
+            <div class="list-title">🛍️ Handle</div>
             <div style="display:flex;gap:7px;align-items:center">
               <button class="btn-oda-all" onclick="odaOpenAll()" title="Åpne topp 10 varer i Oda">
                 🛒 Oda
@@ -1959,6 +2068,33 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
     </div>
   </section>
 
+  <!-- PAGE: ADMIN ────────────────────────────────────────────── -->
+  <section class="page" id="page-admin">
+    <div class="pg">
+      <div class="sec-lbl">👑 Husstand-admin</div>
+
+      <!-- Pending requests -->
+      <div class="fld-lbl" style="margin:12px 0 8px">Ventende forespørsler</div>
+      <div id="admin-pending-list"><p class="admin-empty">Laster…</p></div>
+
+      <!-- Approved members -->
+      <div class="fld-lbl" style="margin:16px 0 8px">Husstandsmedlemmer</div>
+      <div id="admin-approved-list"><p class="admin-empty">Laster…</p></div>
+
+      <!-- Firebase security rules -->
+      <details class="acc" style="margin-top:16px">
+        <summary>🔒 Firebase sikkerhetsregler</summary>
+        <div class="acc-body" style="padding-top:10px">
+          <p style="font-size:.8rem;color:var(--t3);margin-bottom:10px;line-height:1.6">
+            Lim inn disse reglene i <strong>Firebase Console → Realtime Database → Rules</strong> for å håndheve tilgangskontroll på serversiden:
+          </p>
+          <pre class="admin-rules-pre" id="admin-rules-pre"></pre>
+          <button class="btn btn-gray btn-sm" onclick="copyFirebaseRules()">📋 Kopier regler</button>
+        </div>
+      </details>
+    </div>
+  </section>
+
 </main>
 
 <!-- ══ RECIPE DETAIL MODAL ═══════════════════════════════════ -->
@@ -1974,11 +2110,11 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
 <nav id="bottom-nav">
   <button class="nav-btn active" onclick="showPage('meny')" id="nav-meny">
     <span class="nav-icon">📅</span>
-    <span class="nav-lbl">Meny</span>
+    <span class="nav-lbl">Planlegg</span>
   </button>
   <button class="nav-btn" onclick="showPage('handleliste')" id="nav-handleliste">
     <span class="nav-icon">🛍️</span>
-    <span class="nav-lbl">Handleliste</span>
+    <span class="nav-lbl">Handle</span>
     <span class="nav-dot" id="nav-dot-handleliste"></span>
   </button>
   <button class="nav-btn" onclick="showPage('harjeg')" id="nav-harjeg">
@@ -1987,11 +2123,16 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
   </button>
   <button class="nav-btn" onclick="showPage('historikk')" id="nav-historikk">
     <span class="nav-icon">🕐</span>
-    <span class="nav-lbl">Historikk</span>
+    <span class="nav-lbl">Statistikk</span>
   </button>
   <button class="nav-btn" onclick="showPage('oppskrifter')" id="nav-oppskrifter">
     <span class="nav-icon">📖</span>
     <span class="nav-lbl">Oppskrifter</span>
+  </button>
+  <button class="nav-btn" onclick="showPage('admin');renderAdminPanel()" id="nav-admin" style="display:none">
+    <span class="nav-icon">👑</span>
+    <span class="nav-lbl">Admin</span>
+    <span class="nav-badge" id="nav-badge-admin"></span>
   </button>
 </nav>
 
@@ -2010,6 +2151,38 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
     <button class="dsp-close" onclick="closeDayPicker()" aria-label="Lukk">✕</button>
   </div>
   <div class="dsp-chips" id="dsp-chips"></div>
+</div>
+
+<!-- ══ APPROVAL OVERLAY ══════════════════════════════════════ -->
+<div id="approval-overlay" class="approval-overlay hidden" role="dialog" aria-modal="true">
+
+  <!-- Waiting for approval -->
+  <div id="approval-waiting" class="approval-sheet" style="display:none">
+    <span class="approval-icon">⏳</span>
+    <h2>Venter på godkjenning…</h2>
+    <p>Hei, <strong id="approval-waiting-name"></strong>!</p>
+    <p>En admin i husstand <strong id="approval-waiting-code" style="font-family:'Courier New',monospace;letter-spacing:2px"></strong> må godkjenne deg.</p>
+    <div class="approval-spinner"></div>
+    <p class="approval-sub">Sjekker automatisk hvert 10. sekund…</p>
+    <button class="hh-skip-btn" style="margin-top:20px" onclick="approvalTryAgain()">Avbryt og prøv på nytt</button>
+  </div>
+
+  <!-- Rejected -->
+  <div id="approval-rejected" class="approval-sheet" style="display:none">
+    <span class="approval-icon">😔</span>
+    <h2>Forespørsel avvist</h2>
+    <p>Forespørselen din ble dessverre avvist av admin.</p>
+    <button class="btn btn-gen" style="max-width:280px;width:100%;margin-top:16px" onclick="approvalTryAgain()">Prøv en annen husstand</button>
+  </div>
+
+  <!-- Revoked -->
+  <div id="approval-revoked" class="approval-sheet" style="display:none">
+    <span class="approval-icon">🔒</span>
+    <h2>Tilgang fjernet</h2>
+    <p>Tilgangen din til husstanden er fjernet av en admin.</p>
+    <button class="btn btn-gen" style="max-width:280px;width:100%;margin-top:16px" onclick="approvalTryAgain()">Be om tilgang igjen</button>
+  </div>
+
 </div>
 
 <!-- ══ SYNC TOAST ════════════════════════════════════════════ -->
@@ -2033,7 +2206,14 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
     <div id="hh-step-start">
       <span class="hh-modal-icon">🏠</span>
       <h2>Hei! Hvem planlegger du mat med?</h2>
-      <p>Koble deg sammen med husstanden din for å synkronisere middagsplanen, handlelisten og oppskriftene i sanntid.</p>
+      <p>Synkroniser middagsplanen, handlelisten og oppskriftene med hele husstanden i sanntid.</p>
+      <div style="text-align:left;margin-bottom:14px">
+        <div class="fld-lbl" style="margin-bottom:6px">Ditt navn</div>
+        <input type="text" class="hh-name-input" id="hh-start-name"
+               placeholder="Ola Nordmann" autocomplete="name" maxlength="40"
+               oninput="document.getElementById('hh-name-error').textContent=''">
+        <div id="hh-name-error" class="hh-error" style="min-height:18px"></div>
+      </div>
       <div class="hh-btn-row">
         <button class="btn btn-gen" onclick="hhStartCreate()">🏡 Opprett husstand</button>
         <button class="btn btn-blue" onclick="hhShowJoin()">🔗 Bli med i husstand</button>
@@ -2058,13 +2238,32 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
     <div id="hh-step-join" style="display:none">
       <span class="hh-modal-icon">🔗</span>
       <h2>Skriv inn koden</h2>
-      <p>Be et husstandsmedlem om å dele sin 6-tegns kode.</p>
+      <p>Skriv inn 6-tegns koden du har fått fra et husstandsmedlem. En admin godkjenner deg.</p>
       <input type="text" class="hh-join-input" id="hh-join-input"
              placeholder="MAT42X" maxlength="6"
              oninput="this.value=this.value.toUpperCase();document.getElementById('hh-join-error').textContent=''">
       <div id="hh-join-error" class="hh-error"></div>
-      <button class="btn btn-gen" id="hh-join-btn" onclick="hhDoJoin()" style="width:100%;margin-bottom:8px">🔗 Bli med</button>
+      <button class="btn btn-gen" id="hh-join-btn" onclick="hhDoJoin()" style="width:100%;margin-bottom:8px">📨 Send forespørsel</button>
       <button class="hh-back-link" onclick="hhBackToStart()">← Tilbake</button>
+    </div>
+
+    <!-- Step: waiting (inline, first time request) -->
+    <div id="hh-step-waiting" style="display:none">
+      <span class="hh-modal-icon">⏳</span>
+      <h2>Venter på godkjenning…</h2>
+      <p>Hei, <strong id="hh-waiting-name"></strong>!<br>
+         En admin i husstand <strong id="hh-waiting-code"></strong> må godkjenne deg.</p>
+      <div class="hh-spinner"></div>
+      <p style="font-size:.75rem;color:var(--t4);margin-bottom:16px">Sjekker automatisk hvert 10. sekund…</p>
+      <button class="hh-skip-btn" onclick="approvalTryAgain()">Avbryt og prøv på nytt</button>
+    </div>
+
+    <!-- Step: rejected (inline) -->
+    <div id="hh-step-rejected" style="display:none">
+      <span class="hh-modal-icon">😔</span>
+      <h2>Forespørsel avvist</h2>
+      <p>Forespørselen din ble dessverre avvist av admin.</p>
+      <button class="btn btn-gen" style="width:100%;margin-bottom:10px" onclick="hhBackToStart()">Prøv igjen</button>
     </div>
 
   </div>
@@ -2199,11 +2398,12 @@ function showPage(name) {
 }
 
 const PAGE_META = {
-  meny:        { emoji:'📅', lbl:'Meny' },
-  handleliste: { emoji:'🛍️', lbl:'Handleliste' },
+  meny:        { emoji:'📅', lbl:'Planlegg' },
+  handleliste: { emoji:'🛍️', lbl:'Handle' },
   harjeg:      { emoji:'🧊', lbl:'Kjøleskap' },
-  historikk:   { emoji:'🕐', lbl:'Historikk' },
+  historikk:   { emoji:'🕐', lbl:'Statistikk' },
   oppskrifter: { emoji:'📖', lbl:'Oppskrifter' },
+  admin:       { emoji:'👑', lbl:'Admin' },
 };
 
 function updateHeaderActions(page) {
@@ -2221,6 +2421,8 @@ function updateHeaderActions(page) {
       : '';
   } else if (page === 'oppskrifter') {
     el.innerHTML = `<button class="hdr-btn" onclick="openAddRecipeForm()">➕ Legg til</button>`;
+  } else if (page === 'admin') {
+    el.innerHTML = `<button class="hdr-btn" onclick="renderAdminPanel()">↻ Oppdater</button>`;
   } else {
     el.innerHTML = '';
   }
@@ -3379,11 +3581,9 @@ const DEFAULT_RECIPES = [
 ];
 
 function loadRecipes() {
+  // Load from localStorage only; Firebase will override asynchronously.
+  // DEFAULT_RECIPES are seeded later, once we know whether Firebase has data.
   try { recipes = JSON.parse(localStorage.getItem('recipes') || '[]'); } catch { recipes = []; }
-  if (recipes.length === 0) {
-    recipes = DEFAULT_RECIPES;
-    saveRecipes();
-  }
 }
 function saveRecipes() {
   const s = JSON.stringify(recipes);
@@ -3717,6 +3917,7 @@ function saveRecipe() {
   cancelRecipeForm();
   renderRecipes();
   rebuildSelects();
+  showSyncToast(_fbRef ? '✓ Oppskrift lagret og synkronisert' : '✓ Oppskrift lagret lokalt');
 }
 
 function deleteRecipe(id) {
@@ -3725,6 +3926,7 @@ function deleteRecipe(id) {
   saveRecipes();
   renderRecipes();
   rebuildSelects();
+  showSyncToast(_fbRef ? '🗑️ Oppskrift slettet og synkronisert' : '🗑️ Oppskrift slettet lokalt');
 }
 
 // ── Recipe library render ─────────────────────────────────────────────────────
@@ -4160,8 +4362,37 @@ if (!_deviceId) {
 
 // ── Low-level write ────────────────────────────────────────────────────────────
 function fbSet(section, value) {
-  if (!_fbRef) return;
-  _fbRef.child(section).set({ v: value, by: _deviceId });
+  if (!_fbRef) return Promise.resolve();
+  return _fbRef.child(section).set({ v: value, by: _deviceId })
+    .catch(err => {
+      console.warn('[Firebase] Kunne ikke skrive til skyen (' + section + '):', err.message);
+      // Data is already saved in localStorage — no data loss
+    });
+}
+
+// Seed DEFAULT_RECIPES only if the local array is still empty
+function _seedDefaultRecipesIfEmpty() {
+  if (recipes.length) return;
+  recipes = DEFAULT_RECIPES.slice();
+  saveRecipes();     // → localStorage + Firebase (if _fbRef is set)
+  renderRecipes();
+  rebuildSelects();
+}
+
+// Show a pulsing skeleton while waiting for Firebase to load recipes
+function renderRecipesLoading() {
+  const c = document.getElementById('recipes-content');
+  if (!c) return;
+  const card = () =>
+    `<div class="recipe-skel">
+       <div class="skel-line title"></div>
+       <div class="skel-line short"></div>
+       <div class="skel-line xshort"></div>
+     </div>`;
+  c.innerHTML = `<div class="recipes-loading">
+    ${card()}${card()}${card()}${card()}
+    <p class="recipes-loading-label">☁️ Laster oppskrifter fra skyen…</p>
+  </div>`;
 }
 
 function fbSetMenu() {
@@ -4375,9 +4606,11 @@ function copyHHCode() {
 function leaveHousehold() {
   if (!confirm('Forlate husstanden og koble fra synkroniseringen?')) return;
   if (_fbRef) { _fbRef.off(); _fbRef = null; }
-  localStorage.removeItem('firebase_hh_id');
+  stopApprovalPolling();
+  ['firebase_hh_id','_user_name','_approval_status'].forEach(k => localStorage.removeItem(k));
   document.getElementById('hh-info-popover').classList.add('hidden');
   updateHHIndicator(null);
+  updateAdminNavVisibility();
   showSyncToast('Du har forlatt husstanden');
 }
 
@@ -4393,70 +4626,366 @@ function showHHModal() {
   hhShowStep('start');
 }
 function hhShowStep(s) {
-  ['start','create','join'].forEach(id =>
-    document.getElementById(`hh-step-${id}`).style.display = id === s ? '' : 'none'
-  );
+  ['start','create','join','waiting','rejected'].forEach(id => {
+    const el = document.getElementById(`hh-step-${id}`);
+    if (el) el.style.display = id === s ? '' : 'none';
+  });
 }
+
+// Validate name field on the start step; returns trimmed name or null
+function hhValidateName() {
+  const input = document.getElementById('hh-start-name');
+  const name  = input.value.trim();
+  if (!name) {
+    document.getElementById('hh-name-error').textContent = 'Skriv inn ditt navn.';
+    input.focus();
+    return null;
+  }
+  document.getElementById('hh-name-error').textContent = '';
+  return name;
+}
+
 function hhStartCreate() {
+  if (!hhValidateName()) return;
   _pendingHHCode = _hhCode();
   document.getElementById('hh-code-value').textContent = _pendingHHCode;
   hhShowStep('create');
 }
+
 async function hhConfirmCreate() {
-  const btn = document.getElementById('hh-create-confirm-btn');
+  const name = document.getElementById('hh-start-name').value.trim() || 'Admin';
+  const btn  = document.getElementById('hh-create-confirm-btn');
   btn.disabled = true; btn.textContent = 'Oppretter…';
   try {
-    await _fbDb.ref('households/' + _pendingHHCode + '/meta')
-      .set({ createdAt: firebase.database.ServerValue.TIMESTAMP });
-    localStorage.setItem('firebase_hh_id', _pendingHHCode);
-    _fbRef = _fbDb.ref('households/' + _pendingHHCode);
+    const hhId = _pendingHHCode;
+    // Create household meta + register self as admin in approvedUsers
+    await _fbDb.ref('households/' + hhId).update({
+      'meta': { createdAt: firebase.database.ServerValue.TIMESTAMP, adminDeviceId: _deviceId },
+      ['approvedUsers/' + _deviceId]: {
+        name,
+        role:       'admin',
+        approvedAt: firebase.database.ServerValue.TIMESTAMP,
+      },
+    });
+    localStorage.setItem('firebase_hh_id',      hhId);
+    localStorage.setItem('_user_name',           name);
+    localStorage.setItem('_approval_status',     'admin');
+    _fbRef = _fbDb.ref('households/' + hhId);
     fbStartListeners();
+    fbStartAdminListeners();
     fbPushAll();
-    updateHHIndicator(_pendingHHCode);
+    _seedDefaultRecipesIfEmpty();
+    updateHHIndicator(hhId);
+    updateAdminNavVisibility();
     document.getElementById('hh-modal').classList.add('hidden');
   } catch {
     btn.disabled = false; btn.textContent = '✓ Klar, la oss begynne!';
     document.getElementById('hh-create-error').textContent = 'Klarte ikke opprette husstand. Sjekk internettforbindelsen.';
   }
 }
+
 function hhShowJoin() {
+  if (!hhValidateName()) return;
   document.getElementById('hh-join-input').value = '';
   document.getElementById('hh-join-error').textContent = '';
   hhShowStep('join');
 }
+
 async function hhDoJoin() {
+  const name = document.getElementById('hh-start-name').value.trim();
   const code = document.getElementById('hh-join-input').value.trim().toUpperCase();
   const errEl = document.getElementById('hh-join-error');
   if (code.length !== 6) { errEl.textContent = 'Koden skal være 6 tegn.'; return; }
   errEl.textContent = '';
   const btn = document.getElementById('hh-join-btn');
-  btn.disabled = true; btn.textContent = 'Kobler til…';
+  btn.disabled = true; btn.textContent = 'Sjekker…';
   try {
-    const snap = await _fbDb.ref('households/' + code).once('value');
+    // Verify household exists
+    const snap = await _fbDb.ref('households/' + code + '/meta').once('value');
     if (!snap.exists()) {
       errEl.textContent = 'Koden ble ikke funnet. Sjekk at du skrev riktig.';
-      btn.disabled = false; btn.textContent = '🔗 Bli med';
+      btn.disabled = false; btn.textContent = '📨 Send forespørsel';
       return;
     }
-    localStorage.setItem('firebase_hh_id', code);
-    _fbRef = _fbDb.ref('households/' + code);
-    fbStartListeners();
-    // Load remote data (overwrite local with household data)
-    const data = snap.val() || {};
-    fbApply(data, true);
-    updateHHIndicator(code);
-    document.getElementById('hh-modal').classList.add('hidden');
-    showSyncToast('✓ Koblet til husstand ' + code);
+    // Register as pending
+    await _fbDb.ref(`households/${code}/pendingUsers/${_deviceId}`).set({
+      name,
+      requestedAt: firebase.database.ServerValue.TIMESTAMP,
+      status:      'pending',
+    });
+    localStorage.setItem('firebase_hh_id',  code);
+    localStorage.setItem('_user_name',      name);
+    localStorage.setItem('_approval_status','pending');
+    // Show inline waiting step
+    document.getElementById('hh-waiting-name').textContent = name;
+    document.getElementById('hh-waiting-code').textContent = code;
+    hhShowStep('waiting');
+    startApprovalPolling(code);
   } catch {
     errEl.textContent = 'Kunne ikke koble til. Sjekk internettforbindelsen.';
-    btn.disabled = false; btn.textContent = '🔗 Bli med';
+    btn.disabled = false; btn.textContent = '📨 Send forespørsel';
   }
 }
+
 function hhSkip() {
   localStorage.setItem('firebase_hh_id', '__local__');
   document.getElementById('hh-modal').classList.add('hidden');
+  _seedDefaultRecipesIfEmpty();
 }
-function hhBackToStart() { hhShowStep('start'); }
+function hhBackToStart() {
+  // Reset any inline rejection/waiting state
+  stopApprovalPolling();
+  hhShowStep('start');
+}
+
+// ── Approval polling ───────────────────────────────────────────────────────────
+let _approvalPollInterval = null;
+
+function startApprovalPolling(hhId) {
+  stopApprovalPolling();
+  _approvalPollInterval = setInterval(() => _checkApproval(hhId), 10000);
+}
+function stopApprovalPolling() {
+  if (_approvalPollInterval) { clearInterval(_approvalPollInterval); _approvalPollInterval = null; }
+}
+
+async function _checkApproval(hhId) {
+  try {
+    // Check if approved
+    const approvedSnap = await _fbDb.ref(`households/${hhId}/approvedUsers/${_deviceId}`).once('value');
+    if (approvedSnap.exists()) {
+      stopApprovalPolling();
+      localStorage.setItem('_approval_status', 'approved');
+      _onApprovalGranted(hhId);
+      return;
+    }
+    // Check if rejected
+    const pendingSnap = await _fbDb.ref(`households/${hhId}/pendingUsers/${_deviceId}/status`).once('value');
+    if (pendingSnap.val() === 'rejected') {
+      stopApprovalPolling();
+      localStorage.setItem('_approval_status', 'rejected');
+      // Show in whatever surface is currently visible
+      if (!document.getElementById('hh-modal').classList.contains('hidden')) {
+        hhShowStep('rejected');
+      } else {
+        showApprovalOverlay('rejected');
+      }
+    }
+  } catch { /* network error — retry next cycle */ }
+}
+
+function _onApprovalGranted(hhId) {
+  document.getElementById('hh-modal').classList.add('hidden');
+  hideApprovalOverlay();
+  connectHouseholdData(hhId, false);
+  updateHHIndicator(hhId);
+  updateAdminNavVisibility();
+  showSyncToast('✓ Tilgang godkjent! Velkommen inn 🎉');
+}
+
+// ── Approval overlay ───────────────────────────────────────────────────────────
+function showApprovalOverlay(state) {
+  ['waiting','rejected','revoked'].forEach(s => {
+    document.getElementById('approval-' + s).style.display = s === state ? '' : 'none';
+  });
+  if (state === 'waiting') {
+    const name = localStorage.getItem('_user_name') || '';
+    const hhId = localStorage.getItem('firebase_hh_id') || '';
+    document.getElementById('approval-waiting-name').textContent = name;
+    document.getElementById('approval-waiting-code').textContent = hhId;
+  }
+  document.getElementById('approval-overlay').classList.remove('hidden');
+}
+function hideApprovalOverlay() {
+  document.getElementById('approval-overlay').classList.add('hidden');
+}
+function approvalTryAgain() {
+  stopApprovalPolling();
+  if (_fbRef) { _fbRef.off(); _fbRef = null; }
+  ['firebase_hh_id','_user_name','_approval_status'].forEach(k => localStorage.removeItem(k));
+  hideApprovalOverlay();
+  document.getElementById('hh-start-name').value = '';
+  document.getElementById('hh-name-error').textContent  = '';
+  showHHModal();
+}
+
+// ── Connect household data (for approved / admin users) ────────────────────────
+function connectHouseholdData(hhId, isAdmin) {
+  _fbRef = _fbDb.ref('households/' + hhId);
+  if (!recipes.length) renderRecipesLoading();
+  fbStartListeners();
+  if (isAdmin) fbStartAdminListeners();
+  _fbRef.once('value').then(snap => {
+    const data = snap.val() || {};
+    const hasData = data.recipes || data.menu || data.homeItems ||
+                    data.customMeals || data.household || data.staplesState;
+    if (hasData) fbApply(data, true);
+    if (!data.recipes && !recipes.length) _seedDefaultRecipesIfEmpty();
+  }).catch(() => { _seedDefaultRecipesIfEmpty(); });
+}
+
+// ── Admin: listeners and panel ────────────────────────────────────────────────
+function fbStartAdminListeners() {
+  const hhId = localStorage.getItem('firebase_hh_id');
+  if (!hhId || !_fbDb) return;
+  _fbDb.ref(`households/${hhId}/pendingUsers`).on('value', snap => {
+    const data = snap.val() || {};
+    const count = Object.values(data).filter(u => u.status === 'pending').length;
+    updateAdminBadge(count);
+    if (document.getElementById('page-admin')?.classList.contains('active')) {
+      renderAdminPanel();
+    }
+  });
+}
+
+function updateAdminBadge(n) {
+  const el = document.getElementById('nav-badge-admin');
+  if (!el) return;
+  el.textContent = n > 9 ? '9+' : String(n);
+  el.classList.toggle('on', n > 0);
+}
+
+function updateAdminNavVisibility() {
+  const status = localStorage.getItem('_approval_status');
+  const btn = document.getElementById('nav-admin');
+  if (btn) btn.style.display = status === 'admin' ? '' : 'none';
+}
+
+function _fmtTs(ts) {
+  if (!ts) return '';
+  return new Date(ts).toLocaleDateString('nb-NO', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+}
+
+async function renderAdminPanel() {
+  const hhId = localStorage.getItem('firebase_hh_id');
+  const pendingEl  = document.getElementById('admin-pending-list');
+  const approvedEl = document.getElementById('admin-approved-list');
+  const rulesEl    = document.getElementById('admin-rules-pre');
+  if (!pendingEl || !approvedEl || !hhId) return;
+
+  // Populate rules display
+  if (rulesEl && !rulesEl.textContent) rulesEl.textContent = FIREBASE_RULES;
+
+  pendingEl.innerHTML = approvedEl.innerHTML = '<p class="admin-empty">Laster…</p>';
+  try {
+    const [ps, as] = await Promise.all([
+      _fbDb.ref(`households/${hhId}/pendingUsers`).once('value'),
+      _fbDb.ref(`households/${hhId}/approvedUsers`).once('value'),
+    ]);
+    const pendingData  = ps.val() || {};
+    const approvedData = as.val() || {};
+
+    const pending = Object.entries(pendingData)
+      .filter(([, u]) => u.status === 'pending')
+      .sort(([, a],[, b]) => (a.requestedAt||0) - (b.requestedAt||0));
+
+    pendingEl.innerHTML = pending.length ? pending.map(([did, u]) => `
+      <div class="admin-user-card">
+        <div class="admin-user-info">
+          <div class="admin-user-name">👤 ${escHtml(u.name)}</div>
+          <div class="admin-user-meta">${_fmtTs(u.requestedAt)}</div>
+        </div>
+        <div class="admin-user-actions">
+          <button class="btn btn-green btn-sm" onclick="adminApprove('${escHtml(did)}','${escHtml(u.name)}')">Godkjenn</button>
+          <button class="btn btn-danger btn-sm" onclick="adminReject('${escHtml(did)}','${escHtml(u.name)}')">Avvis</button>
+        </div>
+      </div>`).join('')
+    : '<p class="admin-empty">Ingen ventende forespørsler ✓</p>';
+
+    const approved = Object.entries(approvedData)
+      .sort(([, a],[, b]) => (a.approvedAt||0) - (b.approvedAt||0));
+
+    approvedEl.innerHTML = approved.length ? approved.map(([did, u]) => {
+      const isSelf  = did === _deviceId;
+      const isAdmin = u.role === 'admin';
+      return `
+      <div class="admin-user-card">
+        <div class="admin-user-info">
+          <div class="admin-user-name">${isAdmin ? '👑' : '✓'} ${escHtml(u.name)}${isSelf ? ' <span style="color:var(--t4);font-size:.72rem">(deg)</span>' : ''}</div>
+          <div class="admin-user-meta">${isAdmin ? 'Admin' : 'Godkjent ' + _fmtTs(u.approvedAt)}</div>
+        </div>
+        ${!isSelf && !isAdmin
+          ? `<div class="admin-user-actions"><button class="btn btn-danger btn-sm" onclick="adminRemove('${escHtml(did)}','${escHtml(u.name)}')">Fjern</button></div>`
+          : ''}
+      </div>`;
+    }).join('')
+    : '<p class="admin-empty">Ingen godkjente medlemmer ennå</p>';
+
+    updateAdminBadge(pending.length);
+  } catch {
+    pendingEl.innerHTML = '<p class="admin-empty">Kunne ikke laste data — sjekk internettforbindelsen</p>';
+    approvedEl.innerHTML = '';
+  }
+}
+
+async function adminApprove(deviceId, name) {
+  const hhId = localStorage.getItem('firebase_hh_id');
+  if (!hhId) return;
+  try {
+    await _fbDb.ref(`households/${hhId}/approvedUsers/${deviceId}`).set({
+      name,
+      approvedAt: firebase.database.ServerValue.TIMESTAMP,
+      approvedBy: _deviceId,
+    });
+    await _fbDb.ref(`households/${hhId}/pendingUsers/${deviceId}`).remove();
+    renderAdminPanel();
+    showSyncToast('✓ ' + name + ' er godkjent');
+  } catch { showSyncToast('Kunne ikke godkjenne — prøv igjen'); }
+}
+
+async function adminReject(deviceId, name) {
+  const hhId = localStorage.getItem('firebase_hh_id');
+  if (!hhId) return;
+  try {
+    await _fbDb.ref(`households/${hhId}/pendingUsers/${deviceId}/status`).set('rejected');
+    renderAdminPanel();
+    showSyncToast('Forespørsel fra ' + name + ' avvist');
+  } catch { showSyncToast('Kunne ikke avvise — prøv igjen'); }
+}
+
+async function adminRemove(deviceId, name) {
+  const hhId = localStorage.getItem('firebase_hh_id');
+  if (!hhId || !confirm('Fjerne ' + name + ' fra husstanden?')) return;
+  try {
+    await _fbDb.ref(`households/${hhId}/approvedUsers/${deviceId}`).remove();
+    renderAdminPanel();
+    showSyncToast(name + ' er fjernet fra husstanden');
+  } catch { showSyncToast('Kunne ikke fjerne — prøv igjen'); }
+}
+
+// ── Firebase rules (shown in admin panel) ─────────────────────────────────────
+const FIREBASE_RULES = `{
+  "rules": {
+    "households": {
+      "$hhId": {
+        "pendingUsers": {
+          ".read": true,
+          ".write": true
+        },
+        "approvedUsers": {
+          ".read": true,
+          ".write": false
+        },
+        "meta": {
+          ".read": true,
+          ".write": false
+        },
+        "menu":         { ".read": true, ".write": true },
+        "household":    { ".read": true, ".write": true },
+        "recipes":      { ".read": true, ".write": true },
+        "customMeals":  { ".read": true, ".write": true },
+        "homeItems":    { ".read": true, ".write": true },
+        "staplesState": { ".read": true, ".write": true }
+      }
+    }
+  }
+}`;
+
+function copyFirebaseRules() {
+  navigator.clipboard.writeText(FIREBASE_RULES)
+    .then(() => showSyncToast('✓ Regler kopiert!'))
+    .catch(() => showSyncToast('Kopier teksten fra admin-panelet manuelt'));
+}
 
 // ── Bootstrap Firebase ─────────────────────────────────────────────────────────
 function initFirebaseSync() {
@@ -4464,24 +4993,63 @@ function initFirebaseSync() {
     const app = firebase.initializeApp(FB_CONFIG);
     _fbDb = firebase.database(app);
   } catch (e) {
-    // App already initialized (e.g. hot reload)
     _fbDb = firebase.database(firebase.app());
   }
 
   const savedId = localStorage.getItem('firebase_hh_id');
+  const status  = localStorage.getItem('_approval_status');
+
   if (!savedId) {
-    // First launch — show onboarding after a short delay so the app renders first
+    // First launch — seed defaults, show onboarding
+    _seedDefaultRecipesIfEmpty();
     setTimeout(showHHModal, 400);
-  } else if (savedId !== '__local__') {
-    _fbRef = _fbDb.ref('households/' + savedId);
-    fbStartListeners();
-    // One-time read to catch any changes made while offline
-    _fbRef.once('value').then(snap => {
-      const data = snap.val() || {};
-      // Only overwrite if Firebase actually has household data
-      if (data.recipes || data.menu || data.homeItems) fbApply(data, true);
-    }).catch(() => {}); // offline: silently fall back to localStorage
+    return;
   }
+
+  if (savedId === '__local__') {
+    _seedDefaultRecipesIfEmpty();
+    return;
+  }
+
+  // ── Has a real household ID ────────────────────────────────────────────────
+
+  if (status === 'pending') {
+    // Waiting for admin approval
+    showApprovalOverlay('waiting');
+    startApprovalPolling(savedId);
+    return;
+  }
+
+  if (status === 'rejected') { showApprovalOverlay('rejected'); return; }
+  if (status === 'revoked')  { showApprovalOverlay('revoked');  return; }
+
+  if (status === 'approved' || status === 'admin') {
+    // Verify access is still valid in Firebase before connecting
+    _fbDb.ref(`households/${savedId}/approvedUsers/${_deviceId}`).once('value')
+      .then(snap => {
+        if (!snap.exists()) {
+          // Access was revoked while we were away
+          localStorage.setItem('_approval_status', 'revoked');
+          showApprovalOverlay('revoked');
+        } else {
+          connectHouseholdData(savedId, status === 'admin');
+          updateHHIndicator(savedId);
+          updateAdminNavVisibility();
+        }
+      })
+      .catch(() => {
+        // Offline: trust localStorage — connect without verification
+        connectHouseholdData(savedId, status === 'admin');
+        updateHHIndicator(savedId);
+        updateAdminNavVisibility();
+      });
+    return;
+  }
+
+  // Unknown status (e.g. old install before approval system) — treat as approved
+  // for backward-compat; set status and connect
+  localStorage.setItem('_approval_status', 'approved');
+  connectHouseholdData(savedId, false);
   updateHHIndicator(savedId);
 }
 
@@ -4500,6 +5068,7 @@ renderHistory();
 renderStats();
 renderRecipes();
 renderHomeItems();
+updateAdminNavVisibility();
 initFirebaseSync();
 </script>
 </body>
