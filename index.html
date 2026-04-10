@@ -60,8 +60,8 @@ body{
 #app{
   display:flex;
   flex-direction:column;
-  height:100dvh;
   height:100vh;
+  height:100dvh;
   overflow:hidden;
   position:fixed;
   inset:0;
@@ -99,7 +99,7 @@ body{
 .hdr-btn{
   background:rgba(255,255,255,.18);
   border:none;
-  border-radius:10px;
+  border-radius:var(--rsm);
   color:white;
   font-size:0.82rem;
   font-weight:600;
@@ -146,7 +146,7 @@ body{
   z-index:10;
 }
 .pg{
-  padding:16px 14px;
+  padding:16px;
   padding-bottom:calc(24px + env(safe-area-inset-bottom));
   min-height:100%;
 }
@@ -165,6 +165,8 @@ body{
 }
 .nav-btn{
   flex:1;
+  min-width:0;
+  overflow:hidden;
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -191,8 +193,8 @@ body{
   background:var(--g);
   border-radius:0 0 4px 4px;
 }
-.nav-icon{font-size:1.45rem;line-height:1;margin-bottom:2px;display:block}
-.nav-lbl{font-size:0.67rem;font-weight:600;letter-spacing:.1px;white-space:nowrap}
+.nav-icon{font-size:1.4rem;line-height:1;margin-bottom:2px;display:flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem}
+.nav-lbl{font-size:0.67rem;font-weight:600;letter-spacing:.1px;white-space:nowrap;max-width:100%;text-overflow:ellipsis;overflow:hidden}
 .nav-dot{
   position:absolute;
   top:5px;right:calc(50% - 20px);
@@ -373,7 +375,7 @@ select:focus,input:focus{
 }
 details[open].acc>summary::after{transform:rotate(180deg)}
 .acc-body{
-  padding:4px 16px 18px;
+  padding:14px 16px 18px;
   border-top:1px solid var(--bd);
 }
 /* Staples variant */
@@ -467,7 +469,7 @@ details[open].acc>summary::after{transform:rotate(180deg)}
   font-size:.76rem;
   font-weight:700;
   color:var(--t2);
-  padding:10px 16px 9px;
+  padding:10px 16px;
   background:#fafafa;
   border-bottom:1px solid var(--bd);
   display:flex;
@@ -542,7 +544,7 @@ details[open].acc>summary::after{transform:rotate(180deg)}
   font-weight:600;
   background:#f3f4f6;
   padding:5px 11px;
-  border-radius:8px;
+  border-radius:var(--rxs);
   white-space:nowrap;
   flex-shrink:0;
 }
@@ -564,8 +566,9 @@ details[open].acc>summary::after{transform:rotate(180deg)}
 .home-item-del{
   background:none;border:none;color:var(--t4);
   font-size:1rem;cursor:pointer;padding:4px 6px;
-  line-height:1;border-radius:6px;touch-action:manipulation;
+  line-height:1;border-radius:var(--rxs);touch-action:manipulation;
   min-height:36px;min-width:36px;display:flex;align-items:center;justify-content:center;
+  transition:background .2s,color .2s;
 }
 .home-item-del:active{background:#fee2e2;color:#dc2626}
 .home-items-count{
@@ -708,7 +711,7 @@ details[open].acc>summary::after{transform:rotate(180deg)}
   flex-shrink:0;
   line-height:1.4;
   min-height:32px;
-  transition:background .13s,color .13s;
+  transition:background .2s,color .2s;
 }
 .oda-btn:active{background:#4a9c5d;color:white;transition:none}
 .item-list li.checked .oda-btn{opacity:.35;pointer-events:none}
@@ -716,7 +719,7 @@ details[open].acc>summary::after{transform:rotate(180deg)}
   background:#4a9c5d;
   color:white;
   border:none;
-  border-radius:var(--rxs);
+  border-radius:var(--rsm);
   font-size:.82rem;
   font-weight:700;
   padding:9px 14px;
@@ -727,7 +730,7 @@ details[open].acc>summary::after{transform:rotate(180deg)}
   align-items:center;
   gap:6px;
   min-height:40px;
-  transition:opacity .15s;
+  transition:opacity .2s;
 }
 .btn-oda-all:active{opacity:.82}
 
@@ -768,7 +771,7 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
 ═══════════════════════════════════════════════ */
 .scan-card{
   background:var(--card);border-radius:var(--r);
-  padding:18px 16px;border:1.5px solid var(--bd);
+  padding:16px;border:1.5px solid var(--bd);
   box-shadow:var(--sh);margin-bottom:14px;
 }
 .notice{
@@ -780,7 +783,7 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
   border:2px dashed #bfdbfe;border-radius:var(--r);
   padding:30px 16px;text-align:center;cursor:pointer;
   background:#f0f7ff;color:var(--t3);font-size:.95rem;
-  touch-action:manipulation;transition:background .15s;
+  touch-action:manipulation;transition:background .2s;
 }
 .upload-area:active{background:#e0f2fe}
 .upload-icon{font-size:2.5rem;display:block;margin-bottom:8px}
@@ -821,7 +824,7 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
   padding:16px;margin-bottom:10px;
   border:1.5px solid var(--bd);box-shadow:var(--sh);
   touch-action:manipulation;
-  transition:box-shadow .15s,transform .1s;
+  transition:box-shadow .2s,transform .2s;
   -webkit-user-select:none;user-select:none;
 }
 .hist-item:active{box-shadow:var(--shm);transform:scale(.99);transition-duration:.08s}
@@ -917,10 +920,10 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
    SMALL PHONES (< 360px)
 ═══════════════════════════════════════════════ */
 @media(max-width:360px){
-  .pg{padding:12px 10px calc(20px + env(safe-area-inset-bottom))}
+  .pg{padding:12px 12px calc(20px + env(safe-area-inset-bottom))}
   .nav-lbl{font-size:.6rem}
   .week-grid{gap:8px}
-  .day-card{padding:12px 10px}
+  .day-card{padding:12px}
   .recipe-grid{grid-template-columns:1fr}
 }
 
@@ -938,7 +941,7 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
   .week-grid{gap:8px;margin-bottom:10px}
   .day-card{padding:10px 10px}
   .empty-state{padding:30px 20px 20px;min-height:40vh}
-  .recipe-modal-sheet{max-height:95dvh;max-height:95vh}
+  .recipe-modal-sheet{max-height:95vh;max-height:95dvh}
   .recipe-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
   .acc>summary{min-height:48px}
   .btn-gen{min-height:48px;font-size:.98rem}
@@ -981,10 +984,10 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
   border-radius:var(--r);
   border:1.5px solid var(--bd);
   box-shadow:var(--sh);
-  padding:14px 13px;
+  padding:14px;
   cursor:pointer;
   touch-action:manipulation;
-  transition:box-shadow .15s,border-color .15s;
+  transition:box-shadow .2s,border-color .2s;
   display:flex;
   flex-direction:column;
   gap:6px;
@@ -1009,7 +1012,7 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
 .recipe-days{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
 .recipe-day-tag{
   background:var(--g50);color:var(--g);border:1px solid var(--g100);
-  border-radius:8px;padding:2px 7px;font-size:.68rem;font-weight:600;
+  border-radius:var(--rxs);padding:2px 7px;font-size:.68rem;font-weight:600;
 }
 .recipe-card-actions{
   display:flex;gap:7px;align-items:center;
@@ -1058,7 +1061,7 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
   background:var(--card);
   border-radius:var(--r) var(--r) 0 0;
   padding:0 0 env(safe-area-inset-bottom);
-  max-height:88dvh;max-height:88vh;
+  max-height:88vh;max-height:88dvh;
   overflow-y:auto;
   -webkit-overflow-scrolling:touch;
   box-shadow:0 -4px 24px rgba(0,0,0,.18);
@@ -1069,7 +1072,7 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
   width:40px;height:4px;border-radius:2px;
   background:#d1d5db;margin:12px auto 0;
 }
-.recipe-modal-content{padding:16px 18px 24px}
+.recipe-modal-content{padding:16px 16px 24px}
 .recipe-modal-title{font-size:1.25rem;font-weight:800;margin:10px 0 4px;line-height:1.2;letter-spacing:-.2px}
 .recipe-modal-meta{font-size:.85rem;color:var(--t3);margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .recipe-modal-ing h4{font-size:.78rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
@@ -1118,10 +1121,10 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
 .install-banner-actions{display:flex;gap:7px;align-items:center;flex-shrink:0}
 #install-btn{
   background:linear-gradient(135deg,#16a34a,#22c55e);
-  color:white;border:none;border-radius:var(--rxs);
+  color:white;border:none;border-radius:var(--rsm);
   padding:9px 14px;font-size:.84rem;font-weight:700;
   cursor:pointer;font-family:inherit;touch-action:manipulation;
-  white-space:nowrap;min-height:40px;
+  white-space:nowrap;min-height:40px;transition:opacity .2s;
 }
 #install-btn:active{opacity:.85}
 .install-close{
@@ -1133,18 +1136,105 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
 }
 .install-close:active{background:#f3f4f6}
 
+/* ═══════════════════════════════════════════════
+   INGREDIENT IMPORT
+═══════════════════════════════════════════════ */
+.ing-paste-ta{
+  width:100%;
+  min-height:110px;
+  resize:vertical;
+  padding:12px 14px;
+  border:1.5px solid var(--bd);
+  border-radius:var(--rsm);
+  font-size:.93rem;
+  font-family:inherit;
+  color:var(--t1);
+  background:#fafafa;
+  line-height:1.6;
+  transition:border-color .15s,box-shadow .15s;
+  -webkit-appearance:none;
+  appearance:none;
+}
+.ing-paste-ta:focus{
+  outline:none;
+  border-color:var(--g-lt);
+  box-shadow:0 0 0 3px rgba(34,197,94,.14);
+  background:white;
+}
+.ing-import-actions{
+  display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap;
+}
+.ing-rows-actions{
+  display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;
+}
+.ing-import-hint{
+  font-size:.76rem;color:var(--t4);margin-top:6px;line-height:1.5;
+}
+.ing-skipped-notice{
+  font-size:.76rem;color:#92400e;margin-top:8px;padding:7px 11px;
+  background:#fffbeb;border-radius:var(--rxs);border-left:3px solid #f59e0b;
+  line-height:1.5;
+}
+.ing-preview-list{
+  display:flex;flex-direction:column;gap:5px;
+  max-height:280px;overflow-y:auto;
+  border:1.5px solid var(--bd);border-radius:var(--rsm);
+  padding:6px;background:#fafafa;
+}
+.ing-preview-item{
+  display:flex;align-items:center;gap:7px;
+  padding:7px 8px;background:white;
+  border:1px solid var(--g100);border-radius:var(--rxs);
+  min-height:40px;
+}
+.ing-preview-qty{
+  font-size:.72rem;font-weight:700;color:var(--g);
+  background:var(--g100);padding:2px 7px;
+  border-radius:20px;white-space:nowrap;flex-shrink:0;
+}
+.ing-preview-name{
+  font-size:.88rem;font-weight:600;color:var(--t1);
+  flex:1;min-width:0;overflow:hidden;
+  white-space:nowrap;text-overflow:ellipsis;
+}
+.ing-preview-cat-sel{
+  font-size:.72rem;padding:4px 20px 4px 6px;
+  border:1px solid var(--bd);border-radius:var(--rxs);
+  background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 5px center;
+  -webkit-appearance:none;appearance:none;
+  color:var(--t2);font-family:inherit;min-height:30px;
+  cursor:pointer;max-width:130px;flex-shrink:0;
+}
+.ing-preview-del{
+  background:none;border:none;color:var(--t4);
+  font-size:.8rem;cursor:pointer;padding:4px;
+  border-radius:var(--rxs);min-height:30px;min-width:30px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:background .2s,color .2s;
+}
+.ing-preview-del:active{background:#fee2e2;color:#dc2626}
+.ing-preview-header{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;
+}
+.ing-preview-count-lbl{
+  font-size:.76rem;font-weight:700;color:var(--t2);
+}
 
 /* ═══════════════════════════════════════════════
-   PRINT
+   SHARE TOAST
 ═══════════════════════════════════════════════ */
-@media print{
-  #app{position:static;height:auto;overflow:visible}
-  #app-header,#bottom-nav,#page-meny,#page-harjeg,#page-historikk,#page-oppskrifter,
-  #install-banner{display:none!important}
-  #page-handleliste{display:block!important;position:static!important;overflow:visible!important}
-  .list-hero,.cat-block{box-shadow:none;border-color:#e5e7eb}
-  #handleliste-empty{display:none!important}
+#share-toast{
+  position:fixed;
+  bottom:calc(var(--nav) + env(safe-area-inset-bottom) + 12px);
+  left:50%;transform:translateX(-50%) translateY(8px);
+  background:#111827;color:white;
+  font-size:.86rem;font-weight:600;
+  padding:10px 18px;border-radius:var(--rsm);
+  white-space:nowrap;pointer-events:none;
+  opacity:0;transition:opacity .2s,transform .2s;
+  z-index:600;
 }
+#share-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
@@ -1154,8 +1244,8 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
 <header id="app-header">
   <div class="hdr-inner">
     <div class="hdr-title">
-      <span class="hdr-emoji">🥗</span>
-      <span>Handleliste</span>
+      <span class="hdr-emoji" id="hdr-emoji">📅</span>
+      <span id="hdr-lbl">Meny</span>
     </div>
     <div class="hdr-actions" id="hdr-actions"></div>
   </div>
@@ -1234,8 +1324,8 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
       <div id="handleliste-empty">
         <div class="empty-state">
           <span class="empty-icon">🛍️</span>
-          <h2>Ingen handleliste ennå</h2>
-          <p>Gå til Meny, velg middager for uken, og trykk «Generer handleliste».</p>
+          <h2>Handlelisten er tom</h2>
+          <p>Velg middager for uken på Meny-siden og trykk «Generer handleliste» for å lage listen automatisk.</p>
           <button class="btn btn-gen" style="max-width:280px;min-height:52px" onclick="showPage('meny')">📅 Gå til Meny</button>
         </div>
       </div>
@@ -1248,7 +1338,7 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
               <button class="btn-oda-all" onclick="odaOpenAll()" title="Åpne topp 10 varer i Oda">
                 🛒 Oda
               </button>
-              <button class="btn btn-gray btn-sm" onclick="window.print()">🖨️ Skriv ut</button>
+              <button class="btn btn-gray btn-sm" id="share-list-btn" onclick="shareList()">📤 Del</button>
             </div>
           </div>
           <div class="prog-wrap"><div id="progress-bar"></div></div>
@@ -1368,7 +1458,7 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
   <!-- PAGE: OPPSKRIFTER ───────────────────────────────────── -->
   <section class="page" id="page-oppskrifter">
     <div class="pg">
-      <div class="sec-lbl">📖 Oppskriftbibliotek</div>
+      <div class="sec-lbl">📖 Oppskriftsbibliotek</div>
 
       <!-- Legg til oppskrift -->
       <details class="acc" id="acc-add-recipe">
@@ -1412,17 +1502,45 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
               </div>
             </div>
 
-            <details style="margin-bottom:14px">
-              <summary style="font-size:.86rem;font-weight:600;color:var(--t2);cursor:pointer;list-style:none;padding:8px 0;display:flex;align-items:center;gap:8px">
-                <span style="font-size:.6rem;display:inline-block;transition:transform .15s" id="ing-toggle-arrow">▶</span>
-                Ingredienser (valgfritt — brukes på handlelisten)
-              </summary>
-              <div style="margin-top:8px" id="recipe-ing-wrapper">
-                <div id="recipe-ing-rows"></div>
-                <button class="btn btn-gray btn-sm" onclick="addRecipeIngRow()"
-                        style="margin-top:4px;margin-bottom:4px">+ Legg til ingrediens</button>
+            <div class="fld-lbl" style="margin-bottom:8px;margin-top:2px">
+              Ingredienser <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--t4);font-size:.75rem">(brukes på handlelisten)</span>
+            </div>
+
+            <!-- Import paste panel -->
+            <div id="ing-import-wrap" style="margin-bottom:12px">
+              <textarea id="ing-paste-area" class="ing-paste-ta"
+                placeholder="Lim inn ingrediensliste her, én per linje…&#10;&#10;Eks:&#10;300 g kyllingfilet&#10;2 dl fløte&#10;1 løk&#10;salt og pepper"></textarea>
+              <div class="ing-import-actions">
+                <button class="btn btn-blue btn-sm" onclick="parseAndShowIngredients()" style="flex:1;min-width:160px">✨ Analyser ingredienser</button>
+                <button class="btn btn-gray btn-sm" onclick="switchToManualIng()">✏️ Manuelt</button>
               </div>
-            </details>
+              <p class="ing-import-hint">Lim inn fra hvilken som helst oppskriftsside — én ingrediens per linje</p>
+            </div>
+
+            <!-- Preview panel (shown after parse) -->
+            <div id="ing-preview-wrap" style="display:none;margin-bottom:12px">
+              <div class="ing-preview-header">
+                <span class="ing-preview-count-lbl">
+                  <span id="ing-preview-count">0</span> ingredienser funnet
+                </span>
+                <button class="btn btn-gray btn-sm" onclick="resetIngImport()"
+                        style="min-height:30px;padding:4px 10px;font-size:.75rem">↩ Endre tekst</button>
+              </div>
+              <div id="ing-preview-list" class="ing-preview-list"></div>
+              <div id="ing-skipped-notice" class="ing-skipped-notice" style="display:none"></div>
+              <div class="ing-rows-actions" style="margin-top:10px">
+                <button class="btn btn-gen" style="flex:1" onclick="confirmPreview()">✓ Bruk disse ingrediensene</button>
+              </div>
+            </div>
+
+            <!-- Rows panel (shown after preview confirm or manual) -->
+            <div id="ing-rows-wrap" style="display:none;margin-bottom:12px">
+              <div id="recipe-ing-rows"></div>
+              <div class="ing-rows-actions">
+                <button class="btn btn-gray btn-sm" onclick="addRecipeIngRow()">+ Legg til</button>
+                <button class="btn btn-gray btn-sm" onclick="resetIngImport()">↩ Ny import</button>
+              </div>
+            </div>
 
             <div style="display:flex;gap:8px">
               <button class="btn btn-gen" style="flex:1" onclick="saveRecipe()">💾 Lagre oppskrift</button>
@@ -1474,6 +1592,9 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
 </nav>
 
 </div><!-- /#app -->
+
+<!-- ══ SHARE TOAST ═══════════════════════════════════════════ -->
+<div id="share-toast" role="status" aria-live="polite"></div>
 
 <!-- ══ INSTALL BANNER ════════════════════════════════════════ -->
 <div id="install-banner" role="complementary" aria-label="Installer app">
@@ -1603,17 +1724,79 @@ function showPage(name) {
   updateHeaderActions(name);
 }
 
+const PAGE_META = {
+  meny:        { emoji:'📅', lbl:'Meny' },
+  handleliste: { emoji:'🛍️', lbl:'Handleliste' },
+  harjeg:      { emoji:'🧊', lbl:'Kjøleskap' },
+  historikk:   { emoji:'🕐', lbl:'Historikk' },
+  oppskrifter: { emoji:'📖', lbl:'Oppskrifter' },
+};
+
 function updateHeaderActions(page) {
+  const meta = PAGE_META[page] || { emoji:'🥗', lbl:'Matplanlegger' };
+  const emojiEl = document.getElementById('hdr-emoji');
+  const lblEl   = document.getElementById('hdr-lbl');
+  if (emojiEl) emojiEl.textContent = meta.emoji;
+  if (lblEl)   lblEl.textContent   = meta.lbl;
+
   const el = document.getElementById('hdr-actions');
   if (page === 'handleliste') {
     const hasItems = document.querySelectorAll('#list-content .item-list li').length > 0;
     el.innerHTML = hasItems
-      ? `<button class="hdr-btn" onclick="window.print()">🖨️ Skriv ut</button>`
+      ? `<button class="hdr-btn" onclick="shareList()">📤 Del liste</button>`
       : '';
   } else if (page === 'oppskrifter') {
     el.innerHTML = `<button class="hdr-btn" onclick="openAddRecipeForm()">➕ Legg til</button>`;
   } else {
     el.innerHTML = '';
+  }
+}
+
+// ── Share list ────────────────────────────────────────────────────────────────
+function buildShareText() {
+  const blocks = document.querySelectorAll('#list-content .cat-block');
+  const lines = ['🛍️ Handleliste', ''];
+  blocks.forEach(block => {
+    const unchecked = [...block.querySelectorAll('.item-list li')].filter(li => !li.classList.contains('checked'));
+    if (!unchecked.length) return;
+    const title = block.querySelector('.cat-title')?.textContent.trim() ?? '';
+    lines.push(title);
+    unchecked.forEach(li => {
+      const name = li.querySelector('.item-name')?.textContent.trim() ?? '';
+      const qty  = li.querySelector('.item-qty')?.textContent.trim() ?? '';
+      lines.push(qty ? `• ${name} – ${qty}` : `• ${name}`);
+    });
+    lines.push('');
+  });
+  return lines.join('\n').trimEnd();
+}
+
+function showShareToast(msg) {
+  const el = document.getElementById('share-toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+async function shareList() {
+  const text = buildShareText();
+  if (!text) return;
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: 'Handleliste', text });
+      return;
+    } catch (e) {
+      if (e.name === 'AbortError') return; // user cancelled — silent
+    }
+  }
+  // Fallback: copy to clipboard
+  try {
+    await navigator.clipboard.writeText(text);
+    showShareToast('✓ Kopiert til utklippstavle');
+  } catch {
+    showShareToast('Klarte ikke å kopiere — prøv igjen');
   }
 }
 
@@ -1672,7 +1855,7 @@ function renderHistory() {
     container.innerHTML = `<div class="empty-state">
       <span class="empty-icon">🕐</span>
       <h2>Ingen historikk ennå</h2>
-      <p>Generer din første handleliste så dukker den opp her.</p>
+      <p>Tidligere handlelister dukker opp her etter at du har generert og lagret din første uke.</p>
     </div>`;
     return;
   }
@@ -2358,6 +2541,15 @@ function resetRecipeForm() {
   document.getElementById('recipe-servings').value = '4';
   document.getElementById('recipe-ing-rows').innerHTML = '';
   document.getElementById('recipe-fetch-hint').textContent = 'Lim inn en lenke — tittelen hentes automatisk';
+  const ta = document.getElementById('ing-paste-area');
+  if (ta) ta.value = '';
+  _preview = [];
+  const importWrap   = document.getElementById('ing-import-wrap');
+  const previewWrap  = document.getElementById('ing-preview-wrap');
+  const rowsWrap     = document.getElementById('ing-rows-wrap');
+  if (importWrap)  importWrap.style.display  = '';
+  if (previewWrap) previewWrap.style.display = 'none';
+  if (rowsWrap)    rowsWrap.style.display    = 'none';
   recipeIngCount = 0;
   // Reset category to middag
   document.querySelectorAll('.recipe-cat-chip').forEach(c => c.classList.remove('active'));
@@ -2440,16 +2632,253 @@ async function fetchRecipeTitle() {
   }
 }
 
-function addRecipeIngRow() {
+// ── Ingredient import parser ──────────────────────────────────────────────────
+
+const ING_CAT_KEYWORDS = {
+  kjott:     ['kylling','kyllingfilet','kyllinglår','kyllingbryst','biff','svinekjøtt',
+              'svin','lam','lammekjøtt','kjøttdeig','bacon','skinke','chorizo','pølse',
+              'ribbe','kalkun','and','entrecote','okse','oksekjøtt','karbonader',
+              'koteletter','medisterpølse','kjøtt'],
+  fisk:      ['laks','torsk','makrell','sild','reker','krabbe','tunfisk','ansjos',
+              'sardiner','ørret','hyse','sjømat','kamskjell','blekksprut','klippfisk',
+              'fiskefilet','sei','abbor','torskefilet'],
+  meieri:    ['melk','fløte','rømme','ost','smør','yoghurt','egg','kefir',
+              'crème fraîche','creme fraiche','cottage cheese','brunost','hvitost',
+              'mozzarella','parmesan','ricotta','brie','feta','matyoghurt','kvarg',
+              'seterrømme','kremfløte','matfløte','cheddar','gouda'],
+  gronnsaker:['løk','gulrot','gulrøtter','tomat','paprika','brokkoli','blomkål',
+              'spinat','salat','agurk','potet','poteter','hvitløk','sopp','purre',
+              'selleri','mais','erter','bønner','kål','zucchini','squash','aubergine',
+              'avokado','appelsin','banan','eple','pære','sitron','lime','jordbær',
+              'blåbær','bringebær','mango','ananas','druer','fersken','vårløk',
+              'sjalottløk','ingefær','chili','jalapeño','ruccola','persille','dill',
+              'basilikum','koriander','gressløk','timian','rosmarin','laurbær'],
+  brød:      ['brød','hvetemel','gjær','bakepulver','natron','havregryn','havre',
+              'speltmel','rugmel','sammalt','kavring','knekkebrød','pita','tortilla',
+              'rundstykke','baguette','ciabatta','loff','fullkorn'],
+  tørvarer:  ['pasta','spaghetti','tagliatelle','penne','fusilli','rigatoni','ris',
+              'basmatiris','nudler','glassnudler','linser','kikerter','olivenolje',
+              'solsikkeolje','rapsolje','eddik','soyasaus','buljong','kraft',
+              'hermetikk','sukker','melis','honning','sirup','sjokolade','kakao',
+              'maizena','potetmel','ketchup','majones','dressing','balsamico',
+              'worcestershire','tabasco','sambal','pesto','tomatsaus','kokosmelk',
+              'mandler','nøtter','cashew','valnøtt','peanøtt','rosiner','dadler',
+              'karri','gurkemeie','spisskummen','muskat','chilipulver','paprikapulver',
+              'hvitløkspulver','løkpulver','oregano','kanel','tørkede','tørket'],
+};
+
+// Pantry staples to silently drop (exact-name matches after qty/unit extraction)
+const PANTRY_STAPLES = new Set([
+  'vann','salt','pepper','olje','mel',
+  'salt og pepper','pepper og salt','litt salt',
+]);
+
+// Words that indicate an instruction rather than an ingredient
+const INSTRUCTION_RE = /\b(bland|kok|stek|tilsett|rør|hell|skjær|varm\s*opp|rist|knus|hakk|finhakk|kutt|skrell|smak\s*til|trekk|server|brun|fres|forvarm|avkjøl|la\s+det|la\s+den|dekk\s+til|sil\s+av|legg\s+i)\b/i;
+
+// Any known unit token (used to decide if a line looks like an ingredient)
+const MEAS_RE = /\b(g|kg|dl|l|ml|ss|ts|stk|stykk|boks|pose|pakke|fedd|neve|bunt|kvist|gram|kilo|liter|teskje|spiseskje)\b/i;
+
+function hasMeasurement(str) {
+  return /\d/.test(str) || MEAS_RE.test(str);
+}
+
+function autoCategorizeing(name) {
+  const lower = name.toLowerCase();
+  for (const [cat, kws] of Object.entries(ING_CAT_KEYWORDS)) {
+    if (kws.some(kw => lower.includes(kw))) return cat;
+  }
+  return 'annet';
+}
+
+const FRAC_MAP = {'½':0.5,'⅓':1/3,'⅔':2/3,'¼':0.25,'¾':0.75,'⅕':0.2,'⅖':0.4,'⅗':0.6,'⅘':0.8,'⅙':1/6,'⅛':0.125};
+const UNIT_ALIAS = {
+  'dl':'dl','l':'l','liter':'l','ml':'ml',
+  'g':'g','gram':'g','kg':'kg','kilo':'kg',
+  'stk':'stk','stykk':'stk','stykker':'stk',
+  'ss':'ss','spiseskje':'ss','spiseskjeer':'ss','tbsp':'ss',
+  'ts':'ts','teskje':'ts','teskjeer':'ts','tsp':'ts',
+  'boks':'boks','bokser':'boks','dåse':'boks',
+  'pose':'pose','poser':'pose',
+  'pakke':'pakke','pakker':'pakke','pk':'pakke',
+  'bunt':'bunt','bunter':'bunt',
+  'kvist':'kvist','kvister':'kvist',
+  'fedd':'fedd','hode':'hode','hoder':'hode',
+  'neve':'stk','klype':'ts','klyper':'ts',
+};
+
+function parseNum(str) {
+  str = str.replace(/[–—].*$/, '').trim(); // drop range tail: "2-3" → "2"
+  for (const [ch, val] of Object.entries(FRAC_MAP)) {
+    if (str.startsWith(ch)) {
+      const rest = str.slice(ch.length);
+      return val + (rest ? parseFloat(rest.replace(',', '.')) || 0 : 0);
+    }
+  }
+  return parseFloat(str.replace(',', '.')) || null;
+}
+
+function parseIngredientLine(raw) {
+  // ── 1. Basic clean ────────────────────────────────────────────────────────
+  let line = raw.trim()
+    .replace(/^[-–•*▪◦‣⁃·]\s*/,  '')  // leading bullets
+    .replace(/^\d+[.)]\s*/,       '')  // "1." / "1)"
+    .replace(/\s*\([^)]*\)/g,     '')  // parentheticals: "(ca 250 g)"
+    .replace(/,\s*$/,             '')  // trailing comma
+    .replace(/\s+/g,              ' ')
+    .trim();
+
+  if (line.length < 2) return null;
+
+  const lower = line.toLowerCase();
+
+  // ── 2. Skip section headers ───────────────────────────────────────────────
+  // Ends with colon
+  if (/[:\uff1a]$/.test(line)) return null;
+  // All-caps (but not a lone digit like "2")
+  if (/^[A-ZÆØÅ\s]{2,}$/.test(line)) return null;
+  // Short (< 3 words) with no measurement → header/label
+  const words = line.split(' ');
+  if (words.length < 3 && !hasMeasurement(line)) return null;
+
+  // ── 3. Skip instructions ──────────────────────────────────────────────────
+  if (INSTRUCTION_RE.test(lower)) return null;
+
+  // ── 4. Must look like an ingredient (has a number or unit) ────────────────
+  if (!hasMeasurement(line)) return null;
+
+  // ── 5. Parse quantity + unit ──────────────────────────────────────────────
+  let qty = 1, unit = 'stk', nameStart = 0;
+  const n0 = parseNum(words[0]);
+  if (n0 !== null) {
+    qty = n0 || 1;
+    nameStart = 1;
+    const w1 = (words[1] || '').toLowerCase().replace(/[.,]/g, '');
+    if (UNIT_ALIAS[w1]) { unit = UNIT_ALIAS[w1]; nameStart = 2; }
+  }
+
+  // ── 6. Build ingredient name (strip any leftover unit words in the name) ──
+  let name = words.slice(nameStart).join(' ')
+    .replace(/,\s*$/, '')
+    .trim();
+  if (!name) return null;
+  name = name.charAt(0).toUpperCase() + name.slice(1);
+
+  // ── 7. Drop pantry staples ────────────────────────────────────────────────
+  if (PANTRY_STAPLES.has(name.toLowerCase())) return null;
+
+  return { name, qty: Math.round(qty * 100) / 100, unit, cat: autoCategorizeing(name) };
+}
+
+// ── Preview state ──────────────────────────────────────────────────────────────
+let _preview = [];
+
+function renderPreview() {
+  const list    = document.getElementById('ing-preview-list');
+  const countEl = document.getElementById('ing-preview-count');
+  if (countEl) countEl.textContent = _preview.length;
+  if (!list) return;
+  if (!_preview.length) { resetIngImport(); return; }
+
+  list.innerHTML = _preview.map((p, i) => {
+    const qtyLbl = (p.qty !== 1 || p.unit !== 'stk')
+      ? `${p.qty === Math.floor(p.qty) ? p.qty : p.qty} ${p.unit}`
+      : '';
+    const catOpts = CAT_ORDER.map(k =>
+      `<option value="${k}"${p.cat === k ? ' selected' : ''}>${CAT_LABELS[k]}</option>`
+    ).join('');
+    return `<div class="ing-preview-item" id="pip-${i}">
+      <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0;overflow:hidden">
+        ${qtyLbl ? `<span class="ing-preview-qty">${escHtml(qtyLbl)}</span>` : ''}
+        <span class="ing-preview-name" title="${escHtml(p.name)}">${escHtml(p.name)}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+        <select class="ing-preview-cat-sel" onchange="_preview[${i}].cat=this.value">${catOpts}</select>
+        <button class="ing-preview-del" onclick="removePreviewItem(${i})" aria-label="Fjern ${escHtml(p.name)}">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function removePreviewItem(i) {
+  _preview.splice(i, 1);
+  renderPreview(); // handles empty case → calls resetIngImport
+}
+
+function confirmPreview() {
+  if (!_preview.length) return;
+  document.getElementById('recipe-ing-rows').innerHTML = '';
+  recipeIngCount = 0;
+  _preview.forEach(p => addRecipeIngRow(p));
+  document.getElementById('ing-preview-wrap').style.display = 'none';
+  document.getElementById('ing-rows-wrap').style.display    = '';
+}
+
+function parseAndShowIngredients() {
+  const ta  = document.getElementById('ing-paste-area');
+  const raw = ta ? ta.value.trim() : '';
+  if (!raw) { switchToManualIng(); return; }
+
+  let lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  if (lines.length === 1) lines = raw.split(',').map(l => l.trim()).filter(Boolean);
+
+  const results = lines.map(parseIngredientLine);
+  const parsed  = results.filter(Boolean);
+  const skipped = lines.length - parsed.length;
+
+  if (!parsed.length) { switchToManualIng(); return; }
+
+  _preview = parsed;
+  renderPreview();
+
+  const notice = document.getElementById('ing-skipped-notice');
+  if (notice) {
+    if (skipped > 0) {
+      notice.textContent = `${skipped} linje${skipped !== 1 ? 'r' : ''} hoppet over`
+        + ` (overskrifter, instruksjoner eller basisvarer som salt/pepper/olje/vann).`;
+      notice.style.display = '';
+    } else {
+      notice.style.display = 'none';
+    }
+  }
+
+  document.getElementById('ing-import-wrap').style.display   = 'none';
+  document.getElementById('ing-preview-wrap').style.display  = '';
+}
+
+function switchToManualIng() {
+  document.getElementById('ing-import-wrap').style.display  = 'none';
+  document.getElementById('ing-preview-wrap').style.display = 'none';
+  document.getElementById('ing-rows-wrap').style.display    = '';
+  if (!document.querySelector('#recipe-ing-rows .ing-row')) addRecipeIngRow();
+}
+
+function resetIngImport() {
+  _preview = [];
+  document.getElementById('recipe-ing-rows').innerHTML      = '';
+  recipeIngCount = 0;
+  document.getElementById('ing-import-wrap').style.display  = '';
+  document.getElementById('ing-preview-wrap').style.display = 'none';
+  document.getElementById('ing-rows-wrap').style.display    = 'none';
+}
+
+// ── Recipe ingredient rows ─────────────────────────────────────────────────────
+function addRecipeIngRow(prefill) {
   const id = recipeIngCount++;
   const row = document.createElement('div');
   row.className = 'ing-row';
   row.id = `ring-${id}`;
+  const unitOpts = UNITS.map(u =>
+    `<option value="${u}"${prefill?.unit === u ? ' selected' : ''}>${u}</option>`
+  ).join('');
+  const catOpts = CAT_ORDER.map(k =>
+    `<option value="${k}"${prefill?.cat === k ? ' selected' : ''}>${CAT_LABELS[k]}</option>`
+  ).join('');
   row.innerHTML = `
-    <input type="text" class="r-name" placeholder="Ingrediens" id="ring-name-${id}">
-    <input type="number" class="r-qty" placeholder="0" min="0" step="0.5" id="ring-qty-${id}" value="1">
-    <select class="r-unit" id="ring-unit-${id}">${UNIT_OPTIONS}</select>
-    <select class="r-cat" id="ring-cat-${id}">${CAT_OPTIONS}</select>
+    <input type="text" class="r-name" placeholder="Ingrediens" id="ring-name-${id}" value="${escHtml(prefill?.name ?? '')}">
+    <input type="number" class="r-qty" placeholder="0" min="0" step="0.5" id="ring-qty-${id}" value="${prefill?.qty ?? 1}">
+    <select class="r-unit" id="ring-unit-${id}">${unitOpts}</select>
+    <select class="r-cat" id="ring-cat-${id}">${catOpts}</select>
     <button class="btn btn-red btn-sm r-del" onclick="document.getElementById('ring-${id}').remove()" style="min-height:36px;padding:6px 10px">✕</button>
   `;
   document.getElementById('recipe-ing-rows').appendChild(row);
@@ -2499,7 +2928,7 @@ function renderRecipes() {
     container.innerHTML = `<div class="empty-state">
       <span class="empty-icon">📖</span>
       <h2>Ingen oppskrifter ennå</h2>
-      <p>Legg til oppskrifter fra nett for å samle dem her — de dukker også opp i ukesmenyen.</p>
+      <p>Legg til favorittoppskriftene dine — lim inn en nettlenke eller skriv inn navn og ingredienser selv.</p>
       <button class="btn btn-green" style="max-width:260px" onclick="openAddRecipeForm()">➕ Legg til oppskrift</button>
     </div>`;
     return;
