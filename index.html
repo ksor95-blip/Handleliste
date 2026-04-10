@@ -16,6 +16,8 @@
 <title>Matplanlegger</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <style>
 /* ═══════════════════════════════════════════════
    RESET & VARIABLES
@@ -320,13 +322,13 @@ select:focus,input:focus{
 .week-grid{
   display:grid;
   grid-template-columns:repeat(2,1fr);
-  gap:10px;
-  margin-bottom:14px;
+  gap:8px;
+  margin-bottom:10px;
 }
 .day-card{
   background:var(--card);
   border-radius:var(--r);
-  padding:14px 12px;
+  padding:11px 10px;
   border:2px solid var(--bd);
   box-shadow:var(--sh);
   transition:border-color .2s,background .2s;
@@ -337,13 +339,13 @@ select:focus,input:focus{
 }
 .day-name{
   font-weight:700;
-  font-size:.85rem;
-  margin-bottom:9px;
+  font-size:.83rem;
+  margin-bottom:6px;
   color:var(--t2);
 }
 .day-card.active .day-name{color:var(--o)}
-.day-card select{font-size:15px;padding:11px 32px 11px 10px;min-height:48px}
-.gen-area{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.day-card select{font-size:15px;padding:9px 32px 9px 10px;min-height:44px}
+.gen-area{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
 
 /* ═══════════════════════════════════════════════
    ACCORDIONS
@@ -1349,21 +1351,41 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
 .household-bar{
   background:var(--card);
   border-radius:var(--r);
-  padding:12px 14px 14px;
   border:1.5px solid var(--bd);
   box-shadow:var(--sh);
-  margin-bottom:12px;
+  margin-bottom:8px;
+  overflow:hidden;
 }
-.household-bar-hdr{
-  display:flex;align-items:center;gap:7px;
-  margin-bottom:10px;
+.household-summary{
+  display:flex;align-items:center;gap:6px;
+  width:100%;padding:10px 14px;
+  background:none;border:none;cursor:pointer;
+  font-family:inherit;touch-action:manipulation;
+  -webkit-user-select:none;user-select:none;
+  text-align:left;
 }
-.household-bar-lbl{
-  font-size:.73rem;font-weight:700;text-transform:uppercase;
-  letter-spacing:.6px;color:var(--t3);
+.household-summary:active{background:var(--o50)}
+.household-summary-icon{font-size:.95rem;line-height:1;flex-shrink:0}
+.household-summary-text{
+  font-size:.88rem;font-weight:700;color:var(--t1);flex:1;
 }
+.household-summary-sep{color:var(--t4);font-size:.8rem}
+.household-summary-action{
+  font-size:.78rem;font-weight:700;color:var(--o);
+  text-decoration:underline;text-underline-offset:2px;
+  flex-shrink:0;
+}
+.household-expanded{
+  display:none;
+  padding:0 14px 14px;
+}
+.household-bar.open .household-expanded{display:block}
 .household-chips{
   display:flex;gap:6px;flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.household-apply-btn{
+  min-height:44px;font-size:.9rem;
 }
 .household-chip{
   display:inline-flex;align-items:center;gap:4px;
@@ -1462,6 +1484,148 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
   font-size:.83rem;font-weight:700;color:var(--o);
   margin-bottom:8px;display:flex;align-items:center;gap:6px;
 }
+
+/* ═══════════════════════════════════════════════
+   FIREBASE SYNC
+═══════════════════════════════════════════════ */
+/* Sync toast — slides in from top */
+#sync-toast{
+  position:fixed;
+  top:calc(var(--hdr) + env(safe-area-inset-top) + 10px);
+  left:50%;
+  transform:translateX(-50%) translateY(-72px);
+  background:var(--t1);
+  color:#fff;
+  font-size:.82rem;
+  font-weight:600;
+  padding:9px 20px;
+  border-radius:50px;
+  z-index:9500;
+  opacity:0;
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .3s;
+  white-space:nowrap;
+  box-shadow:var(--shm);
+  pointer-events:none;
+}
+#sync-toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* HH indicator button in header */
+.hh-indicator{
+  background:rgba(255,255,255,.18);
+  border:none;
+  border-radius:var(--rsm);
+  color:#fff;
+  font-size:.75rem;
+  font-weight:700;
+  padding:5px 10px;
+  cursor:pointer;
+  font-family:inherit;
+  touch-action:manipulation;
+  min-height:36px;
+  display:flex;
+  align-items:center;
+  gap:4px;
+  letter-spacing:.5px;
+  transition:background .2s;
+}
+.hh-indicator:active{background:rgba(255,255,255,.32)}
+
+/* HH info popover */
+.hh-info-popover{
+  position:fixed;
+  top:calc(var(--hdr) + env(safe-area-inset-top) + 8px);
+  right:12px;
+  background:var(--card);
+  border-radius:var(--rsm);
+  padding:14px 16px;
+  box-shadow:var(--shm);
+  z-index:8000;
+  min-width:220px;
+  border:1px solid var(--bd);
+  animation:pop-in .18s ease;
+}
+.hh-info-popover.hidden{display:none}
+@keyframes pop-in{from{opacity:0;transform:scale(.93) translateY(-6px)}to{opacity:1;transform:none}}
+.hh-info-lbl{font-size:.72rem;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:6px}
+.hh-info-code{
+  font-size:1.5rem;font-weight:800;letter-spacing:5px;
+  font-family:'Courier New',monospace;color:var(--g-dk);
+  margin-bottom:10px;
+}
+.hh-info-actions{display:flex;gap:6px}
+.hh-info-actions .btn{flex:1;font-size:.78rem;padding:7px 10px;min-height:34px}
+
+/* Onboarding modal */
+.hh-modal{
+  position:fixed;
+  inset:0;
+  z-index:10000;
+  background:rgba(28,20,16,.6);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding:0 12px calc(env(safe-area-inset-bottom) + 16px);
+}
+.hh-modal.hidden{display:none}
+.hh-modal-sheet{
+  background:var(--card);
+  border-radius:28px 28px 20px 20px;
+  padding:28px 22px 22px;
+  width:100%;
+  max-width:440px;
+  box-shadow:var(--shm);
+  text-align:center;
+  animation:slide-up .3s cubic-bezier(.34,1.2,.64,1);
+}
+@keyframes slide-up{from{transform:translateY(60px);opacity:0}to{transform:none;opacity:1}}
+.hh-modal-icon{font-size:2.8rem;margin-bottom:10px;display:block;line-height:1}
+.hh-modal-sheet h2{font-size:1.2rem;font-weight:800;color:var(--t1);margin-bottom:8px;letter-spacing:-.3px}
+.hh-modal-sheet p{font-size:.85rem;color:var(--t3);line-height:1.65;margin-bottom:20px}
+.hh-btn-row{display:flex;flex-direction:column;gap:9px;margin-bottom:12px}
+.hh-btn-row .btn{font-size:.93rem;padding:13px}
+.hh-skip-btn{
+  background:none;border:none;color:var(--t4);
+  font-size:.78rem;font-family:inherit;cursor:pointer;
+  padding:6px;text-decoration:underline;text-underline-offset:3px;
+  margin-top:2px;
+}
+.hh-code-box{
+  background:var(--g50);
+  border:2px dashed var(--g200);
+  border-radius:var(--rsm);
+  padding:16px;
+  margin:14px 0;
+}
+.hh-code-value{
+  font-size:2rem;font-weight:800;letter-spacing:7px;
+  color:var(--g-dk);font-family:'Courier New',monospace;
+  user-select:all;
+}
+.hh-code-hint{font-size:.78rem;color:var(--t3);margin-top:8px;line-height:1.5}
+.hh-join-input{
+  width:100%;text-align:center;
+  font-size:1.6rem;font-weight:800;letter-spacing:6px;
+  text-transform:uppercase;
+  padding:14px;
+  border:2px solid var(--bd);
+  border-radius:var(--rsm);
+  color:var(--t1);
+  font-family:'Courier New',monospace;
+  background:var(--bg);
+  margin-bottom:12px;
+  outline:none;
+  transition:border-color .2s;
+}
+.hh-join-input:focus{border-color:var(--g)}
+.hh-error{font-size:.82rem;color:#dc2626;min-height:18px;margin-bottom:8px;text-align:center}
+.hh-back-link{
+  background:none;border:none;color:var(--t3);
+  font-size:.8rem;font-family:inherit;cursor:pointer;
+  padding:6px;text-decoration:underline;text-underline-offset:3px;
+  margin-top:4px;display:block;
+}
 </style>
 </head>
 <body>
@@ -1474,7 +1638,10 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
       <span class="hdr-emoji" id="hdr-emoji">📅</span>
       <span id="hdr-lbl">Meny</span>
     </div>
-    <div class="hdr-actions" id="hdr-actions"></div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <button class="hh-indicator" id="hh-indicator" onclick="toggleHHPopover()" style="display:none" aria-label="Husstand"></button>
+      <div class="hdr-actions" id="hdr-actions"></div>
+    </div>
   </div>
   <div id="hdr-progress-wrap"><div id="hdr-progress"></div></div>
 </header>
@@ -1488,12 +1655,17 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
       <div class="sec-lbl">📅 Planlegg uken</div>
 
       <!-- Husstand -->
-      <div class="household-bar">
-        <div class="household-bar-hdr">
-          <span style="font-size:1rem">🏠</span>
-          <span class="household-bar-lbl">Husstandstørrelse</span>
+      <div class="household-bar" id="household-bar">
+        <button class="household-summary" id="household-summary" onclick="toggleHousehold()">
+          <span class="household-summary-icon">🏠</span>
+          <span class="household-summary-text" id="household-summary-text">👫 2 voksne</span>
+          <span class="household-summary-sep">·</span>
+          <span class="household-summary-action">endre</span>
+        </button>
+        <div class="household-expanded" id="household-expanded">
+          <div class="household-chips" id="household-chips"></div>
+          <button class="btn btn-gen household-apply-btn" onclick="applyHouseholdToWeek()">Bruk for hele uken</button>
         </div>
-        <div class="household-chips" id="household-chips"></div>
       </div>
 
       <div class="week-grid" id="week-grid"></div>
@@ -1503,30 +1675,6 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
         <button class="btn btn-gen" onclick="generateList()">🛍️ Generer handleliste</button>
         <button class="btn btn-sec btn-sm" onclick="clearAll()">Nullstill uken</button>
       </div>
-
-      <!-- Egne retter -->
-      <details class="acc" id="acc-custom">
-        <summary>🍳 Egne retter</summary>
-        <div class="acc-body">
-          <div style="margin-top:8px">
-            <div class="fld-lbl" style="margin-bottom:6px">Ny rett</div>
-            <div class="meal-form">
-              <input type="text" id="new-meal-name" placeholder="Navn på retten…">
-              <button class="btn btn-green btn-sm" onclick="startNewMeal()">+ Opprett</button>
-            </div>
-            <div id="ingredient-editor" style="display:none">
-              <div class="fld-lbl" style="margin-bottom:8px">Ingredienser til: <span id="editing-name" style="color:var(--g)"></span></div>
-              <div id="ingredient-rows"></div>
-              <button class="btn btn-gray btn-sm" onclick="addIngredientRow()" style="margin-top:4px;margin-bottom:12px">+ Legg til ingrediens</button>
-              <div style="display:flex;gap:8px">
-                <button class="btn btn-green btn-sm" onclick="saveCustomMeal()">Lagre rett</button>
-                <button class="btn btn-gray btn-sm" onclick="cancelMeal()">Avbryt</button>
-              </div>
-            </div>
-            <div id="custom-meals-list"></div>
-          </div>
-        </div>
-      </details>
 
       <!-- Basisvarer -->
       <details class="acc acc-staples" id="staples-section">
@@ -1784,6 +1932,30 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
 
       <!-- Recipe library -->
       <div id="recipes-content"></div>
+
+      <!-- Egne retter -->
+      <details class="acc" id="acc-custom">
+        <summary>🍳 Egne retter</summary>
+        <div class="acc-body">
+          <div style="margin-top:8px">
+            <div class="fld-lbl" style="margin-bottom:6px">Ny rett</div>
+            <div class="meal-form">
+              <input type="text" id="new-meal-name" placeholder="Navn på retten…">
+              <button class="btn btn-green btn-sm" onclick="startNewMeal()">+ Opprett</button>
+            </div>
+            <div id="ingredient-editor" style="display:none">
+              <div class="fld-lbl" style="margin-bottom:8px">Ingredienser til: <span id="editing-name" style="color:var(--g)"></span></div>
+              <div id="ingredient-rows"></div>
+              <button class="btn btn-gray btn-sm" onclick="addIngredientRow()">+ Legg til ingrediens</button>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-green btn-sm" onclick="saveCustomMeal()">Lagre rett</button>
+                <button class="btn btn-gray btn-sm" onclick="cancelMeal()">Avbryt</button>
+              </div>
+            </div>
+            <div id="custom-meals-list"></div>
+          </div>
+        </div>
+      </details>
     </div>
   </section>
 
@@ -1838,6 +2010,64 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
     <button class="dsp-close" onclick="closeDayPicker()" aria-label="Lukk">✕</button>
   </div>
   <div class="dsp-chips" id="dsp-chips"></div>
+</div>
+
+<!-- ══ SYNC TOAST ════════════════════════════════════════════ -->
+<div id="sync-toast" role="status" aria-live="polite"></div>
+
+<!-- ══ HH INFO POPOVER ═══════════════════════════════════════ -->
+<div id="hh-info-popover" class="hh-info-popover hidden">
+  <div class="hh-info-lbl">Huststandskode</div>
+  <div class="hh-info-code" id="hh-info-code-value"></div>
+  <div class="hh-info-actions">
+    <button class="btn btn-green btn-sm" onclick="copyHHCode()">📋 Kopier</button>
+    <button class="btn btn-gray btn-sm" onclick="leaveHousehold()">Forlat</button>
+  </div>
+</div>
+
+<!-- ══ HH ONBOARDING MODAL ════════════════════════════════════ -->
+<div id="hh-modal" class="hh-modal hidden" role="dialog" aria-modal="true">
+  <div class="hh-modal-sheet">
+
+    <!-- Step: start -->
+    <div id="hh-step-start">
+      <span class="hh-modal-icon">🏠</span>
+      <h2>Hei! Hvem planlegger du mat med?</h2>
+      <p>Koble deg sammen med husstanden din for å synkronisere middagsplanen, handlelisten og oppskriftene i sanntid.</p>
+      <div class="hh-btn-row">
+        <button class="btn btn-gen" onclick="hhStartCreate()">🏡 Opprett husstand</button>
+        <button class="btn btn-blue" onclick="hhShowJoin()">🔗 Bli med i husstand</button>
+      </div>
+      <button class="hh-skip-btn" onclick="hhSkip()">Bruk uten synkronisering</button>
+    </div>
+
+    <!-- Step: create -->
+    <div id="hh-step-create" style="display:none">
+      <span class="hh-modal-icon">🎉</span>
+      <h2>Husstanden er opprettet!</h2>
+      <p>Del denne koden med de andre i husstanden. De kan skrive den inn under «Bli med i husstand».</p>
+      <div class="hh-code-box">
+        <div class="hh-code-value" id="hh-code-value"></div>
+        <div class="hh-code-hint">Koden er case-insensitiv og trygg å dele</div>
+      </div>
+      <div id="hh-create-error" class="hh-error"></div>
+      <button class="btn btn-gen" id="hh-create-confirm-btn" onclick="hhConfirmCreate()" style="width:100%">✓ Klar, la oss begynne!</button>
+    </div>
+
+    <!-- Step: join -->
+    <div id="hh-step-join" style="display:none">
+      <span class="hh-modal-icon">🔗</span>
+      <h2>Skriv inn koden</h2>
+      <p>Be et husstandsmedlem om å dele sin 6-tegns kode.</p>
+      <input type="text" class="hh-join-input" id="hh-join-input"
+             placeholder="MAT42X" maxlength="6"
+             oninput="this.value=this.value.toUpperCase();document.getElementById('hh-join-error').textContent=''">
+      <div id="hh-join-error" class="hh-error"></div>
+      <button class="btn btn-gen" id="hh-join-btn" onclick="hhDoJoin()" style="width:100%;margin-bottom:8px">🔗 Bli med</button>
+      <button class="hh-back-link" onclick="hhBackToStart()">← Tilbake</button>
+    </div>
+
+  </div>
 </div>
 
 <!-- ══ INSTALL BANNER ════════════════════════════════════════ -->
@@ -2347,7 +2577,11 @@ let customMeals = JSON.parse(localStorage.getItem('custom_meals') || '{}');
 let editingMealName = '';
 let ingredientCount = 0;
 
-function saveToStorage() { localStorage.setItem('custom_meals', JSON.stringify(customMeals)); }
+function saveToStorage() {
+  const s = JSON.stringify(customMeals);
+  localStorage.setItem('custom_meals', s);
+  fbSet('customMeals', s);
+}
 
 // ── Basisvarer ────────────────────────────────────────────────────────────────
 const DEFAULT_STAPLES = [
@@ -2379,7 +2613,9 @@ function loadStaplesState() {
   return { disabled: new Set(), custom: [] };
 }
 function saveStaplesState() {
-  localStorage.setItem('staples_state', JSON.stringify({ disabled:[...staplesState.disabled], custom:staplesState.custom }));
+  const s = JSON.stringify({ disabled:[...staplesState.disabled], custom:staplesState.custom });
+  localStorage.setItem('staples_state', s);
+  fbSet('staplesState', s);
 }
 function getActiveStapleNames() {
   const n = [];
@@ -2443,18 +2679,11 @@ function renderStaplesSettings() {
 
 // ── Week grid ─────────────────────────────────────────────────────────────────
 function getMealOptions() {
-  const builtin = Object.entries(MEALS).map(([k,v]) => `<option value="${k}">${v.label}</option>`).join('');
-  const custom = Object.keys(customMeals).length
-    ? '<optgroup label="Mine retter">' +
-      Object.entries(customMeals).map(([k,v]) => `<option value="custom__${k}">${v.label}</option>`).join('') +
-      '</optgroup>'
-    : '';
-  const recipeOpts = recipes.length
-    ? '<optgroup label="📖 Oppskrifter">' +
-      recipes.map(r => `<option value="recipe__${r.id}">${r.name}</option>`).join('') +
-      '</optgroup>'
-    : '';
-  return builtin + custom + recipeOpts;
+  if (!recipes.length) {
+    return '<option value="">Legg til oppskrifter i Oppskrifter-fanen først</option>';
+  }
+  return '<option value="">– Ingen –</option>' +
+    recipes.map(r => `<option value="recipe__${r.id}">${r.name}</option>`).join('');
 }
 function buildGrid() {
   const grid = document.getElementById('week-grid');
@@ -2491,6 +2720,7 @@ function updateCard(i) {
   const val = document.getElementById(`dinner-${i}`).value;
   document.getElementById(`card-${i}`).className = 'day-card' + (val ? ' active' : '');
   localStorage.setItem(`day-${i}`, val);
+  fbSetMenu();
 }
 function clearAll() {
   DAYS.forEach((_,i) => { document.getElementById(`dinner-${i}`).value = ''; updateCard(i); });
@@ -2517,10 +2747,31 @@ function getGlobalHH() { return localStorage.getItem('household') || '2'; }
 function setGlobalHH(id) {
   localStorage.setItem('household', id);
   buildHouseholdChips();
+  updateHouseholdSummary();
   DAYS.forEach((_,i) => updateDaySizeLabel(i));
+  fbSetHousehold();
 }
 function getDayHHOverride(i) { return localStorage.getItem(`day-hh-${i}`) || null; }
 function getEffectiveDayHH(i) { return getHHOption(getDayHHOverride(i) || getGlobalHH()); }
+
+function toggleHousehold() {
+  document.getElementById('household-bar').classList.toggle('open');
+}
+function updateHouseholdSummary() {
+  const el = document.getElementById('household-summary-text');
+  if (!el) return;
+  const hh = getHHOption(getGlobalHH());
+  el.textContent = `${hh.emoji} ${hh.label}`;
+}
+function applyHouseholdToWeek() {
+  // Clear all per-day overrides so every day uses the global setting
+  DAYS.forEach((_,i) => {
+    localStorage.removeItem(`day-hh-${i}`);
+    updateDaySizeLabel(i);
+  });
+  document.getElementById('household-bar').classList.remove('open');
+  fbSetHousehold();
+}
 
 function buildHouseholdChips() {
   const wrap = document.getElementById('household-chips');
@@ -2566,6 +2817,7 @@ function setDayOverride(i, id) {
   else localStorage.setItem(`day-hh-${i}`, id);
   updateDaySizeLabel(i);
   closeDayPicker();
+  fbSetHousehold();
 }
 
 // ── Random week ───────────────────────────────────────────────────────────────
@@ -2582,12 +2834,8 @@ function shuffleArray(arr) {
 }
 
 function randomizeWeek() {
-  const allKeys = [
-    ...Object.keys(MEALS).filter(k => k !== ''),
-    ...Object.keys(customMeals).map(k => `custom__${k}`),
-    ...recipes.map(r => `recipe__${r.id}`)
-  ];
-  if (!allKeys.length) { showRandomToast('Legg til noen oppskrifter først! 📖'); return; }
+  const allKeys = recipes.map(r => `recipe__${r.id}`);
+  if (!allKeys.length) { showRandomToast('Legg til oppskrifter i Oppskrifter-fanen først 📖'); return; }
 
   // Build a pool of 7 with no repeats; if library < 7, allow repeats only when needed
   let pool = shuffleArray(allKeys);
@@ -3137,7 +3385,11 @@ function loadRecipes() {
     saveRecipes();
   }
 }
-function saveRecipes() { localStorage.setItem('recipes', JSON.stringify(recipes)); }
+function saveRecipes() {
+  const s = JSON.stringify(recipes);
+  localStorage.setItem('recipes', s);
+  fbSet('recipes', s);
+}
 
 // ── Recipe form ───────────────────────────────────────────────────────────────
 function openAddRecipeForm() {
@@ -3586,7 +3838,11 @@ let homeItems = [];
 function loadHomeItems() {
   try { homeItems = JSON.parse(localStorage.getItem('home_items') || '[]'); } catch { homeItems = []; }
 }
-function saveHomeItems() { localStorage.setItem('home_items', JSON.stringify(homeItems)); }
+function saveHomeItems() {
+  const s = JSON.stringify(homeItems);
+  localStorage.setItem('home_items', s);
+  fbSet('homeItems', s);
+}
 
 function addHomeItem(nameArg) {
   let name = nameArg;
@@ -3880,6 +4136,357 @@ function odaOpenAll() {
   });
 }
 
+// ══ FIREBASE SYNC ══════════════════════════════════════════════════════════════
+
+const FB_CONFIG = {
+  apiKey: "AIzaSyCgOBooYrVN8y3dcxND_q9LIJeij7XZPjc",
+  authDomain: "matplan-8afd7.firebaseapp.com",
+  databaseURL: "https://matplan-8afd7-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "matplan-8afd7",
+  storageBucket: "matplan-8afd7.firebasestorage.app",
+  messagingSenderId: "922998257857",
+  appId: "1:922998257857:web:d3ce334086f187d291bc40",
+};
+
+let _fbDb  = null;
+let _fbRef = null;  // ref to households/{hhId}
+
+// Stable device ID so we can ignore our own writes coming back from Firebase
+let _deviceId = localStorage.getItem('_fb_device');
+if (!_deviceId) {
+  _deviceId = Math.random().toString(36).slice(2, 12);
+  localStorage.setItem('_fb_device', _deviceId);
+}
+
+// ── Low-level write ────────────────────────────────────────────────────────────
+function fbSet(section, value) {
+  if (!_fbRef) return;
+  _fbRef.child(section).set({ v: value, by: _deviceId });
+}
+
+function fbSetMenu() {
+  if (!_fbRef) return;
+  const menu = {};
+  DAYS.forEach((_, i) => { menu[`day${i}`] = localStorage.getItem(`day-${i}`) || ''; });
+  fbSet('menu', JSON.stringify(menu));
+}
+
+function fbSetHousehold() {
+  if (!_fbRef) return;
+  const hh = { global: getGlobalHH() };
+  DAYS.forEach((_, i) => { hh[`day${i}`] = getDayHHOverride(i) || null; });
+  fbSet('household', JSON.stringify(hh));
+}
+
+// ── Push all local data up to Firebase ────────────────────────────────────────
+function fbPushAll() {
+  if (!_fbRef) return;
+  const menu = {};
+  DAYS.forEach((_, i) => { menu[`day${i}`] = localStorage.getItem(`day-${i}`) || ''; });
+  const hh = { global: getGlobalHH() };
+  DAYS.forEach((_, i) => { hh[`day${i}`] = getDayHHOverride(i) || null; });
+  _fbRef.update({
+    menu:        { v: JSON.stringify(menu), by: _deviceId },
+    household:   { v: JSON.stringify(hh), by: _deviceId },
+    recipes:     { v: localStorage.getItem('recipes') || '[]', by: _deviceId },
+    customMeals: { v: localStorage.getItem('custom_meals') || '{}', by: _deviceId },
+    homeItems:   { v: localStorage.getItem('home_items') || '[]', by: _deviceId },
+    staplesState:{ v: localStorage.getItem('staples_state') || '{}', by: _deviceId },
+  });
+}
+
+// ── Apply a Firebase snapshot to local state ───────────────────────────────────
+function fbApply(data, silent) {
+  if (data.menu?.v) {
+    try {
+      const menu = JSON.parse(data.menu.v);
+      DAYS.forEach((_, i) => localStorage.setItem(`day-${i}`, menu[`day${i}`] || ''));
+    } catch {}
+  }
+  if (data.household?.v) {
+    try {
+      const hh = JSON.parse(data.household.v);
+      if (hh.global) localStorage.setItem('household', hh.global);
+      DAYS.forEach((_, i) => {
+        if (hh[`day${i}`]) localStorage.setItem(`day-hh-${i}`, hh[`day${i}`]);
+        else localStorage.removeItem(`day-hh-${i}`);
+      });
+    } catch {}
+  }
+  if (data.recipes?.v) {
+    try { recipes = JSON.parse(data.recipes.v); localStorage.setItem('recipes', data.recipes.v); } catch {}
+  }
+  if (data.customMeals?.v) {
+    try { customMeals = JSON.parse(data.customMeals.v); localStorage.setItem('custom_meals', data.customMeals.v); } catch {}
+  }
+  if (data.homeItems?.v) {
+    try { homeItems = JSON.parse(data.homeItems.v); localStorage.setItem('home_items', data.homeItems.v); } catch {}
+  }
+  if (data.staplesState?.v) {
+    try {
+      const s = JSON.parse(data.staplesState.v);
+      staplesState = { disabled: new Set(s.disabled || []), custom: s.custom || [] };
+      localStorage.setItem('staples_state', data.staplesState.v);
+    } catch {}
+  }
+  // Re-render everything
+  buildGrid();
+  buildHouseholdChips();
+  updateHouseholdSummary();
+  renderRecipes();
+  rebuildSelects();
+  renderCustomList();
+  renderHomeItems();
+  renderStaplesSettings();
+  if (!silent) showSyncToast();
+}
+
+// ── Realtime listeners ─────────────────────────────────────────────────────────
+function fbStartListeners() {
+  _fbRef.child('menu').on('value', snap => {
+    const d = snap.val();
+    if (!d || d.by === _deviceId) return;
+    try {
+      const menu = JSON.parse(d.v);
+      DAYS.forEach((_, i) => {
+        const val = menu[`day${i}`] || '';
+        localStorage.setItem(`day-${i}`, val);
+        const sel = document.getElementById(`dinner-${i}`);
+        if (sel) { sel.value = val; document.getElementById(`card-${i}`).className = 'day-card' + (val ? ' active' : ''); }
+      });
+    } catch {}
+    showSyncToast();
+  });
+
+  _fbRef.child('household').on('value', snap => {
+    const d = snap.val();
+    if (!d || d.by === _deviceId) return;
+    try {
+      const hh = JSON.parse(d.v);
+      if (hh.global) localStorage.setItem('household', hh.global);
+      DAYS.forEach((_, i) => {
+        if (hh[`day${i}`]) localStorage.setItem(`day-hh-${i}`, hh[`day${i}`]);
+        else localStorage.removeItem(`day-hh-${i}`);
+        updateDaySizeLabel(i);
+      });
+      buildHouseholdChips();
+      updateHouseholdSummary();
+    } catch {}
+    showSyncToast();
+  });
+
+  _fbRef.child('recipes').on('value', snap => {
+    const d = snap.val();
+    if (!d || d.by === _deviceId) return;
+    try {
+      recipes = JSON.parse(d.v);
+      localStorage.setItem('recipes', d.v);
+      renderRecipes();
+      rebuildSelects();
+    } catch {}
+    showSyncToast();
+  });
+
+  _fbRef.child('customMeals').on('value', snap => {
+    const d = snap.val();
+    if (!d || d.by === _deviceId) return;
+    try {
+      customMeals = JSON.parse(d.v);
+      localStorage.setItem('custom_meals', d.v);
+      renderCustomList();
+      rebuildSelects();
+    } catch {}
+    showSyncToast();
+  });
+
+  _fbRef.child('homeItems').on('value', snap => {
+    const d = snap.val();
+    if (!d || d.by === _deviceId) return;
+    try {
+      homeItems = JSON.parse(d.v);
+      localStorage.setItem('home_items', d.v);
+      renderHomeItems();
+    } catch {}
+    showSyncToast();
+  });
+
+  _fbRef.child('staplesState').on('value', snap => {
+    const d = snap.val();
+    if (!d || d.by === _deviceId) return;
+    try {
+      const s = JSON.parse(d.v);
+      staplesState = { disabled: new Set(s.disabled || []), custom: s.custom || [] };
+      localStorage.setItem('staples_state', d.v);
+      renderStaplesSettings();
+    } catch {}
+    showSyncToast();
+  });
+}
+
+// ── Sync toast ─────────────────────────────────────────────────────────────────
+function showSyncToast(msg) {
+  const el = document.getElementById('sync-toast');
+  if (!el) return;
+  el.textContent = msg || '👥 Oppdatert av husstand';
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// ── HH indicator ───────────────────────────────────────────────────────────────
+function updateHHIndicator(hhId) {
+  const btn = document.getElementById('hh-indicator');
+  const codeEl = document.getElementById('hh-info-code-value');
+  if (!btn) return;
+  if (!hhId || hhId === '__local__') {
+    btn.style.display = 'none';
+  } else {
+    btn.style.display = '';
+    btn.textContent = '🏠 ' + hhId;
+    if (codeEl) codeEl.textContent = hhId;
+  }
+}
+
+function toggleHHPopover() {
+  const pop = document.getElementById('hh-info-popover');
+  const nowHidden = pop.classList.toggle('hidden');
+  if (!nowHidden) {
+    // Just opened — close when user clicks anywhere outside
+    setTimeout(() => document.addEventListener('click', _closeHHPopoverOutside, { once: true }), 0);
+  }
+}
+function _closeHHPopoverOutside(e) {
+  const pop = document.getElementById('hh-info-popover');
+  const btn = document.getElementById('hh-indicator');
+  if (!pop.contains(e.target) && !btn.contains(e.target)) pop.classList.add('hidden');
+}
+
+function copyHHCode() {
+  const hhId = localStorage.getItem('firebase_hh_id');
+  if (!hhId || hhId === '__local__') return;
+  navigator.clipboard.writeText(hhId).then(() => {
+    showSyncToast('✓ Kode kopiert: ' + hhId);
+  }).catch(() => {
+    showSyncToast('Kode: ' + hhId);
+  });
+  document.getElementById('hh-info-popover').classList.add('hidden');
+}
+
+function leaveHousehold() {
+  if (!confirm('Forlate husstanden og koble fra synkroniseringen?')) return;
+  if (_fbRef) { _fbRef.off(); _fbRef = null; }
+  localStorage.removeItem('firebase_hh_id');
+  document.getElementById('hh-info-popover').classList.add('hidden');
+  updateHHIndicator(null);
+  showSyncToast('Du har forlatt husstanden');
+}
+
+// ── Onboarding modal ───────────────────────────────────────────────────────────
+function _hhCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
+let _pendingHHCode = null;
+
+function showHHModal() {
+  document.getElementById('hh-modal').classList.remove('hidden');
+  hhShowStep('start');
+}
+function hhShowStep(s) {
+  ['start','create','join'].forEach(id =>
+    document.getElementById(`hh-step-${id}`).style.display = id === s ? '' : 'none'
+  );
+}
+function hhStartCreate() {
+  _pendingHHCode = _hhCode();
+  document.getElementById('hh-code-value').textContent = _pendingHHCode;
+  hhShowStep('create');
+}
+async function hhConfirmCreate() {
+  const btn = document.getElementById('hh-create-confirm-btn');
+  btn.disabled = true; btn.textContent = 'Oppretter…';
+  try {
+    await _fbDb.ref('households/' + _pendingHHCode + '/meta')
+      .set({ createdAt: firebase.database.ServerValue.TIMESTAMP });
+    localStorage.setItem('firebase_hh_id', _pendingHHCode);
+    _fbRef = _fbDb.ref('households/' + _pendingHHCode);
+    fbStartListeners();
+    fbPushAll();
+    updateHHIndicator(_pendingHHCode);
+    document.getElementById('hh-modal').classList.add('hidden');
+  } catch {
+    btn.disabled = false; btn.textContent = '✓ Klar, la oss begynne!';
+    document.getElementById('hh-create-error').textContent = 'Klarte ikke opprette husstand. Sjekk internettforbindelsen.';
+  }
+}
+function hhShowJoin() {
+  document.getElementById('hh-join-input').value = '';
+  document.getElementById('hh-join-error').textContent = '';
+  hhShowStep('join');
+}
+async function hhDoJoin() {
+  const code = document.getElementById('hh-join-input').value.trim().toUpperCase();
+  const errEl = document.getElementById('hh-join-error');
+  if (code.length !== 6) { errEl.textContent = 'Koden skal være 6 tegn.'; return; }
+  errEl.textContent = '';
+  const btn = document.getElementById('hh-join-btn');
+  btn.disabled = true; btn.textContent = 'Kobler til…';
+  try {
+    const snap = await _fbDb.ref('households/' + code).once('value');
+    if (!snap.exists()) {
+      errEl.textContent = 'Koden ble ikke funnet. Sjekk at du skrev riktig.';
+      btn.disabled = false; btn.textContent = '🔗 Bli med';
+      return;
+    }
+    localStorage.setItem('firebase_hh_id', code);
+    _fbRef = _fbDb.ref('households/' + code);
+    fbStartListeners();
+    // Load remote data (overwrite local with household data)
+    const data = snap.val() || {};
+    fbApply(data, true);
+    updateHHIndicator(code);
+    document.getElementById('hh-modal').classList.add('hidden');
+    showSyncToast('✓ Koblet til husstand ' + code);
+  } catch {
+    errEl.textContent = 'Kunne ikke koble til. Sjekk internettforbindelsen.';
+    btn.disabled = false; btn.textContent = '🔗 Bli med';
+  }
+}
+function hhSkip() {
+  localStorage.setItem('firebase_hh_id', '__local__');
+  document.getElementById('hh-modal').classList.add('hidden');
+}
+function hhBackToStart() { hhShowStep('start'); }
+
+// ── Bootstrap Firebase ─────────────────────────────────────────────────────────
+function initFirebaseSync() {
+  try {
+    const app = firebase.initializeApp(FB_CONFIG);
+    _fbDb = firebase.database(app);
+  } catch (e) {
+    // App already initialized (e.g. hot reload)
+    _fbDb = firebase.database(firebase.app());
+  }
+
+  const savedId = localStorage.getItem('firebase_hh_id');
+  if (!savedId) {
+    // First launch — show onboarding after a short delay so the app renders first
+    setTimeout(showHHModal, 400);
+  } else if (savedId !== '__local__') {
+    _fbRef = _fbDb.ref('households/' + savedId);
+    fbStartListeners();
+    // One-time read to catch any changes made while offline
+    _fbRef.once('value').then(snap => {
+      const data = snap.val() || {};
+      // Only overwrite if Firebase actually has household data
+      if (data.recipes || data.menu || data.homeItems) fbApply(data, true);
+    }).catch(() => {}); // offline: silently fall back to localStorage
+  }
+  updateHHIndicator(savedId);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 loadRecipes();
 loadHomeItems();
@@ -3887,11 +4494,13 @@ buildRecipeDayChips();
 renderStaplesSettings();
 renderCustomList();
 buildHouseholdChips();
+updateHouseholdSummary();
 buildGrid();
 renderHistory();
 renderStats();
 renderRecipes();
 renderHomeItems();
+initFirebaseSync();
 </script>
 </body>
 </html>
