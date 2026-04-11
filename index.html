@@ -2230,15 +2230,37 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
 <!-- ══ APPROVAL OVERLAY ══════════════════════════════════════ -->
 <div id="approval-overlay" class="approval-overlay hidden" role="dialog" aria-modal="true">
 
+  <!-- Checking access (shown immediately on load) -->
+  <div id="approval-checking" class="approval-sheet" style="display:none">
+    <div class="approval-spinner"></div>
+    <p style="margin-top:12px">Sjekker tilgang…</p>
+  </div>
+
+  <!-- Request access (unapproved new device) -->
+  <div id="approval-request" class="approval-sheet" style="display:none">
+    <span class="approval-icon">🔑</span>
+    <h2>Søk om tilgang</h2>
+    <p>Skriv inn navnet ditt for å sende en tilgangsforespørsel til admin. Du får tilgang når admin godkjenner deg.</p>
+    <div style="text-align:left;width:100%;margin:4px 0 6px">
+      <div class="fld-lbl" style="margin-bottom:6px">Ditt navn</div>
+      <input type="text" id="access-name-input" class="hh-name-input"
+             placeholder="Ola Nordmann" maxlength="40" autocomplete="name"
+             oninput="document.getElementById('access-name-error').textContent=''"
+             onkeydown="if(event.key==='Enter')submitAccessRequest()">
+      <div id="access-name-error" class="hh-error"></div>
+    </div>
+    <button class="btn btn-gen" id="access-submit-btn" onclick="submitAccessRequest()"
+            style="width:100%;margin-top:4px;margin-bottom:0">📨 Send forespørsel</button>
+  </div>
+
   <!-- Waiting for approval -->
   <div id="approval-waiting" class="approval-sheet" style="display:none">
     <span class="approval-icon">⏳</span>
     <h2>Venter på godkjenning…</h2>
-    <p>Hei, <strong id="approval-waiting-name"></strong>!</p>
-    <p>En admin i husstand <strong id="approval-waiting-code" style="font-family:'Courier New',monospace;letter-spacing:2px"></strong> må godkjenne deg.</p>
+    <p>Hei, <strong id="approval-waiting-name"></strong>!<br>Forespørselen din er sendt til admin.</p>
     <div class="approval-spinner"></div>
     <p class="approval-sub">Sjekker automatisk hvert 10. sekund…</p>
-    <button class="hh-skip-btn" style="margin-top:20px" onclick="approvalTryAgain()">Avbryt og prøv på nytt</button>
+    <button class="hh-skip-btn" style="margin-top:20px" onclick="approvalTryAgain()">Avbryt og start på nytt</button>
   </div>
 
   <!-- Rejected -->
@@ -2246,15 +2268,23 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
     <span class="approval-icon">😔</span>
     <h2>Forespørsel avvist</h2>
     <p>Forespørselen din ble dessverre avvist av admin.</p>
-    <button class="btn btn-gen" style="max-width:280px;width:100%;margin-top:16px" onclick="approvalTryAgain()">Prøv en annen husstand</button>
+    <button class="btn btn-gen" style="max-width:280px;width:100%;margin-top:16px" onclick="approvalTryAgain()">Prøv igjen</button>
   </div>
 
   <!-- Revoked -->
   <div id="approval-revoked" class="approval-sheet" style="display:none">
     <span class="approval-icon">🔒</span>
     <h2>Tilgang fjernet</h2>
-    <p>Tilgangen din til husstanden er fjernet av en admin.</p>
+    <p>Tilgangen din er fjernet av admin.</p>
     <button class="btn btn-gen" style="max-width:280px;width:100%;margin-top:16px" onclick="approvalTryAgain()">Be om tilgang igjen</button>
+  </div>
+
+  <!-- Offline (can't verify first time) -->
+  <div id="approval-offline" class="approval-sheet" style="display:none">
+    <span class="approval-icon">📡</span>
+    <h2>Ingen internettforbindelse</h2>
+    <p>Tilgang krever internett første gang. Koble til og prøv igjen.</p>
+    <button class="btn btn-gen" style="max-width:280px;width:100%;margin-top:16px" onclick="retryAccessCheck()">Prøv igjen</button>
   </div>
 
 </div>
@@ -2347,7 +2377,7 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
          En admin i husstand <strong id="hh-waiting-code"></strong> må godkjenne deg.</p>
       <div class="hh-spinner"></div>
       <p style="font-size:.75rem;color:var(--t4);margin-bottom:16px">Sjekker automatisk hvert 10. sekund…</p>
-      <button class="hh-skip-btn" onclick="approvalTryAgain()">Avbryt og prøv på nytt</button>
+      <button class="hh-skip-btn" onclick="hhCancelJoin()">Avbryt og prøv på nytt</button>
     </div>
 
     <!-- Step: rejected (inline) -->
@@ -4827,11 +4857,48 @@ async function hhDoJoin() {
     document.getElementById('hh-waiting-name').textContent = name;
     document.getElementById('hh-waiting-code').textContent = code;
     hhShowStep('waiting');
-    startApprovalPolling(code);
+    startHHApprovalPolling(code);
   } catch {
     errEl.textContent = 'Kunne ikke koble til. Sjekk internettforbindelsen.';
     btn.disabled = false; btn.textContent = '📨 Send forespørsel';
   }
+}
+
+// ── Per-household approval polling (used when admin joins an existing household) ──
+let _hhApprovalPollInterval = null;
+
+function startHHApprovalPolling(hhId) {
+  if (_hhApprovalPollInterval) clearInterval(_hhApprovalPollInterval);
+  _hhApprovalPollInterval = setInterval(() => _checkHHApproval(hhId), 10000);
+}
+
+async function _checkHHApproval(hhId) {
+  if (!_fbDb) return;
+  try {
+    const approvedSnap = await _fbDb.ref(`households/${hhId}/approvedUsers/${_deviceId}`).once('value');
+    if (approvedSnap.exists()) {
+      clearInterval(_hhApprovalPollInterval); _hhApprovalPollInterval = null;
+      localStorage.setItem('firebase_hh_id', hhId);
+      localStorage.setItem('_approval_status', 'approved');
+      document.getElementById('hh-modal').classList.add('hidden');
+      connectHouseholdData(hhId);
+      updateHHIndicator(hhId);
+      showSyncToast('✓ Ble med i husstanden!');
+      return;
+    }
+    const pendingSnap = await _fbDb.ref(`households/${hhId}/pendingUsers/${_deviceId}/status`).once('value');
+    if (pendingSnap.val() === 'rejected') {
+      clearInterval(_hhApprovalPollInterval); _hhApprovalPollInterval = null;
+      hhShowStep('rejected');
+    }
+  } catch { /* retry next tick */ }
+}
+
+function hhCancelJoin() {
+  if (_hhApprovalPollInterval) { clearInterval(_hhApprovalPollInterval); _hhApprovalPollInterval = null; }
+  localStorage.removeItem('firebase_hh_id');
+  localStorage.removeItem('_approval_status');
+  hhShowStep('start');
 }
 
 function hhSkip() {
@@ -4846,60 +4913,95 @@ function hhBackToStart() {
   hhShowStep('start');
 }
 
-// ── Approval polling ───────────────────────────────────────────────────────────
+// ── Global approval: submit request ────────────────────────────────────────────
+async function submitAccessRequest() {
+  const nameEl = document.getElementById('access-name-input');
+  const errEl  = document.getElementById('access-name-error');
+  const name   = nameEl.value.trim();
+  if (!name) {
+    errEl.textContent = 'Skriv inn ditt navn.';
+    nameEl.focus();
+    return;
+  }
+  const btn = document.getElementById('access-submit-btn');
+  btn.disabled = true; btn.textContent = 'Sender…';
+  try {
+    await _fbDb.ref('pendingUsers/' + _deviceId).set({
+      name,
+      requestedAt: firebase.database.ServerValue.TIMESTAMP,
+      status: 'pending',
+    });
+    localStorage.setItem('_user_name', name);
+    localStorage.setItem('_approval_status', 'pending');
+    showApprovalOverlay('waiting');
+    startApprovalPolling();
+  } catch {
+    errEl.textContent = 'Kunne ikke sende. Sjekk internettforbindelsen.';
+    btn.disabled = false; btn.textContent = '📨 Send forespørsel';
+  }
+}
+
+// ── Approval polling (global /approvedUsers) ────────────────────────────────────
 let _approvalPollInterval = null;
 
-function startApprovalPolling(hhId) {
+function startApprovalPolling() {
   stopApprovalPolling();
-  _approvalPollInterval = setInterval(() => _checkApproval(hhId), 10000);
+  _approvalPollInterval = setInterval(_checkGlobalApproval, 10000);
 }
 function stopApprovalPolling() {
   if (_approvalPollInterval) { clearInterval(_approvalPollInterval); _approvalPollInterval = null; }
 }
 
-async function _checkApproval(hhId) {
+async function _checkGlobalApproval() {
+  if (!_fbDb) return;
   try {
-    // Check if approved
-    const approvedSnap = await _fbDb.ref(`households/${hhId}/approvedUsers/${_deviceId}`).once('value');
+    const approvedSnap = await _fbDb.ref('approvedUsers/' + _deviceId).once('value');
     if (approvedSnap.exists()) {
       stopApprovalPolling();
       localStorage.setItem('_approval_status', 'approved');
-      _onApprovalGranted(hhId);
+      _onGlobalApprovalGranted();
       return;
     }
-    // Check if rejected
-    const pendingSnap = await _fbDb.ref(`households/${hhId}/pendingUsers/${_deviceId}/status`).once('value');
+    const pendingSnap = await _fbDb.ref('pendingUsers/' + _deviceId + '/status').once('value');
     if (pendingSnap.val() === 'rejected') {
       stopApprovalPolling();
       localStorage.setItem('_approval_status', 'rejected');
-      // Show in whatever surface is currently visible
-      if (!document.getElementById('hh-modal').classList.contains('hidden')) {
-        hhShowStep('rejected');
-      } else {
-        showApprovalOverlay('rejected');
-      }
+      showApprovalOverlay('rejected');
     }
-  } catch { /* network error — retry next cycle */ }
+  } catch { /* network error — retry next tick */ }
 }
 
-function _onApprovalGranted(hhId) {
-  document.getElementById('hh-modal').classList.add('hidden');
+function _onGlobalApprovalGranted() {
   hideApprovalOverlay();
-  connectHouseholdData(hhId);
-  updateHHIndicator(hhId);
-  showSyncToast('✓ Tilgang godkjent! Velkommen inn 🎉');
+  _seedDefaultRecipesIfEmpty();
+  showHHModal(); // Now the user can set up their household
+  showSyncToast('✓ Tilgang godkjent! Velg eller opprett en husstand 🎉');
+}
+
+function retryAccessCheck() {
+  initFirebaseSync();
 }
 
 // ── Approval overlay ───────────────────────────────────────────────────────────
+const _APPROVAL_STATES = ['checking','request','waiting','rejected','revoked','offline'];
+
 function showApprovalOverlay(state) {
-  ['waiting','rejected','revoked'].forEach(s => {
-    document.getElementById('approval-' + s).style.display = s === state ? '' : 'none';
+  _APPROVAL_STATES.forEach(s => {
+    const el = document.getElementById('approval-' + s);
+    if (el) el.style.display = s === state ? '' : 'none';
   });
   if (state === 'waiting') {
     const name = localStorage.getItem('_user_name') || '';
-    const hhId = localStorage.getItem('firebase_hh_id') || '';
     document.getElementById('approval-waiting-name').textContent = name;
-    document.getElementById('approval-waiting-code').textContent = hhId;
+  }
+  if (state === 'request') {
+    // Reset form
+    const nameEl = document.getElementById('access-name-input');
+    const btn    = document.getElementById('access-submit-btn');
+    if (nameEl) nameEl.value = '';
+    if (btn)  { btn.disabled = false; btn.textContent = '📨 Send forespørsel'; }
+    document.getElementById('access-name-error').textContent = '';
+    setTimeout(() => document.getElementById('access-name-input')?.focus(), 80);
   }
   document.getElementById('approval-overlay').classList.remove('hidden');
 }
@@ -4908,12 +5010,9 @@ function hideApprovalOverlay() {
 }
 function approvalTryAgain() {
   stopApprovalPolling();
-  if (_fbRef) { _fbRef.off(); _fbRef = null; }
-  ['firebase_hh_id','_user_name','_approval_status'].forEach(k => localStorage.removeItem(k));
-  hideApprovalOverlay();
-  document.getElementById('hh-start-name').value = '';
-  document.getElementById('hh-name-error').textContent  = '';
-  showHHModal();
+  localStorage.removeItem('_user_name');
+  localStorage.removeItem('_approval_status');
+  showApprovalOverlay('request');
 }
 
 // ── Connect household data (for approved / admin users) ────────────────────────
@@ -4934,15 +5033,11 @@ function connectHouseholdData(hhId) {
 // ── Admin: listeners and panel ────────────────────────────────────────────────
 function fbStartAdminListeners() {
   if (!_fbDb) return;
-  // Listen on all households — only approvedUsers/pendingUsers data is used
-  _fbDb.ref('households').on('value', snap => {
-    const allHH = snap.val() || {};
-    let totalPending = 0;
-    Object.values(allHH).forEach(hhData => {
-      totalPending += Object.values(hhData.pendingUsers || {})
-        .filter(u => u.status === 'pending').length;
-    });
-    updateAdminBadge(totalPending);
+  // Listen for global pending access requests
+  _fbDb.ref('pendingUsers').on('value', snap => {
+    const data = snap.val() || {};
+    const count = Object.values(data).filter(u => u.status === 'pending').length;
+    updateAdminBadge(count);
     if (document.getElementById('page-admin')?.classList.contains('active')) {
       renderAdminPanel();
     }
@@ -5023,76 +5118,115 @@ async function renderAdminPanel() {
   const hhListEl = document.getElementById('admin-hh-list');
   const rulesEl  = document.getElementById('admin-rules-pre');
   if (!hhListEl) return;
-
-  // Populate rules display (once)
   if (rulesEl && !rulesEl.textContent) rulesEl.textContent = FIREBASE_RULES;
 
   hhListEl.innerHTML = '<p class="admin-empty">Laster…</p>';
   try {
-    // Only read approvedUsers and pendingUsers — never menu/recipes/fridge/etc.
-    const snap = await _fbDb.ref('households').once('value');
-    const allHH = snap.val() || {};
-    const entries = Object.entries(allHH);
+    // Fetch global pending/approved + all households in parallel
+    const [pendingGlobalSnap, approvedGlobalSnap, householdsSnap] = await Promise.all([
+      _fbDb.ref('pendingUsers').once('value'),
+      _fbDb.ref('approvedUsers').once('value'),
+      _fbDb.ref('households').once('value'),
+    ]);
 
-    if (!entries.length) {
-      hhListEl.innerHTML = '<p class="admin-empty">Ingen husstander registrert ennå</p>';
-      return;
-    }
+    const pendingGlobal  = pendingGlobalSnap.val()  || {};
+    const approvedGlobal = approvedGlobalSnap.val() || {};
+    const allHH          = householdsSnap.val()     || {};
 
-    let totalPending = 0;
+    const pendingList = Object.entries(pendingGlobal)
+      .filter(([, u]) => u.status === 'pending')
+      .sort(([, a], [, b]) => (a.requestedAt || 0) - (b.requestedAt || 0));
 
-    hhListEl.innerHTML = entries
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([hhId, hhData]) => {
-        // Only use approved/pending — ignore all other data
-        const approvedEntries = Object.entries(hhData.approvedUsers || {})
+    const approvedList = Object.entries(approvedGlobal)
+      .sort(([, a], [, b]) => (a.approvedAt || 0) - (b.approvedAt || 0));
+
+    updateAdminBadge(pendingList.length);
+
+    // ── Section 1: global access requests ──────────────────────────────────
+    const pendingSection = `
+      <div class="fld-lbl" style="margin:0 0 8px">
+        Tilgangsforespørsler${pendingList.length ? ` <span style="background:#ef4444;color:#fff;font-size:.65rem;padding:1px 7px;border-radius:10px;font-weight:800;vertical-align:middle">${pendingList.length}</span>` : ''}
+      </div>
+      ${pendingList.length ? pendingList.map(([did, u]) => `
+        <div class="admin-user-card" style="margin-bottom:6px">
+          <div class="admin-user-info">
+            <div class="admin-user-name">👤 ${escHtml(u.name)}</div>
+            <div class="admin-user-meta">${_fmtTs(u.requestedAt)}</div>
+          </div>
+          <div class="admin-user-actions">
+            <button class="btn btn-green btn-sm" onclick="globalAdminApprove('${escHtml(did)}','${escHtml(u.name)}')">Godkjenn</button>
+            <button class="btn btn-danger btn-sm" onclick="globalAdminReject('${escHtml(did)}','${escHtml(u.name)}')">Avvis</button>
+          </div>
+        </div>`).join('')
+      : '<p class="admin-empty" style="margin-bottom:0">Ingen ventende forespørsler ✓</p>'}`;
+
+    // ── Section 2: globally approved users ─────────────────────────────────
+    const approvedSection = approvedList.length ? `
+      <div class="fld-lbl" style="margin:16px 0 8px">Godkjente brukere</div>
+      <div class="admin-hh-members" style="margin-bottom:4px">
+        ${approvedList.map(([, u]) => `<span class="admin-member-chip">✓ ${escHtml(u.name)}</span>`).join('')}
+      </div>` : '';
+
+    // ── Section 3: households overview ──────────────────────────────────────
+    const hhEntries = Object.entries(allHH).sort(([a], [b]) => a.localeCompare(b));
+    const hhSection = hhEntries.length ? `
+      <div class="fld-lbl" style="margin:16px 0 8px">Husstander</div>
+      ${hhEntries.map(([hhId, hhData]) => {
+        const approved = Object.entries(hhData.approvedUsers || {})
           .sort(([, a], [, b]) => (a.approvedAt || 0) - (b.approvedAt || 0));
-        const pendingEntries  = Object.entries(hhData.pendingUsers  || {})
-          .filter(([, u]) => u.status === 'pending')
-          .sort(([, a], [, b]) => (a.requestedAt || 0) - (b.requestedAt || 0));
-        totalPending += pendingEntries.length;
-
-        const memberChips = approvedEntries.length
-          ? approvedEntries.map(([, u]) => {
+        const chips = approved.length
+          ? approved.map(([, u]) => {
               const isHHAdmin = u.role === 'admin';
               return `<span class="admin-member-chip${isHHAdmin ? ' is-admin' : ''}">${isHHAdmin ? '👑 ' : ''}${escHtml(u.name)}</span>`;
             }).join('')
-          : '<span style="font-size:.76rem;color:var(--t4)">Ingen godkjente brukere</span>';
-
-        const pendingHtml = pendingEntries.length
-          ? `<hr class="admin-hh-divider">
-             <div class="admin-hh-pending-lbl">⏳ Ventende godkjennelser (${pendingEntries.length})</div>
-             ${pendingEntries.map(([did, u]) => `
-               <div class="admin-user-card" style="margin-bottom:6px">
-                 <div class="admin-user-info">
-                   <div class="admin-user-name">👤 ${escHtml(u.name)}</div>
-                   <div class="admin-user-meta">${_fmtTs(u.requestedAt)}</div>
-                 </div>
-                 <div class="admin-user-actions">
-                   <button class="btn btn-green btn-sm" onclick="adminApprove('${escHtml(hhId)}','${escHtml(did)}','${escHtml(u.name)}')">Godkjenn</button>
-                   <button class="btn btn-danger btn-sm" onclick="adminReject('${escHtml(hhId)}','${escHtml(did)}','${escHtml(u.name)}')">Avvis</button>
-                 </div>
-               </div>`).join('')}`
-          : '';
-
+          : '<span style="font-size:.76rem;color:var(--t4)">Ingen</span>';
         return `
           <div class="admin-hh-card">
             <div class="admin-hh-header">
               <div class="admin-hh-code">${escHtml(hhId)}</div>
-              <div class="admin-hh-count">${approvedEntries.length} ${approvedEntries.length === 1 ? 'bruker' : 'brukere'}</div>
+              <div class="admin-hh-count">${approved.length} ${approved.length === 1 ? 'bruker' : 'brukere'}</div>
               <button class="btn btn-gray btn-sm" style="padding:5px 10px;font-size:.75rem" onclick="adminCopyCode('${escHtml(hhId)}')">📋 Kopier</button>
             </div>
-            <div class="admin-hh-members">${memberChips}</div>
-            ${pendingHtml}
+            <div class="admin-hh-members">${chips}</div>
           </div>`;
-      }).join('');
+      }).join('')}` : '';
 
-    updateAdminBadge(totalPending);
+    hhListEl.innerHTML = pendingSection + approvedSection + hhSection;
+
   } catch {
     hhListEl.innerHTML = '<p class="admin-empty">Kunne ikke laste data — sjekk internettforbindelsen</p>';
   }
 }
 
+// ── Global approve / reject (writes to root /approvedUsers) ───────────────────
+async function globalAdminApprove(deviceId, name) {
+  try {
+    await _fbDb.ref('approvedUsers/' + deviceId).set({
+      name,
+      approvedAt: firebase.database.ServerValue.TIMESTAMP,
+      approvedBy: _deviceId,
+    });
+    await _fbDb.ref('pendingUsers/' + deviceId).remove();
+    showSyncToast('✓ ' + name + ' har fått tilgang til appen');
+  } catch { showSyncToast('Kunne ikke godkjenne — prøv igjen'); }
+}
+
+async function globalAdminReject(deviceId, name) {
+  try {
+    await _fbDb.ref('pendingUsers/' + deviceId + '/status').set('rejected');
+    showSyncToast('Forespørsel fra ' + name + ' avvist');
+  } catch { showSyncToast('Kunne ikke avvise — prøv igjen'); }
+}
+
+async function globalAdminRevoke(deviceId, name) {
+  if (!confirm('Fjerne tilgangen til ' + name + '?')) return;
+  try {
+    await _fbDb.ref('approvedUsers/' + deviceId).remove();
+    showSyncToast(name + ' har mistet tilgangen');
+  } catch { showSyncToast('Kunne ikke fjerne — prøv igjen'); }
+}
+
+// ── Per-household actions (manage household membership) ────────────────────────
 async function adminApprove(hhId, deviceId, name) {
   if (!hhId) return;
   try {
@@ -5102,7 +5236,7 @@ async function adminApprove(hhId, deviceId, name) {
       approvedBy: _deviceId,
     });
     await _fbDb.ref(`households/${hhId}/pendingUsers/${deviceId}`).remove();
-    showSyncToast('✓ ' + name + ' er godkjent');
+    showSyncToast('✓ ' + name + ' lagt til i husstand ' + hhId);
   } catch { showSyncToast('Kunne ikke godkjenne — prøv igjen'); }
 }
 
@@ -5132,24 +5266,31 @@ function adminCopyCode(code) {
 const FIREBASE_RULES = `{
   "rules": {
 
-    // Global admin registry — readable by all for admin-status checks
+    // Global admin registry
     "globalAdmin": {
+      ".read": true,
+      ".write": true
+    },
+
+    // Global access control — any device can write a pending request,
+    // only admin can write to approvedUsers
+    "pendingUsers": {
+      ".read": true,
+      ".write": true
+    },
+    "approvedUsers": {
       ".read": true,
       ".write": true
     },
 
     "households": {
       "$hhId": {
+        "pendingUsers":  { ".read": true, ".write": true  },
+        "approvedUsers": { ".read": true, ".write": false },
+        "meta":          { ".read": true, ".write": false },
 
-        // Membership management — admin reads these to approve/reject users
-        "pendingUsers":  { ".read": true,  ".write": true  },
-        "approvedUsers": { ".read": true,  ".write": false },
-        "meta":          { ".read": true,  ".write": false },
-
-        // Private household data — readable only by members who know the code.
-        // NOTE: realtime sync requires .read true here. To fully restrict these
-        // to household members only, add Firebase Authentication and replace
-        // true with: "auth != null && auth.token.hhId == $hhId"
+        // NOTE: household data requires .read true for realtime sync.
+        // For full member-only enforcement, add Firebase Authentication.
         "menu":         { ".read": true, ".write": true },
         "household":    { ".read": true, ".write": true },
         "recipes":      { ".read": true, ".write": true },
@@ -5169,6 +5310,9 @@ function copyFirebaseRules() {
 
 // ── Bootstrap Firebase ─────────────────────────────────────────────────────────
 async function initFirebaseSync() {
+  // Block the entire UI immediately — nothing is accessible until access is verified
+  showApprovalOverlay('checking');
+
   try {
     const app = firebase.initializeApp(FB_CONFIG);
     _fbDb = firebase.database(app);
@@ -5179,59 +5323,92 @@ async function initFirebaseSync() {
   const savedId = localStorage.getItem('firebase_hh_id');
   const status  = localStorage.getItem('_approval_status');
 
-  if (!savedId) {
-    // First launch — wait for admin check so showHHModal knows which buttons to show
-    await checkGlobalAdmin();
-    _seedDefaultRecipesIfEmpty();
-    setTimeout(showHHModal, 200);
-    return;
-  }
-
-  // Existing device — check admin in background (updates nav when done)
-  checkGlobalAdmin();
-
-  if (savedId === '__local__') {
-    _seedDefaultRecipesIfEmpty();
-    return;
-  }
-
-  // ── Has a real household ID ────────────────────────────────────────────────
-
-  if (status === 'pending') {
-    // Waiting for admin approval — block all app access
-    showApprovalOverlay('waiting');
-    startApprovalPolling(savedId);
-    return;
-  }
-
-  if (status === 'rejected') { showApprovalOverlay('rejected'); return; }
-  if (status === 'revoked')  { showApprovalOverlay('revoked');  return; }
-
-  if (status === 'approved' || status === 'admin') {
-    // Verify access is still valid in Firebase before connecting
-    _fbDb.ref(`households/${savedId}/approvedUsers/${_deviceId}`).once('value')
-      .then(snap => {
-        if (!snap.exists()) {
-          // Access was revoked while we were away
-          localStorage.setItem('_approval_status', 'revoked');
-          showApprovalOverlay('revoked');
-        } else {
-          connectHouseholdData(savedId);
-          updateHHIndicator(savedId);
-        }
-      })
-      .catch(() => {
-        // Offline: trust localStorage — connect without verification
+  try {
+    // ── 1. Check global admin ────────────────────────────────────────────────
+    const adminSnap = await _fbDb.ref('globalAdmin/' + _deviceId).once('value');
+    if (adminSnap.exists()) {
+      _isGlobalAdmin = true;
+      updateAdminNavVisibility();
+      hideApprovalOverlay();
+      if (!savedId) {
+        _seedDefaultRecipesIfEmpty();
+        showHHModal();
+      } else if (savedId === '__local__') {
+        _seedDefaultRecipesIfEmpty();
+      } else {
         connectHouseholdData(savedId);
         updateHHIndicator(savedId);
-      });
-    return;
-  }
+      }
+      return;
+    }
 
-  // Unknown status (old install before approval system) — treat as approved for back-compat
-  localStorage.setItem('_approval_status', 'approved');
-  connectHouseholdData(savedId);
-  updateHHIndicator(savedId);
+    // ── 2. Check global approval ─────────────────────────────────────────────
+    const approvedSnap = await _fbDb.ref('approvedUsers/' + _deviceId).once('value');
+    if (approvedSnap.exists()) {
+      localStorage.setItem('_approval_status', 'approved');
+      hideApprovalOverlay();
+      if (!savedId) {
+        // Approved but no household yet — go to household setup
+        _seedDefaultRecipesIfEmpty();
+        showHHModal();
+      } else if (savedId === '__local__') {
+        _seedDefaultRecipesIfEmpty();
+      } else {
+        // Re-verify household membership
+        const hhSnap = await _fbDb.ref(`households/${savedId}/approvedUsers/${_deviceId}`).once('value');
+        if (hhSnap.exists()) {
+          connectHouseholdData(savedId);
+          updateHHIndicator(savedId);
+        } else {
+          // Globally approved but removed from household — back to household setup
+          localStorage.removeItem('firebase_hh_id');
+          _seedDefaultRecipesIfEmpty();
+          showHHModal();
+        }
+      }
+      return;
+    }
+
+    // ── 3. Check if pending ───────────────────────────────────────────────────
+    const pendingSnap = await _fbDb.ref('pendingUsers/' + _deviceId).once('value');
+    if (pendingSnap.exists()) {
+      const pData = pendingSnap.val();
+      if (pData.status === 'pending') {
+        localStorage.setItem('_user_name', pData.name || '');
+        localStorage.setItem('_approval_status', 'pending');
+        showApprovalOverlay('waiting');
+        startApprovalPolling();
+        return;
+      }
+      if (pData.status === 'rejected') {
+        localStorage.setItem('_approval_status', 'rejected');
+        showApprovalOverlay('rejected');
+        return;
+      }
+    }
+
+    // ── 4. Unknown / first-time device ───────────────────────────────────────
+    showApprovalOverlay('request');
+
+  } catch (err) {
+    // ── Network error — fall back to localStorage for existing sessions ───────
+    if ((status === 'approved' || status === 'admin') && savedId && savedId !== '__local__') {
+      if (status === 'admin') { _isGlobalAdmin = true; updateAdminNavVisibility(); }
+      hideApprovalOverlay();
+      connectHouseholdData(savedId);
+      updateHHIndicator(savedId);
+    } else if (status === 'admin' && savedId === '__local__') {
+      _isGlobalAdmin = true;
+      updateAdminNavVisibility();
+      hideApprovalOverlay();
+      _seedDefaultRecipesIfEmpty();
+    } else if (status === 'pending') {
+      showApprovalOverlay('waiting');
+      startApprovalPolling();
+    } else {
+      showApprovalOverlay('offline');
+    }
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
