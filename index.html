@@ -1770,6 +1770,27 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
   border:none;border-top:1px solid var(--bd);
   margin:10px 0 8px;
 }
+
+/* Admin pending requests — prominent alert box */
+.admin-pending-box{
+  background:#fff7ed;border:2px solid #fdba74;
+  border-radius:var(--r);padding:14px 15px;
+  margin-bottom:16px;
+}
+.admin-pending-hdr{
+  display:flex;align-items:center;gap:8px;
+  font-weight:800;font-size:.92rem;color:#92400e;
+  margin-bottom:12px;
+}
+.admin-pending-cnt{
+  background:#ef4444;color:#fff;
+  font-size:.65rem;padding:2px 7px;
+  border-radius:10px;font-weight:800;line-height:1.4;
+}
+.admin-pending-empty{
+  font-size:.84rem;color:var(--t4);
+  text-align:center;padding:8px 0 2px;
+}
 .admin-hh-pending-lbl{
   font-size:.74rem;font-weight:700;color:var(--t3);
   margin:8px 0 6px;text-transform:uppercase;letter-spacing:.5px;
@@ -2148,19 +2169,20 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
   <section class="page" id="page-admin">
     <div class="pg">
       <div class="sec-lbl">👑 Global admin</div>
-      <p style="font-size:.8rem;color:var(--t3);margin-bottom:14px;line-height:1.55">
-        Alle husstander i systemet. Kun brukernavn og statuser vises — meny, oppskrifter og kjøleskap er skjult.
-      </p>
 
-      <!-- All households list -->
-      <div id="admin-hh-list"><p class="admin-empty">Laster…</p></div>
+      <!-- Pending access requests — prominent real-time section -->
+      <div id="admin-pending-global"></div>
+
+      <!-- Approved users and households -->
+      <div id="admin-hh-list"></div>
 
       <!-- Firebase security rules -->
       <details class="acc" style="margin-top:20px">
         <summary>🔒 Firebase sikkerhetsregler</summary>
         <div class="acc-body" style="padding-top:10px">
-          <p style="font-size:.8rem;color:var(--t3);margin-bottom:10px;line-height:1.6">
-            Lim inn disse reglene i <strong>Firebase Console → Realtime Database → Rules</strong> for å begrense hva som kan leses:
+          <p style="font-size:.8rem;color:var(--t3);margin-bottom:6px;line-height:1.6">
+            Lim inn disse reglene i <strong>Firebase Console → Realtime Database → Rules</strong>.
+            Dette er nødvendig for at appen skal fungere — uten disse reglene vises «tilkoblingsfeil».
           </p>
           <pre class="admin-rules-pre" id="admin-rules-pre"></pre>
           <button class="btn btn-gray btn-sm" onclick="copyFirebaseRules()">📋 Kopier regler</button>
@@ -2279,12 +2301,16 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
     <button class="btn btn-gen" style="max-width:280px;width:100%;margin-top:16px" onclick="approvalTryAgain()">Be om tilgang igjen</button>
   </div>
 
-  <!-- Offline (can't verify first time) -->
+  <!-- Offline / connection error -->
   <div id="approval-offline" class="approval-sheet" style="display:none">
     <span class="approval-icon">📡</span>
-    <h2>Ingen internettforbindelse</h2>
-    <p>Tilgang krever internett første gang. Koble til og prøv igjen.</p>
-    <button class="btn btn-gen" style="max-width:280px;width:100%;margin-top:16px" onclick="retryAccessCheck()">Prøv igjen</button>
+    <h2 id="approval-offline-title">Ingen internettforbindelse</h2>
+    <p id="approval-offline-msg">Koble til internett og prøv igjen.</p>
+    <button class="btn btn-gen" style="max-width:280px;width:100%;margin-top:16px" onclick="retryAccessCheck()">🔄 Prøv igjen</button>
+    <details id="approval-offline-details" style="margin-top:18px;text-align:left;width:100%;display:none">
+      <summary style="font-size:.78rem;color:var(--t4);cursor:pointer">Tekniske detaljer</summary>
+      <pre id="approval-offline-err" style="font-size:.7rem;color:var(--t3);margin-top:8px;white-space:pre-wrap;word-break:break-all;background:var(--bg);padding:10px;border-radius:8px;border:1px solid var(--bd)"></pre>
+    </details>
   </div>
 
 </div>
@@ -4979,6 +5005,11 @@ function _onGlobalApprovalGranted() {
 }
 
 function retryAccessCheck() {
+  // Reset error display before retrying
+  document.getElementById('approval-offline-title').textContent = 'Sjekker tilgang…';
+  document.getElementById('approval-offline-msg').textContent   = '';
+  const detailsEl = document.getElementById('approval-offline-details');
+  if (detailsEl) detailsEl.style.display = 'none';
   initFirebaseSync();
 }
 
@@ -5033,11 +5064,17 @@ function connectHouseholdData(hhId) {
 // ── Admin: listeners and panel ────────────────────────────────────────────────
 function fbStartAdminListeners() {
   if (!_fbDb) return;
-  // Listen for global pending access requests
+  // Listen for global pending access requests — update badge + pending box in real-time
   _fbDb.ref('pendingUsers').on('value', snap => {
     const data = snap.val() || {};
-    const count = Object.values(data).filter(u => u.status === 'pending').length;
-    updateAdminBadge(count);
+    const pendingList = Object.entries(data)
+      .filter(([, u]) => u.status === 'pending')
+      .sort(([, a], [, b]) => (a.requestedAt || 0) - (b.requestedAt || 0));
+    updateAdminBadge(pendingList.length);
+    // Always update the pending section so it's ready when admin navigates to the page
+    const pendingEl = document.getElementById('admin-pending-global');
+    if (pendingEl) pendingEl.innerHTML = _buildPendingSection(pendingList);
+    // Re-render approved + households only if admin page is currently active
     if (document.getElementById('page-admin')?.classList.contains('active')) {
       renderAdminPanel();
     }
@@ -5115,12 +5152,14 @@ function _fmtTs(ts) {
 }
 
 async function renderAdminPanel() {
-  const hhListEl = document.getElementById('admin-hh-list');
-  const rulesEl  = document.getElementById('admin-rules-pre');
+  const pendingEl = document.getElementById('admin-pending-global');
+  const hhListEl  = document.getElementById('admin-hh-list');
+  const rulesEl   = document.getElementById('admin-rules-pre');
   if (!hhListEl) return;
   if (rulesEl && !rulesEl.textContent) rulesEl.textContent = FIREBASE_RULES;
 
   hhListEl.innerHTML = '<p class="admin-empty">Laster…</p>';
+
   try {
     // Fetch global pending/approved + all households in parallel
     const [pendingGlobalSnap, approvedGlobalSnap, householdsSnap] = await Promise.all([
@@ -5142,35 +5181,20 @@ async function renderAdminPanel() {
 
     updateAdminBadge(pendingList.length);
 
-    // ── Section 1: global access requests ──────────────────────────────────
-    const pendingSection = `
-      <div class="fld-lbl" style="margin:0 0 8px">
-        Tilgangsforespørsler${pendingList.length ? ` <span style="background:#ef4444;color:#fff;font-size:.65rem;padding:1px 7px;border-radius:10px;font-weight:800;vertical-align:middle">${pendingList.length}</span>` : ''}
-      </div>
-      ${pendingList.length ? pendingList.map(([did, u]) => `
-        <div class="admin-user-card" style="margin-bottom:6px">
-          <div class="admin-user-info">
-            <div class="admin-user-name">👤 ${escHtml(u.name)}</div>
-            <div class="admin-user-meta">${_fmtTs(u.requestedAt)}</div>
-          </div>
-          <div class="admin-user-actions">
-            <button class="btn btn-green btn-sm" onclick="globalAdminApprove('${escHtml(did)}','${escHtml(u.name)}')">Godkjenn</button>
-            <button class="btn btn-danger btn-sm" onclick="globalAdminReject('${escHtml(did)}','${escHtml(u.name)}')">Avvis</button>
-          </div>
-        </div>`).join('')
-      : '<p class="admin-empty" style="margin-bottom:0">Ingen ventende forespørsler ✓</p>'}`;
+    // ── Pending section (prominent top box — also updated live via listener) ───
+    if (pendingEl) pendingEl.innerHTML = _buildPendingSection(pendingList);
 
-    // ── Section 2: globally approved users ─────────────────────────────────
+    // ── Approved users ─────────────────────────────────────────────────────────
     const approvedSection = approvedList.length ? `
-      <div class="fld-lbl" style="margin:16px 0 8px">Godkjente brukere</div>
+      <div class="fld-lbl" style="margin:0 0 8px">Godkjente brukere</div>
       <div class="admin-hh-members" style="margin-bottom:4px">
-        ${approvedList.map(([, u]) => `<span class="admin-member-chip">✓ ${escHtml(u.name)}</span>`).join('')}
+        ${approvedList.map(([did, u]) => `<span class="admin-member-chip" title="ID: ${escHtml(did)}">✓ ${escHtml(u.name)}</span>`).join('')}
       </div>` : '';
 
-    // ── Section 3: households overview ──────────────────────────────────────
+    // ── Households overview ────────────────────────────────────────────────────
     const hhEntries = Object.entries(allHH).sort(([a], [b]) => a.localeCompare(b));
     const hhSection = hhEntries.length ? `
-      <div class="fld-lbl" style="margin:16px 0 8px">Husstander</div>
+      <div class="fld-lbl" style="margin:${approvedList.length ? '16px' : '0'} 0 8px">Husstander</div>
       ${hhEntries.map(([hhId, hhData]) => {
         const approved = Object.entries(hhData.approvedUsers || {})
           .sort(([, a], [, b]) => (a.approvedAt || 0) - (b.approvedAt || 0));
@@ -5191,11 +5215,37 @@ async function renderAdminPanel() {
           </div>`;
       }).join('')}` : '';
 
-    hhListEl.innerHTML = pendingSection + approvedSection + hhSection;
+    hhListEl.innerHTML = (approvedSection + hhSection) ||
+      '<p class="admin-empty">Ingen godkjente brukere eller husstander ennå</p>';
 
   } catch {
+    if (pendingEl) pendingEl.innerHTML = '';
     hhListEl.innerHTML = '<p class="admin-empty">Kunne ikke laste data — sjekk internettforbindelsen</p>';
   }
+}
+
+// Builds the pending-requests HTML (used by renderAdminPanel + live listener)
+function _buildPendingSection(pendingList) {
+  if (!pendingList.length) {
+    return '<p class="admin-pending-empty">Ingen ventende forespørsler ✓</p>';
+  }
+  return `<div class="admin-pending-box">
+    <div class="admin-pending-hdr">
+      🔔 Ventende brukere
+      <span class="admin-pending-cnt">${pendingList.length}</span>
+    </div>
+    ${pendingList.map(([did, u]) => `
+      <div class="admin-user-card" style="margin-bottom:6px">
+        <div class="admin-user-info">
+          <div class="admin-user-name">👤 ${escHtml(u.name)}</div>
+          <div class="admin-user-meta">${_fmtTs(u.requestedAt)}</div>
+        </div>
+        <div class="admin-user-actions">
+          <button class="btn btn-green btn-sm" onclick="globalAdminApprove('${escHtml(did)}','${escHtml(u.name)}')">Godkjenn</button>
+          <button class="btn btn-danger btn-sm" onclick="globalAdminReject('${escHtml(did)}','${escHtml(u.name)}')">Avvis</button>
+        </div>
+      </div>`).join('')}
+  </div>`;
 }
 
 // ── Global approve / reject (writes to root /approvedUsers) ───────────────────
@@ -5308,24 +5358,85 @@ function copyFirebaseRules() {
     .catch(() => showSyncToast('Kopier teksten fra admin-panelet manuelt'));
 }
 
+// ── Firebase helpers ───────────────────────────────────────────────────────────
+// Wrap a Firebase .once('value') with a 12-second timeout so the app never hangs
+function _fbRead(path) {
+  if (!_fbDb) return Promise.reject(Object.assign(new Error('Firebase ikke initialisert'), { code: 'not-initialized' }));
+  return Promise.race([
+    _fbDb.ref(path).once('value'),
+    new Promise((_, rej) =>
+      setTimeout(() => rej(Object.assign(new Error('Firebase-tilkobling tok for lang tid (timeout)'), { code: 'timeout' })), 12000)
+    ),
+  ]);
+}
+
+function _showConnectionError(err) {
+  const code    = err?.code || '';
+  const message = err?.message || String(err);
+  console.error('[Firebase] Connection error:', code, message);
+
+  let title = 'Tilkoblingsfeil';
+  let msg   = 'Klarte ikke koble til databasen. Prøv igjen.';
+
+  if (code === 'not-initialized' || message.includes('not initialized') || message.includes('No Firebase App')) {
+    title = 'Firebase ikke klar';
+    msg   = 'Firebase SDK kunne ikke lastes. Sjekk internettforbindelsen og last siden på nytt.';
+  } else if (code === 'PERMISSION_DENIED' || message.includes('PERMISSION_DENIED')) {
+    title = 'Tilgangsregler mangler';
+    msg   = 'Firebase-reglene er ikke oppdatert. Åpne admin-panelet (5 trykk på tittelen), kopier reglene og lim dem inn i Firebase Console → Realtime Database → Rules.';
+  } else if (code === 'timeout') {
+    title = 'Tilkoblingen tok for lang tid';
+    msg   = 'Firebase svarte ikke. Sjekk internettforbindelsen og prøv igjen.';
+  } else if (code === 'unavailable' || message.includes('network') || message.includes('Failed to fetch') || message.includes('Network')) {
+    title = 'Ingen internettforbindelse';
+    msg   = 'Koble til internett og prøv igjen.';
+  }
+
+  document.getElementById('approval-offline-title').textContent = title;
+  document.getElementById('approval-offline-msg').textContent   = msg;
+  const detailsEl = document.getElementById('approval-offline-details');
+  const errEl     = document.getElementById('approval-offline-err');
+  if (detailsEl && errEl) {
+    detailsEl.style.display = '';
+    errEl.textContent = (code ? 'Kode: ' + code + '\n' : '') + message;
+  }
+  showApprovalOverlay('offline');
+}
+
 // ── Bootstrap Firebase ─────────────────────────────────────────────────────────
 async function initFirebaseSync() {
   // Block the entire UI immediately — nothing is accessible until access is verified
   showApprovalOverlay('checking');
 
+  // ── 1. Ensure Firebase SDK is loaded ────────────────────────────────────────
+  if (typeof firebase === 'undefined') {
+    _showConnectionError(Object.assign(
+      new Error('Firebase SDK ikke lastet — CDN utilgjengelig'),
+      { code: 'sdk-missing' }
+    ));
+    return;
+  }
+
+  // ── 2. Initialize Firebase database ─────────────────────────────────────────
   try {
     const app = firebase.initializeApp(FB_CONFIG);
     _fbDb = firebase.database(app);
   } catch (e) {
-    _fbDb = firebase.database(firebase.app());
+    // initializeApp throws if already initialized — get the existing instance
+    try {
+      _fbDb = firebase.database(firebase.app());
+    } catch (e2) {
+      _showConnectionError(e2);
+      return;
+    }
   }
 
   const savedId = localStorage.getItem('firebase_hh_id');
   const status  = localStorage.getItem('_approval_status');
 
   try {
-    // ── 1. Check global admin ────────────────────────────────────────────────
-    const adminSnap = await _fbDb.ref('globalAdmin/' + _deviceId).once('value');
+    // ── 3. Check global admin ────────────────────────────────────────────────
+    const adminSnap = await _fbRead('globalAdmin/' + _deviceId);
     if (adminSnap.exists()) {
       _isGlobalAdmin = true;
       updateAdminNavVisibility();
@@ -5342,25 +5453,22 @@ async function initFirebaseSync() {
       return;
     }
 
-    // ── 2. Check global approval ─────────────────────────────────────────────
-    const approvedSnap = await _fbDb.ref('approvedUsers/' + _deviceId).once('value');
+    // ── 4. Check global approval ─────────────────────────────────────────────
+    const approvedSnap = await _fbRead('approvedUsers/' + _deviceId);
     if (approvedSnap.exists()) {
       localStorage.setItem('_approval_status', 'approved');
       hideApprovalOverlay();
       if (!savedId) {
-        // Approved but no household yet — go to household setup
         _seedDefaultRecipesIfEmpty();
         showHHModal();
       } else if (savedId === '__local__') {
         _seedDefaultRecipesIfEmpty();
       } else {
-        // Re-verify household membership
-        const hhSnap = await _fbDb.ref(`households/${savedId}/approvedUsers/${_deviceId}`).once('value');
+        const hhSnap = await _fbRead(`households/${savedId}/approvedUsers/${_deviceId}`);
         if (hhSnap.exists()) {
           connectHouseholdData(savedId);
           updateHHIndicator(savedId);
         } else {
-          // Globally approved but removed from household — back to household setup
           localStorage.removeItem('firebase_hh_id');
           _seedDefaultRecipesIfEmpty();
           showHHModal();
@@ -5369,8 +5477,8 @@ async function initFirebaseSync() {
       return;
     }
 
-    // ── 3. Check if pending ───────────────────────────────────────────────────
-    const pendingSnap = await _fbDb.ref('pendingUsers/' + _deviceId).once('value');
+    // ── 5. Check if pending ───────────────────────────────────────────────────
+    const pendingSnap = await _fbRead('pendingUsers/' + _deviceId);
     if (pendingSnap.exists()) {
       const pData = pendingSnap.val();
       if (pData.status === 'pending') {
@@ -5387,12 +5495,13 @@ async function initFirebaseSync() {
       }
     }
 
-    // ── 4. Unknown / first-time device ───────────────────────────────────────
+    // ── 6. Unknown / first-time device ───────────────────────────────────────
     showApprovalOverlay('request');
 
   } catch (err) {
-    // ── Network error — fall back to localStorage for existing sessions ───────
+    // ── Fallback for existing approved sessions (offline-first) ──────────────
     if ((status === 'approved' || status === 'admin') && savedId && savedId !== '__local__') {
+      console.warn('[Firebase] Using localStorage fallback for existing session:', err?.code);
       if (status === 'admin') { _isGlobalAdmin = true; updateAdminNavVisibility(); }
       hideApprovalOverlay();
       connectHouseholdData(savedId);
@@ -5406,7 +5515,7 @@ async function initFirebaseSync() {
       showApprovalOverlay('waiting');
       startApprovalPolling();
     } else {
-      showApprovalOverlay('offline');
+      _showConnectionError(err);
     }
   }
 }
