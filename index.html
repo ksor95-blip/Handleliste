@@ -2295,8 +2295,8 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
     <!-- Step: start -->
     <div id="hh-step-start">
       <span class="hh-modal-icon">🏠</span>
-      <h2>Hei! Hvem planlegger du mat med?</h2>
-      <p>Synkroniser middagsplanen, handlelisten og oppskriftene med hele husstanden i sanntid.</p>
+      <h2>Hei! Hva heter du?</h2>
+      <p id="hh-start-desc">Skriv inn navnet ditt og koden du har fått av en husstandsadmin.</p>
       <div style="text-align:left;margin-bottom:14px">
         <div class="fld-lbl" style="margin-bottom:6px">Ditt navn</div>
         <input type="text" class="hh-name-input" id="hh-start-name"
@@ -2305,10 +2305,12 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
         <div id="hh-name-error" class="hh-error" style="min-height:18px"></div>
       </div>
       <div class="hh-btn-row">
-        <button class="btn btn-gen" onclick="hhStartCreate()">🏡 Opprett husstand</button>
+        <!-- Only shown to the admin device -->
+        <button class="btn btn-gen" id="hh-create-btn" onclick="hhStartCreate()" style="display:none">🏡 Opprett husstand</button>
         <button class="btn btn-blue" onclick="hhShowJoin()">🔗 Bli med i husstand</button>
       </div>
-      <button class="hh-skip-btn" onclick="hhSkip()">Bruk uten synkronisering</button>
+      <!-- Only shown to the admin device -->
+      <button class="hh-skip-btn" id="hh-skip-btn" onclick="hhSkip()" style="display:none">Bruk uten synkronisering</button>
     </div>
 
     <!-- Step: create -->
@@ -4716,6 +4718,17 @@ let _pendingHHCode = null;
 
 function showHHModal() {
   document.getElementById('hh-modal').classList.remove('hidden');
+
+  // Admin device — show household creation and skip options
+  const createBtn = document.getElementById('hh-create-btn');
+  const skipBtn   = document.getElementById('hh-skip-btn');
+  const descEl    = document.getElementById('hh-start-desc');
+  if (createBtn) createBtn.style.display = _isGlobalAdmin ? '' : 'none';
+  if (skipBtn)   skipBtn.style.display   = _isGlobalAdmin ? '' : 'none';
+  if (descEl)    descEl.textContent      = _isGlobalAdmin
+    ? 'Synkroniser middagsplanen og handlelisten med hele husstanden i sanntid.'
+    : 'Skriv inn navnet ditt og koden du har fått av en husstandsadmin. Tilgangen godkjennes av admin.';
+
   hhShowStep('start');
 }
 function hhShowStep(s) {
@@ -4739,6 +4752,7 @@ function hhValidateName() {
 }
 
 function hhStartCreate() {
+  if (!_isGlobalAdmin) return; // Only admin device can create households
   if (!hhValidateName()) return;
   _pendingHHCode = _hhCode();
   document.getElementById('hh-code-value').textContent = _pendingHHCode;
@@ -4821,6 +4835,7 @@ async function hhDoJoin() {
 }
 
 function hhSkip() {
+  if (!_isGlobalAdmin) return; // Only admin device can bypass sync
   localStorage.setItem('firebase_hh_id', '__local__');
   document.getElementById('hh-modal').classList.add('hidden');
   _seedDefaultRecipesIfEmpty();
@@ -4870,9 +4885,8 @@ async function _checkApproval(hhId) {
 function _onApprovalGranted(hhId) {
   document.getElementById('hh-modal').classList.add('hidden');
   hideApprovalOverlay();
-  connectHouseholdData(hhId, false);
+  connectHouseholdData(hhId);
   updateHHIndicator(hhId);
-  updateAdminNavVisibility();
   showSyncToast('✓ Tilgang godkjent! Velkommen inn 🎉');
 }
 
@@ -5154,7 +5168,7 @@ function copyFirebaseRules() {
 }
 
 // ── Bootstrap Firebase ─────────────────────────────────────────────────────────
-function initFirebaseSync() {
+async function initFirebaseSync() {
   try {
     const app = firebase.initializeApp(FB_CONFIG);
     _fbDb = firebase.database(app);
@@ -5162,18 +5176,19 @@ function initFirebaseSync() {
     _fbDb = firebase.database(firebase.app());
   }
 
-  // Check global admin status for this device (async — runs in parallel)
-  checkGlobalAdmin();
-
   const savedId = localStorage.getItem('firebase_hh_id');
   const status  = localStorage.getItem('_approval_status');
 
   if (!savedId) {
-    // First launch — seed defaults, show onboarding
+    // First launch — wait for admin check so showHHModal knows which buttons to show
+    await checkGlobalAdmin();
     _seedDefaultRecipesIfEmpty();
-    setTimeout(showHHModal, 400);
+    setTimeout(showHHModal, 200);
     return;
   }
+
+  // Existing device — check admin in background (updates nav when done)
+  checkGlobalAdmin();
 
   if (savedId === '__local__') {
     _seedDefaultRecipesIfEmpty();
@@ -5183,7 +5198,7 @@ function initFirebaseSync() {
   // ── Has a real household ID ────────────────────────────────────────────────
 
   if (status === 'pending') {
-    // Waiting for admin approval
+    // Waiting for admin approval — block all app access
     showApprovalOverlay('waiting');
     startApprovalPolling(savedId);
     return;
@@ -5213,8 +5228,7 @@ function initFirebaseSync() {
     return;
   }
 
-  // Unknown status (e.g. old install before approval system) — treat as approved
-  // for backward-compat; set status and connect
+  // Unknown status (old install before approval system) — treat as approved for back-compat
   localStorage.setItem('_approval_status', 'approved');
   connectHouseholdData(savedId);
   updateHHIndicator(savedId);
