@@ -176,6 +176,7 @@ body{
   position:absolute;
   inset:0;
   overflow-y:auto;
+  overflow-x:hidden; /* hard guard against any element overflowing horizontally */
   -webkit-overflow-scrolling:touch;
   overscroll-behavior-y:contain;
   display:none;
@@ -325,7 +326,7 @@ body{
 .btn-sec:active,.btn-gray:active{background:#ecddd2}
 .btn-blue{background:#eff6ff;color:#1d4ed8;border:1.5px solid #bfdbfe}
 .btn-red{background:#fff5f5;color:#dc2626;border:1.5px solid #fecaca}
-.btn-sm{min-height:40px;padding:8px 14px;font-size:.83rem;border-radius:var(--rsm)}
+.btn-sm{min-height:44px;padding:9px 14px;font-size:.85rem;border-radius:var(--rsm)}
 
 /* ═══════════════════════════════════════════════
    FORMS
@@ -336,12 +337,13 @@ select,input[type=text],input[type=number],input[type=password]{
   border:1.5px solid var(--bd);
   border-radius:var(--rsm);
   font-size:16px;
-  background:#faf5ee;
+  background-color:#faf5ee;
   color:var(--t1);
   font-family:inherit;
   min-height:48px;
   transition:border-color .15s,box-shadow .15s;
   -webkit-appearance:none;
+  -moz-appearance:none;
   appearance:none;
 }
 select{
@@ -351,11 +353,13 @@ select{
   background-position:right 12px center;
   padding-right:38px;
 }
+/* Use background-color (not the shorthand!) so the chevron image stays
+   at its position and doesn't tile across the select as arrow artifacts. */
 select:focus,input:focus{
   outline:none;
   border-color:var(--o);
   box-shadow:0 0 0 3px rgba(244,132,95,.15);
-  background:white;
+  background-color:#fff;
 }
 .fld-lbl{
   font-size:.76rem;
@@ -380,7 +384,7 @@ select:focus,input:focus{
 }
 .week-nav-btn{
   flex-shrink:0;
-  width:40px;height:40px;
+  width:44px;height:44px;
   border:1.5px solid var(--bd);
   background:var(--bg);
   border-radius:var(--rsm);
@@ -391,7 +395,7 @@ select:focus,input:focus{
   -webkit-user-select:none;user-select:none;
   transition:background .15s,border-color .15s,transform .1s;
 }
-.week-nav-btn svg{width:20px;height:20px}
+.week-nav-btn svg{width:22px;height:22px}
 .week-nav-btn:active{
   background:var(--o50);border-color:var(--o);color:var(--o);
   transform:scale(.94);transition-duration:.06s;
@@ -409,13 +413,13 @@ select:focus,input:focus{
   font-size:.76rem;color:var(--t3);margin-top:2px;
 }
 .week-today-btn{
-  display:block;margin:0 0 8px;
+  display:block;margin:0 0 10px;
   background:transparent;
   border:1.5px dashed var(--bd);
   color:var(--t3);
   border-radius:var(--rsm);
-  font-family:inherit;font-size:.78rem;font-weight:700;
-  padding:7px 14px;min-height:34px;
+  font-family:inherit;font-size:.85rem;font-weight:700;
+  padding:10px 14px;min-height:44px;
   cursor:pointer;touch-action:manipulation;
   -webkit-user-select:none;user-select:none;
   width:100%;
@@ -432,13 +436,13 @@ select:focus,input:focus{
 .week-grid{
   display:grid;
   grid-template-columns:repeat(2,1fr);
-  gap:8px;
+  gap:7px;
   margin-bottom:10px;
 }
 .day-card{
   background:var(--card);
-  border-radius:var(--r);
-  padding:11px 10px;
+  border-radius:var(--rsm);
+  padding:9px 9px 8px;
   border:2px solid var(--bd);
   box-shadow:var(--sh);
   transition:border-color .2s,background .2s;
@@ -449,13 +453,31 @@ select:focus,input:focus{
 }
 .day-name{
   font-weight:700;
-  font-size:.83rem;
-  margin-bottom:6px;
+  font-size:.76rem;
+  margin-bottom:4px;
   color:var(--t2);
+  letter-spacing:.2px;
 }
 .day-card.active .day-name{color:var(--o)}
-.day-card select{font-size:15px;padding:9px 32px 9px 10px;min-height:44px}
-.gen-area{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+/* font-size must be ≥16px to prevent iOS Safari from zooming on focus */
+.day-card select{font-size:16px;padding:10px 30px 10px 10px;min-height:44px}
+
+/* Sticky Generer handleliste footer — pinned to the bottom of the Planlegg
+   scroll area, above the bottom nav. Full-bleed background with a faint
+   top border so content visibly scrolls behind it. */
+.gen-area{
+  display:flex;flex-direction:column;gap:8px;
+  position:sticky;
+  bottom:0;
+  background:var(--bg);
+  margin:12px -16px 0;
+  padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+  border-top:1.5px solid var(--bd);
+  box-shadow:0 -6px 16px -8px rgba(0,0,0,.08);
+  z-index:20;
+}
+.gen-area .btn-gen{min-height:50px;font-size:1rem}
+.gen-area .gen-minor{margin-top:2px}
 
 /* ═══════════════════════════════════════════════
    ACCORDIONS
@@ -645,8 +667,9 @@ details[open].acc>summary::after{transform:rotate(180deg)}
 .item-list li{
   display:flex;
   align-items:center;
-  gap:14px;
-  padding:14px 16px;
+  flex-wrap:wrap;
+  gap:10px 12px;
+  padding:12px 14px;
   font-size:1rem;
   border-bottom:1px solid #ede5db;
   cursor:pointer;
@@ -654,7 +677,8 @@ details[open].acc>summary::after{transform:rotate(180deg)}
   -webkit-user-select:none;
   user-select:none;
   transition:background .1s;
-  min-height:62px;
+  min-height:58px;
+  min-width:0;
 }
 .item-list li:last-child{border-bottom:none}
 .item-list li:active{background:var(--o50);transition:none}
@@ -692,10 +716,12 @@ details[open].acc>summary::after{transform:rotate(180deg)}
   to{opacity:1;transform:rotate(45deg) scale(1)}
 }
 .item-name{
-  flex:1;
+  flex:1 1 120px;
+  min-width:0;
   font-size:1rem;
   transition:color .15s;
   line-height:1.3;
+  word-break:break-word;
 }
 .item-list li.checked .item-name{text-decoration:line-through;color:var(--t4)}
 .item-qty{
@@ -950,6 +976,41 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
 }
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* Shortcut link to basisvarer in settings (Kjøleskap page) */
+.staples-shortcut-btn{
+  display:flex;align-items:center;gap:12px;
+  width:100%;
+  background:var(--card);
+  border:1.5px solid var(--bd);
+  border-left:4px solid var(--y);
+  border-radius:var(--rsm);
+  padding:14px 14px;
+  font-family:inherit;cursor:pointer;
+  box-shadow:var(--sh);text-align:left;
+  touch-action:manipulation;
+  -webkit-user-select:none;user-select:none;
+  transition:background .15s,transform .1s;
+  color:var(--t1);
+}
+.staples-shortcut-btn:active{
+  background:#fef9c3;transform:scale(.98);transition-duration:.06s;
+}
+.staples-shortcut-icon{
+  font-size:1.5rem;line-height:1;flex-shrink:0;
+  width:40px;height:40px;
+  background:#fef9c3;border-radius:var(--rxs);
+  display:flex;align-items:center;justify-content:center;
+}
+.staples-shortcut-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.staples-shortcut-title{font-size:.92rem;font-weight:800;color:var(--t1);letter-spacing:-.1px}
+.staples-shortcut-desc{font-size:.76rem;color:var(--t3);line-height:1.4}
+.staples-shortcut-arrow{
+  font-size:1.4rem;color:var(--t4);font-weight:600;
+  flex-shrink:0;line-height:1;
+}
+html[data-theme="dark"] .staples-shortcut-icon{background:#2a2110}
+html[data-theme="dark"] .staples-shortcut-btn:active{background:#2a2110}
+
 /* ═══════════════════════════════════════════════
    HISTORY PAGE
 ═══════════════════════════════════════════════ */
@@ -1036,7 +1097,7 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
 .ing-row .r-cat {grid-area:cat}
 .ing-row .r-del {grid-area:del;justify-self:end;align-self:center}
 .ing-row select,.ing-row input{
-  font-size:15px;min-height:44px;padding:10px 10px;
+  font-size:16px;min-height:44px;padding:10px 10px;
 }
 .ing-row select{padding-right:28px}
 
@@ -1056,9 +1117,20 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
 @media(max-width:360px){
   .pg{padding:12px 12px calc(20px + env(safe-area-inset-bottom))}
   .nav-lbl{font-size:.6rem}
-  .week-grid{gap:8px}
-  .day-card{padding:12px}
+  .week-grid{gap:6px;margin-bottom:8px}
+  .day-card{padding:8px 8px 7px}
+  .day-name{font-size:.72rem;margin-bottom:3px}
+  /* Keep 44px min-height even on small phones so tap targets stay reliable */
+  .day-card select{padding:9px 28px 9px 9px;min-height:44px}
+  .day-size-lbl{font-size:.6rem}
+  .day-size-btn{font-size:.62rem;padding:3px 6px;min-height:26px}
+  /* Fall back to a single recipe column on very narrow phones so cards
+     never get squeezed below legible width */
   .recipe-grid{grid-template-columns:1fr}
+  .recipe-card{padding:12px}
+  .recipe-name{font-size:.92rem}
+  .gen-area{margin:10px -12px 0;padding:9px 12px calc(9px + env(safe-area-inset-bottom))}
+  .gen-area .btn-gen{min-height:48px;font-size:.94rem}
 }
 
 /* ═══════════════════════════════════════════════
@@ -1071,14 +1143,16 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
   .nav-icon{font-size:1.25rem;margin-bottom:0}
   .pg{padding:10px 12px calc(10px + env(safe-area-inset-bottom))}
   .sec-lbl{margin-bottom:8px}
-  .gen-area{margin-bottom:12px}
-  .week-grid{gap:8px;margin-bottom:10px}
-  .day-card{padding:10px 10px}
+  .week-grid{gap:6px;margin-bottom:8px;grid-template-columns:repeat(4,1fr)}
+  .day-card{padding:7px 8px 6px}
+  .day-name{font-size:.7rem;margin-bottom:3px}
+  .day-card select{min-height:36px;padding:6px 26px 6px 8px}
   .empty-state{padding:30px 20px 20px;min-height:40vh}
   .recipe-modal-sheet{max-height:95vh;max-height:95dvh}
   .recipe-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
   .acc>summary{min-height:48px}
-  .btn-gen{min-height:48px;font-size:.98rem}
+  .gen-area{margin:8px -12px 0;padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
+  .gen-area .btn-gen{min-height:44px;font-size:.94rem}
 }
 
 /* ═══════════════════════════════════════════════
@@ -1087,6 +1161,7 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
 @media(min-width:600px){
   .week-grid{grid-template-columns:repeat(3,1fr)}
   .pg{padding:20px 20px calc(24px + env(safe-area-inset-bottom));max-width:720px;margin:0 auto}
+  .gen-area{margin:14px -20px 0;padding:12px 20px calc(14px + env(safe-area-inset-bottom))}
   .ing-row{
     grid-template:"name qty unit cat del"/1fr 70px 80px 110px auto;
     grid-template-rows:auto;
@@ -1109,22 +1184,25 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
 ═══════════════════════════════════════════════ */
 .recipe-grid{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  /* Mobile-first: 2 even columns down to iPhone width (375px).
+     Larger breakpoints below scale up to auto-fill grids. */
+  grid-template-columns:repeat(2,minmax(0,1fr));
   gap:10px;
   margin-top:4px;
 }
 .recipe-card{
   background:var(--card);
-  border-radius:var(--r);
+  border-radius:var(--rsm);
   border:1.5px solid var(--bd);
   box-shadow:var(--sh);
-  padding:14px;
+  padding:12px 11px;
   cursor:pointer;
   touch-action:manipulation;
   transition:box-shadow .2s,border-color .2s;
   display:flex;
   flex-direction:column;
   gap:6px;
+  min-width:0;
 }
 .recipe-card:active{box-shadow:var(--shm);border-color:var(--o-lt);transform:scale(.98);transition-duration:.08s}
 .recipe-card-top{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap}
@@ -1167,18 +1245,6 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
 .recipe-cat-chip input[type=radio]{display:none}
 .recipe-cat-chip.active{border-color:var(--g);background:var(--g50);color:var(--g);font-weight:700}
 
-/* Day selection chips */
-.recipe-day-chips{display:flex;flex-wrap:wrap;gap:7px}
-.recipe-day-chip{
-  padding:9px 13px;border-radius:20px;
-  border:1.5px solid var(--bd);background:#f8f3ec;
-  color:var(--t2);font-size:.86rem;cursor:pointer;
-  -webkit-user-select:none;user-select:none;
-  transition:all .2s;font-weight:500;min-height:44px;
-  display:inline-flex;align-items:center;touch-action:manipulation;
-}
-.recipe-day-chip.selected{background:var(--g100);border-color:var(--g);color:#2a5c37;font-weight:700}
-
 /* ─── Recipe tags (form + card + filter bar) ─────── */
 .recipe-tags-form{display:flex;flex-direction:column;gap:12px}
 .recipe-tags-group-lbl{
@@ -1211,6 +1277,26 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
 }
 .tag-chip:active{transform:scale(.95);transition-duration:.06s}
 
+/* Recipe form's tag section — green-tinted "creation" container that
+   visually distinguishes "tags you ADD to this recipe" from the orange
+   "filter existing recipes" bar further down the page. */
+.recipe-form-tags-section{
+  background:linear-gradient(180deg,var(--g50),var(--card));
+  border:1.5px solid var(--g200);
+  border-left:4px solid var(--g);
+  border-radius:var(--rsm);
+  padding:14px 14px 16px;
+  margin-bottom:16px;
+}
+.recipe-form-tags-title{
+  font-size:.88rem;font-weight:800;color:#2a5c37;
+  letter-spacing:-.1px;margin-bottom:4px;
+}
+.recipe-form-tags-desc{
+  font-size:.76rem;color:var(--t3);
+  line-height:1.5;margin-bottom:12px;
+}
+
 /* Small tag pills shown on recipe cards */
 .recipe-card-tags{
   display:flex;flex-wrap:wrap;gap:4px;margin-top:2px;
@@ -1225,23 +1311,96 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
 .recipe-tag-pill.time{background:#fff7ed;border-color:#fed7aa;color:#9a3412}
 .recipe-tag-pill.food{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
 
-/* Filter bar on Oppskrifter page */
-.recipe-filter-bar{
-  background:var(--card);border:1.5px solid var(--bd);
-  border-radius:var(--r);padding:12px 14px 14px;
-  margin-bottom:12px;box-shadow:var(--sh);
+/* Recipe search bar — sits above the filter chips. Keeps the familiar
+   magnifying-glass convention with an inline clear button. */
+.recipe-search-wrap{
+  position:relative;
+  display:flex;align-items:center;
+  margin-bottom:12px;
 }
+.recipe-search-icon{
+  position:absolute;left:14px;top:50%;
+  transform:translateY(-50%);
+  width:20px;height:20px;
+  color:var(--t4);
+  pointer-events:none;
+  display:flex;align-items:center;justify-content:center;
+}
+.recipe-search-icon svg{width:20px;height:20px}
+.recipe-search-input{
+  width:100%;
+  padding:12px 44px 12px 42px;
+  font-size:16px; /* ≥16 to prevent iOS zoom-on-focus */
+  min-height:48px;
+  border:1.5px solid var(--bd);
+  border-radius:var(--rsm);
+  background-color:var(--card);
+  color:var(--t1);
+  font-family:inherit;
+  outline:none;
+  transition:border-color .15s,box-shadow .15s;
+  -webkit-appearance:none;appearance:none;
+}
+.recipe-search-input:focus{
+  border-color:var(--o);
+  box-shadow:0 0 0 3px rgba(244,132,95,.15);
+}
+.recipe-search-clear{
+  position:absolute;right:8px;top:50%;
+  transform:translateY(-50%);
+  width:34px;height:34px;
+  border:none;background:var(--bg);
+  color:var(--t3);
+  border-radius:50%;
+  cursor:pointer;
+  font-family:inherit;font-size:1rem;font-weight:700;
+  display:none; /* shown via JS when query is non-empty */
+  align-items:center;justify-content:center;
+  touch-action:manipulation;
+}
+.recipe-search-clear.on{display:flex}
+.recipe-search-clear:active{background:var(--bd);transform:translateY(-50%) scale(.92)}
+html[data-theme="dark"] .recipe-search-input{background-color:#26221d}
+html[data-theme="dark"] .recipe-search-clear{background:#26221d}
+
+/* Filter bar on Oppskrifter page — orange-tinted "search" container,
+   visually distinct from the green "creation" tag section in the form. */
+.recipe-filter-bar{
+  background:linear-gradient(180deg,var(--o50),var(--card));
+  border:1.5px solid var(--o100);
+  border-left:4px solid var(--o);
+  border-radius:var(--rsm);
+  padding:14px 14px 16px;
+  margin-bottom:14px;box-shadow:var(--sh);
+  transition:padding .2s ease;
+}
+/* Collapsed state — shown when a search query is active so the filter bar
+   doesn't push the matching recipes below the fold. Only the title and a
+   compact "tap to expand" hint remain visible. */
+.recipe-filter-bar.collapsed{padding:10px 14px 10px}
+.recipe-filter-bar.collapsed .recipe-filter-desc,
+.recipe-filter-bar.collapsed .recipe-filter-groups{display:none}
+.recipe-filter-bar.collapsed .recipe-filter-hdr{margin-bottom:0}
+.recipe-filter-hint{
+  display:none;font-size:.72rem;color:var(--t3);
+  font-weight:600;flex-shrink:0;
+}
+.recipe-filter-bar.collapsed .recipe-filter-hint{display:inline}
 .recipe-filter-hdr{
   display:flex;align-items:center;gap:10px;
-  margin-bottom:10px;
+  margin-bottom:2px;
 }
 .recipe-filter-title{
-  font-size:.75rem;font-weight:800;color:var(--t2);
-  text-transform:uppercase;letter-spacing:.6px;flex-shrink:0;
+  font-size:.88rem;font-weight:800;color:#9a3412;
+  letter-spacing:-.1px;flex:1;min-width:0;
+}
+.recipe-filter-desc{
+  font-size:.76rem;color:var(--t3);
+  line-height:1.5;margin-bottom:12px;
 }
 .recipe-filter-count{
-  flex:1;font-size:.75rem;color:var(--t3);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-size:.72rem;color:var(--t3);
+  white-space:nowrap;flex-shrink:0;font-weight:600;
 }
 .recipe-filter-clear{
   background:none;border:none;color:var(--o);
@@ -1256,6 +1415,13 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
   font-size:.66rem;font-weight:700;color:var(--t3);
   text-transform:uppercase;letter-spacing:.5px;
   margin-bottom:4px;
+}
+/* Tag chips inside the filter bar use orange accent when selected so
+   they're visually distinct from the green "add" chips in the form. */
+.recipe-filter-bar .tag-chip.selected{
+  background:linear-gradient(135deg,var(--o50),var(--o100));
+  border-color:var(--o);color:#9a3412;
+  box-shadow:0 1px 5px rgba(244,132,95,.22);
 }
 
 /* Recipe detail modal (bottom sheet) */
@@ -1273,8 +1439,9 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
   background:var(--card);
   border-radius:var(--r) var(--r) 0 0;
   padding:0 0 env(safe-area-inset-bottom);
-  max-height:88vh;max-height:88dvh;
+  max-height:90vh;max-height:90dvh;
   overflow-y:auto;
+  overscroll-behavior:contain;
   -webkit-overflow-scrolling:touch;
   box-shadow:0 -4px 24px rgba(0,0,0,.18);
   animation:slideUp .22s ease;
@@ -1288,17 +1455,46 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
 .recipe-modal-title{font-size:1.4rem;font-weight:800;margin:10px 0 4px;line-height:1.2;letter-spacing:-.3px}
 .recipe-modal-meta{font-size:.85rem;color:var(--t3);margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .recipe-modal-ing h4{font-size:.78rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
-.recipe-modal-ing ul{list-style:none;display:flex;flex-direction:column;gap:4px}
-.recipe-modal-ing li{font-size:.9rem;color:var(--t2);display:flex;align-items:center;gap:7px}
-.recipe-modal-ing li::before{content:'·';color:var(--g);font-size:1.2rem;line-height:0;flex-shrink:0}
+.recipe-modal-ing ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+.recipe-modal-ing li{
+  font-size:.9rem;color:var(--t2);
+  display:flex;align-items:flex-start;gap:10px;
+  padding:6px 10px;
+  background:var(--bg);
+  border-radius:var(--rxs);
+  border:1px solid var(--bd);
+  min-width:0;
+}
+.recipe-modal-ing li::before{
+  content:'·';color:var(--g);font-size:1.3rem;line-height:1;
+  flex-shrink:0;font-weight:800;margin-top:-2px;
+}
+.recipe-modal-ing .rmi-name{
+  flex:1;min-width:0;
+  word-break:break-word;
+  line-height:1.35;
+}
+.recipe-modal-ing .rmi-qty{
+  flex-shrink:0;
+  font-size:.78rem;font-weight:600;
+  color:var(--t3);
+  background:var(--card);
+  border:1px solid var(--bd);
+  border-radius:20px;
+  padding:3px 10px;
+  white-space:nowrap;
+  align-self:center;
+}
 .planner-section{margin-top:18px;padding-top:16px;border-top:1.5px solid var(--bd)}
 .planner-section h4{font-size:.78rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px}
 .day-picker{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
 .day-pick-btn{
   background:var(--o50);color:var(--o);border:1.5px solid var(--o100);
-  border-radius:var(--rsm);padding:11px 4px;font-size:.82rem;font-weight:700;
+  border-radius:var(--rsm);padding:10px 4px;font-size:.82rem;font-weight:700;
   cursor:pointer;font-family:inherit;touch-action:manipulation;
-  text-align:center;transition:all .2s;min-height:48px;
+  text-align:center;transition:all .2s;min-height:52px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:1px;line-height:1.15;
 }
 .day-pick-btn:active{background:var(--o100);transform:scale(.95);transition-duration:.08s}
 .day-pick-btn.has-meal{background:linear-gradient(135deg,var(--g50),var(--o50));border-color:var(--o);color:var(--t2)}
@@ -1349,6 +1545,39 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
 .install-close:active{background:#ede5db}
 
 /* ═══════════════════════════════════════════════
+   RECIPE FORM TABS
+═══════════════════════════════════════════════ */
+.recipe-form-tabs{
+  display:flex;gap:6px;
+  background:var(--bg);
+  border:1.5px solid var(--bd);
+  border-radius:var(--rsm);
+  padding:4px;
+  margin-bottom:16px;
+}
+.recipe-form-tab{
+  flex:1;min-width:0;
+  padding:10px 12px;
+  border:none;background:transparent;
+  border-radius:var(--rxs);
+  font-family:inherit;font-size:.85rem;font-weight:700;
+  color:var(--t3);cursor:pointer;
+  transition:background .15s,color .15s,box-shadow .15s;
+  touch-action:manipulation;
+  -webkit-user-select:none;user-select:none;
+  white-space:nowrap;
+}
+.recipe-form-tab.active{
+  background:var(--card);color:var(--g);
+  box-shadow:0 1px 4px rgba(0,0,0,.08);
+}
+.recipe-form-tab:active:not(.active){background:rgba(0,0,0,.04)}
+.recipe-tab-hint{
+  font-size:.83rem;color:var(--t3);line-height:1.55;
+  margin-bottom:10px;
+}
+
+/* ═══════════════════════════════════════════════
    INGREDIENT IMPORT
 ═══════════════════════════════════════════════ */
 .ing-paste-ta{
@@ -1386,50 +1615,6 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
   font-size:.76rem;color:#92400e;margin-top:8px;padding:7px 11px;
   background:#fffbeb;border-radius:var(--rxs);border-left:3px solid #f59e0b;
   line-height:1.5;
-}
-.ing-preview-list{
-  display:flex;flex-direction:column;gap:5px;
-  max-height:280px;overflow-y:auto;
-  border:1.5px solid var(--bd);border-radius:var(--rsm);
-  padding:6px;background:#faf5ee;
-}
-.ing-preview-item{
-  display:flex;align-items:center;gap:7px;
-  padding:7px 8px;background:white;
-  border:1px solid var(--g100);border-radius:var(--rxs);
-  min-height:40px;
-}
-.ing-preview-qty{
-  font-size:.72rem;font-weight:700;color:var(--g);
-  background:var(--g100);padding:2px 7px;
-  border-radius:20px;white-space:nowrap;flex-shrink:0;
-}
-.ing-preview-name{
-  font-size:.88rem;font-weight:600;color:var(--t1);
-  flex:1;min-width:0;overflow:hidden;
-  white-space:nowrap;text-overflow:ellipsis;
-}
-.ing-preview-cat-sel{
-  font-size:.72rem;padding:4px 20px 4px 6px;
-  border:1px solid var(--bd);border-radius:var(--rxs);
-  background:#fdf8f2 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%237a6659' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 5px center;
-  -webkit-appearance:none;appearance:none;
-  color:var(--t2);font-family:inherit;min-height:30px;
-  cursor:pointer;max-width:130px;flex-shrink:0;
-}
-.ing-preview-del{
-  background:none;border:none;color:var(--t4);
-  font-size:.8rem;cursor:pointer;padding:4px;
-  border-radius:var(--rxs);min-height:30px;min-width:30px;
-  display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;transition:background .2s,color .2s;
-}
-.ing-preview-del:active{background:#fee2e2;color:#dc2626}
-.ing-preview-header{
-  display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;
-}
-.ing-preview-count-lbl{
-  font-size:.76rem;font-weight:700;color:var(--t2);
 }
 
 /* ═══════════════════════════════════════════════
@@ -1705,13 +1890,69 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
   display:flex;gap:7px;flex-wrap:wrap;margin:0;
 }
 
+/* Permission rows (Tillatelser card) */
+.permission-row{
+  display:flex;align-items:center;gap:12px;
+  width:100%;
+  background:var(--bg);
+  border:1.5px solid var(--bd);
+  border-radius:var(--rsm);
+  padding:12px 14px;
+  margin-bottom:8px;
+  font-family:inherit;cursor:pointer;text-align:left;
+  touch-action:manipulation;
+  -webkit-user-select:none;user-select:none;
+  transition:background .15s,transform .1s;
+  color:var(--t1);
+}
+.permission-row:last-child{margin-bottom:0}
+.permission-row:active{transform:scale(.98);transition-duration:.06s}
+.permission-row.granted{
+  background:var(--g50);border-color:var(--g200);
+}
+.permission-row.denied{
+  background:#fef2f2;border-color:#fecaca;
+}
+.permission-icon{
+  font-size:1.4rem;line-height:1;flex-shrink:0;
+  width:40px;height:40px;
+  background:var(--card);border:1.5px solid var(--bd);
+  border-radius:var(--rxs);
+  display:flex;align-items:center;justify-content:center;
+}
+.permission-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.permission-title{font-size:.92rem;font-weight:800;color:var(--t1);letter-spacing:-.1px}
+.permission-status{font-size:.78rem;color:var(--t3);line-height:1.4}
+.permission-row.granted .permission-status{color:#2a5c37;font-weight:600}
+.permission-row.denied  .permission-status{color:#b91c1c;font-weight:600}
+.permission-hint{
+  font-size:.72rem;color:var(--t3);line-height:1.5;
+  margin-top:6px;padding:8px 10px;
+  background:var(--card);border:1px dashed var(--bd);
+  border-radius:var(--rxs);
+}
+.permission-badge{
+  flex-shrink:0;font-size:1.1rem;line-height:1;
+  min-width:24px;text-align:center;
+}
+html[data-theme="dark"] .permission-row.granted{
+  background:#14241a;border-color:#1d3828;
+}
+html[data-theme="dark"] .permission-row.denied{
+  background:#2a1313;border-color:#5c1f1f;
+}
+html[data-theme="dark"] .permission-row.granted .permission-status{color:#7dcb91}
+html[data-theme="dark"] .permission-row.denied  .permission-status{color:#f87171}
+html[data-theme="dark"] .permission-icon{background:#26221d}
+html[data-theme="dark"] .permission-hint{background:#26221d}
+
 /* Per-day size row inside day cards */
 .day-size-row{
   display:flex;align-items:center;justify-content:space-between;
-  margin-top:7px;gap:4px;
+  margin-top:5px;gap:4px;
 }
 .day-size-lbl{
-  font-size:.68rem;color:var(--t4);
+  font-size:.63rem;color:var(--t4);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   flex:1;line-height:1.2;
 }
@@ -1720,11 +1961,11 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
 }
 .day-size-btn{
   background:none;border:none;color:var(--t4);
-  font-size:.65rem;font-weight:700;cursor:pointer;
+  font-size:.62rem;font-weight:700;cursor:pointer;
   font-family:inherit;touch-action:manipulation;
-  padding:3px 7px;border-radius:var(--rxs);
+  padding:2px 6px;border-radius:var(--rxs);
   text-decoration:underline;text-underline-offset:2px;
-  white-space:nowrap;min-height:26px;flex-shrink:0;
+  white-space:nowrap;min-height:22px;flex-shrink:0;
   transition:color .15s;
 }
 .day-size-btn:active{color:var(--o)}
@@ -1976,31 +2217,29 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
    with hardcoded light colours that don't fall
    back to CSS variables on their own.
 ═══════════════════════════════════════════════ */
+/* Use background-color only — the shorthand `background` would reset
+   background-repeat to `repeat` and background-position to `0% 0%`,
+   causing the chevron SVG to tile across the select as arrow artifacts. */
 html[data-theme="dark"] select,
 html[data-theme="dark"] input[type=text],
 html[data-theme="dark"] input[type=number],
 html[data-theme="dark"] input[type=password],
 html[data-theme="dark"] textarea{
-  background:#26221d;
+  background-color:#26221d;
   color:var(--t1);
   border-color:var(--bd);
 }
 html[data-theme="dark"] select:focus,
 html[data-theme="dark"] input:focus,
 html[data-theme="dark"] textarea:focus{
-  background:#2e2924;
+  background-color:#2e2924;
 }
 html[data-theme="dark"] select{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239a9080' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
 }
-html[data-theme="dark"] .ing-preview-cat-sel{
-  background:#26221d url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%239a9080' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 5px center;
-}
 html[data-theme="dark"] .item-list li.checked{background:#241f1a}
 html[data-theme="dark"] .recipe-cat-chip{background:#26221d;color:var(--t2)}
 html[data-theme="dark"] .recipe-cat-chip.active{background:var(--g50);color:var(--g-lt)}
-html[data-theme="dark"] .recipe-day-chip{background:#26221d;color:var(--t2)}
-html[data-theme="dark"] .recipe-day-chip.selected{background:var(--g100);color:var(--g-lt)}
 html[data-theme="dark"] .tag-chip{background:#26221d;color:var(--t2)}
 html[data-theme="dark"] .tag-chip.selected{background:linear-gradient(135deg,var(--g50),var(--g100));color:var(--g-lt)}
 html[data-theme="dark"] .tag-chip.auto-suggested{background:#3a2f17;border-color:#5c4a1f;color:#fbbf24}
@@ -2031,7 +2270,18 @@ html[data-theme="dark"] .skipped-pill{background:#26221d;color:var(--t3)}
 html[data-theme="dark"] .admin-pending-empty{color:var(--t3)}
 html[data-theme="dark"] .stat-highlight,
 html[data-theme="dark"] .stat-card{background:var(--card)}
-html[data-theme="dark"] .recipe-filter-bar{background:var(--card)}
+html[data-theme="dark"] .recipe-filter-bar{
+  background:linear-gradient(180deg,var(--o50),var(--card));
+  border-color:#3b241b;
+  border-left-color:var(--o);
+}
+html[data-theme="dark"] .recipe-filter-title{color:#ffb896}
+html[data-theme="dark"] .recipe-form-tags-section{
+  background:linear-gradient(180deg,var(--g50),var(--card));
+  border-color:#1d3828;
+  border-left-color:var(--g);
+}
+html[data-theme="dark"] .recipe-form-tags-title{color:#7dcb91}
 html[data-theme="dark"] .manual-add-form{background:var(--card)}
 html[data-theme="dark"] details.acc summary,
 html[data-theme="dark"] details.acc{background:var(--card)}
@@ -2208,6 +2458,16 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
         <div id="barcode-result"></div>
       </div>
 
+      <!-- Shortcut to basisvarer in Innstillinger -->
+      <button class="staples-shortcut-btn" onclick="openBasisvarerFromFridge()">
+        <span class="staples-shortcut-icon">🧂</span>
+        <span class="staples-shortcut-body">
+          <span class="staples-shortcut-title">Rediger basisvarer</span>
+          <span class="staples-shortcut-desc">Endre hvilke varer som alltid er hjemme</span>
+        </span>
+        <span class="staples-shortcut-arrow">›</span>
+      </button>
+
     </div>
   </section>
 
@@ -2223,125 +2483,115 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
         <div class="acc-body">
           <div style="margin-top:10px">
 
-            <div class="fld-lbl" style="margin-bottom:6px">Oppskriftsnavn</div>
-            <input type="text" id="recipe-name-input" placeholder="Navn på oppskriften…"
-                   oninput="refreshRecipeTagSuggestions()"
-                   style="margin-bottom:14px">
-
-            <div class="fld-lbl" style="margin-bottom:8px">Kategori</div>
-            <div class="recipe-cat-chips" id="recipe-cat-chips" style="margin-bottom:14px">
-              <label class="recipe-cat-chip" onclick="selectRecipeCat(this,'frokost')">
-                <input type="radio" name="recipe-cat" value="frokost"> 🌅 Frokost
-              </label>
-              <label class="recipe-cat-chip" onclick="selectRecipeCat(this,'lunsj')">
-                <input type="radio" name="recipe-cat" value="lunsj"> ☀️ Lunsj
-              </label>
-              <label class="recipe-cat-chip active" onclick="selectRecipeCat(this,'middag')">
-                <input type="radio" name="recipe-cat" value="middag" checked> 🍽️ Middag
-              </label>
+            <!-- Two ways to add: manual or analyse pasted text -->
+            <div class="recipe-form-tabs" role="tablist">
+              <button type="button" class="recipe-form-tab active" id="rft-manuelt"
+                      onclick="switchRecipeTab('manuelt')" role="tab">✏️ Manuelt</button>
+              <button type="button" class="recipe-form-tab" id="rft-analyser"
+                      onclick="switchRecipeTab('analyser')" role="tab">✨ Analyser tekst</button>
             </div>
 
-            <div class="fld-lbl" style="margin-bottom:8px">Passer til dag (valgfritt)</div>
-            <div class="recipe-day-chips" id="recipe-day-chips-form" style="margin-bottom:14px"></div>
-
-            <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
-              <div>
-                <div class="fld-lbl" style="margin-bottom:6px">Antall porsjoner</div>
-                <input type="number" id="recipe-servings" value="4" min="1" max="30"
-                       style="width:90px;min-width:0">
-              </div>
-            </div>
-
-            <div class="fld-lbl" style="margin-bottom:6px">
-              Tags
-              <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--t4);font-size:.72rem">(foreslås automatisk etter lagring)</span>
-            </div>
-            <div id="recipe-tags-form" class="recipe-tags-form" style="margin-bottom:14px"></div>
-
-            <div class="fld-lbl" style="margin-bottom:8px;margin-top:2px">
-              Ingredienser <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--t4);font-size:.75rem">(brukes på handlelisten)</span>
-            </div>
-
-            <!-- Import paste panel -->
-            <div id="ing-import-wrap" style="margin-bottom:12px">
+            <!-- Analyser tekst panel -->
+            <div id="recipe-tab-analyser" class="recipe-tab-panel" style="display:none">
+              <p class="recipe-tab-hint">
+                Lim inn hele oppskriften — navn, ingredienser og porsjoner blir hentet ut automatisk.
+              </p>
               <textarea id="ing-paste-area" class="ing-paste-ta"
-                placeholder="Lim inn ingrediensliste her, én per linje…&#10;&#10;Eks:&#10;300 g kyllingfilet&#10;2 dl fløte&#10;1 løk&#10;salt og pepper"></textarea>
-              <div class="ing-import-actions">
-                <button class="btn btn-blue btn-sm" onclick="parseAndShowIngredients()" style="flex:1;min-width:160px">✨ Analyser ingredienser</button>
-                <button class="btn btn-gray btn-sm" onclick="switchToManualIng()">✏️ Manuelt</button>
+                placeholder="Lim inn hele oppskriften her…&#10;&#10;Eks:&#10;Kylling tikka masala&#10;4 porsjoner&#10;&#10;600 g kyllingfilet&#10;2 bokser hermetiske tomater&#10;3 dl fløte&#10;1 løk&#10;3 fedd hvitløk&#10;3 ss tikka masala-krydder"></textarea>
+              <div class="ing-import-actions" style="margin-top:10px">
+                <button class="btn btn-gen btn-sm" style="flex:1" onclick="analyzeRecipeText()">✨ Analyser tekst</button>
               </div>
-              <p class="ing-import-hint">Lim inn fra hvilken som helst oppskriftsside — én ingrediens per linje</p>
+              <div id="ing-skipped-notice" class="ing-skipped-notice" style="display:none;margin-top:10px"></div>
             </div>
 
-            <!-- Preview panel (shown after parse) -->
-            <div id="ing-preview-wrap" style="display:none;margin-bottom:12px">
-              <div class="ing-preview-header">
-                <span class="ing-preview-count-lbl">
-                  <span id="ing-preview-count">0</span> ingredienser funnet
-                </span>
-                <button class="btn btn-gray btn-sm" onclick="resetIngImport()"
-                        style="min-height:30px;padding:4px 10px;font-size:.75rem">↩ Endre tekst</button>
-              </div>
-              <div id="ing-preview-list" class="ing-preview-list"></div>
-              <div id="ing-skipped-notice" class="ing-skipped-notice" style="display:none"></div>
-              <div class="ing-rows-actions" style="margin-top:10px">
-                <button class="btn btn-gen" style="flex:1" onclick="confirmPreview()">✓ Bruk disse ingrediensene</button>
-              </div>
-            </div>
+            <!-- Manuelt panel (also used as the shared editing surface after
+                 "Analyser tekst" has populated its fields) -->
+            <div id="recipe-tab-manuelt" class="recipe-tab-panel">
+              <div class="fld-lbl" style="margin-bottom:6px">Oppskriftsnavn</div>
+              <input type="text" id="recipe-name-input" placeholder="Navn på oppskriften…"
+                     oninput="refreshRecipeTagSuggestions()"
+                     style="margin-bottom:14px">
 
-            <!-- Rows panel (shown after preview confirm or manual) -->
-            <div id="ing-rows-wrap" style="display:none;margin-bottom:12px">
+              <div class="fld-lbl" style="margin-bottom:8px">Kategori</div>
+              <div class="recipe-cat-chips" id="recipe-cat-chips" style="margin-bottom:14px">
+                <label class="recipe-cat-chip" onclick="selectRecipeCat(this,'frokost')">
+                  <input type="radio" name="recipe-cat" value="frokost"> 🌅 Frokost
+                </label>
+                <label class="recipe-cat-chip" onclick="selectRecipeCat(this,'lunsj')">
+                  <input type="radio" name="recipe-cat" value="lunsj"> ☀️ Lunsj
+                </label>
+                <label class="recipe-cat-chip active" onclick="selectRecipeCat(this,'middag')">
+                  <input type="radio" name="recipe-cat" value="middag" checked> 🍽️ Middag
+                </label>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+                <div>
+                  <div class="fld-lbl" style="margin-bottom:6px">Antall porsjoner</div>
+                  <input type="number" id="recipe-servings" value="4" min="1" max="30"
+                         style="width:90px;min-width:0">
+                </div>
+              </div>
+
+              <div class="fld-lbl" style="margin-bottom:8px;margin-top:2px">
+                Ingredienser <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--t4);font-size:.75rem">(brukes på handlelisten)</span>
+              </div>
+
               <div id="recipe-ing-rows"></div>
-              <div class="ing-rows-actions">
-                <button class="btn btn-gray btn-sm" onclick="addRecipeIngRow()">+ Legg til</button>
-                <button class="btn btn-gray btn-sm" onclick="resetIngImport()">↩ Ny import</button>
+              <div class="ing-rows-actions" style="margin-bottom:14px">
+                <button class="btn btn-gray btn-sm" onclick="addRecipeIngRow()">+ Legg til ingrediens</button>
               </div>
-            </div>
 
-            <div style="display:flex;gap:8px">
-              <button class="btn btn-gen" style="flex:1" onclick="saveRecipe()">💾 Lagre oppskrift</button>
-              <button class="btn btn-gray btn-sm" onclick="cancelRecipeForm()">Avbryt</button>
+              <!-- Tags ADDED to this recipe — visually distinct from the filter bar below -->
+              <div class="recipe-form-tags-section">
+                <div class="recipe-form-tags-title">
+                  ➕ Legg til tags på denne oppskriften
+                </div>
+                <div class="recipe-form-tags-desc">
+                  Foreslås automatisk basert på ingrediensene. Trykk for å legge til eller fjerne.
+                </div>
+                <div id="recipe-tags-form" class="recipe-tags-form"></div>
+              </div>
+
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-gen" style="flex:1" onclick="saveRecipe()">💾 Lagre oppskrift</button>
+                <button class="btn btn-gray btn-sm" onclick="cancelRecipeForm()">Avbryt</button>
+              </div>
             </div>
           </div>
         </div>
       </details>
 
-      <!-- Filter bar -->
+      <!-- Search bar — real-time fuzzy search over recipe names and ingredients -->
+      <div class="recipe-search-wrap" id="recipe-search-wrap">
+        <span class="recipe-search-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </span>
+        <input type="text" id="recipe-search-input" class="recipe-search-input"
+               placeholder="Søk i navn og ingredienser…" autocomplete="off"
+               oninput="onRecipeSearchInput()">
+        <button type="button" class="recipe-search-clear" id="recipe-search-clear"
+                onclick="clearRecipeSearch()" aria-label="Nullstill søk">✕</button>
+      </div>
+
+      <!-- Filter bar — auto-collapses when a search query is active so results
+           aren't pushed below the fold on mobile. -->
       <div id="recipe-filter-bar" class="recipe-filter-bar">
         <div class="recipe-filter-hdr">
-          <span class="recipe-filter-title">Filtrer</span>
+          <span class="recipe-filter-title">🔍 Filtrer oppskrifter</span>
+          <span class="recipe-filter-hint">(minimert under søk)</span>
           <span class="recipe-filter-count" id="recipe-filter-count"></span>
           <button class="recipe-filter-clear" id="recipe-filter-clear" onclick="clearRecipeFilters()">Nullstill</button>
         </div>
+        <div class="recipe-filter-desc">Finn oppskrifter i biblioteket ditt</div>
         <div class="recipe-filter-groups" id="recipe-filter-groups"></div>
       </div>
 
       <!-- Recipe library -->
       <div id="recipes-content"></div>
-
-      <!-- Egne retter -->
-      <details class="acc" id="acc-custom">
-        <summary>🍳 Egne retter</summary>
-        <div class="acc-body">
-          <div style="margin-top:8px">
-            <div class="fld-lbl" style="margin-bottom:6px">Ny rett</div>
-            <div class="meal-form">
-              <input type="text" id="new-meal-name" placeholder="Navn på retten…">
-              <button class="btn btn-green btn-sm" onclick="startNewMeal()">+ Opprett</button>
-            </div>
-            <div id="ingredient-editor" style="display:none">
-              <div class="fld-lbl" style="margin-bottom:8px">Ingredienser til: <span id="editing-name" style="color:var(--g)"></span></div>
-              <div id="ingredient-rows"></div>
-              <button class="btn btn-gray btn-sm" onclick="addIngredientRow()">+ Legg til ingrediens</button>
-              <div style="display:flex;gap:8px">
-                <button class="btn btn-green btn-sm" onclick="saveCustomMeal()">Lagre rett</button>
-                <button class="btn btn-gray btn-sm" onclick="cancelMeal()">Avbryt</button>
-              </div>
-            </div>
-            <div id="custom-meals-list"></div>
-          </div>
-        </div>
-      </details>
     </div>
   </section>
 
@@ -2399,15 +2649,6 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
         </details>
       </div>
 
-      <!-- Statistikk -->
-      <div class="settings-card">
-        <div class="settings-card-hdr">
-          <div class="settings-card-title">Statistikk</div>
-          <div class="settings-card-desc">Morsomme fakta om hva du har spist og planlagt.</div>
-        </div>
-        <div id="stats-content"></div>
-      </div>
-
       <!-- Tema -->
       <div class="settings-card">
         <div class="settings-card-hdr">
@@ -2442,6 +2683,36 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
             <span class="settings-toggle-slider"></span>
           </label>
         </div>
+      </div>
+
+      <!-- Tillatelser -->
+      <div class="settings-card">
+        <div class="settings-card-hdr">
+          <div class="settings-card-title">Tillatelser</div>
+          <div class="settings-card-desc">Styr hva appen har tilgang til på enheten din. Brukes av taleregistrering og strekkodeskanner på Kjøleskap-siden.</div>
+        </div>
+
+        <!-- Mikrofon -->
+        <button type="button" class="permission-row" onclick="requestPermission('microphone')">
+          <span class="permission-icon">🎤</span>
+          <span class="permission-body">
+            <span class="permission-title">Mikrofon</span>
+            <span class="permission-status" id="perm-status-microphone">Sjekker…</span>
+            <span class="permission-hint" id="perm-hint-microphone" style="display:none"></span>
+          </span>
+          <span class="permission-badge" id="perm-badge-microphone"></span>
+        </button>
+
+        <!-- Kamera -->
+        <button type="button" class="permission-row" onclick="requestPermission('camera')">
+          <span class="permission-icon">📷</span>
+          <span class="permission-body">
+            <span class="permission-title">Kamera</span>
+            <span class="permission-status" id="perm-status-camera">Sjekker…</span>
+            <span class="permission-hint" id="perm-hint-camera" style="display:none"></span>
+          </span>
+          <span class="permission-badge" id="perm-badge-camera"></span>
+        </button>
       </div>
 
       <!-- Nullstill data -->
@@ -2742,6 +3013,7 @@ function showPage(name) {
     renderStats();
     syncNotificationsToggle();
     syncThemeToggle();
+    syncPermissions();
   }
 }
 
@@ -2766,9 +3038,9 @@ function updateHeaderActions(page) {
     el.innerHTML = hasItems
       ? `<button class="hdr-btn" onclick="shareList()">📤 Del liste</button>`
       : '';
-  } else if (page === 'oppskrifter') {
-    el.innerHTML = `<button class="hdr-btn" onclick="openAddRecipeForm()">➕ Legg til</button>`;
   } else {
+    // No header action for Oppskrifter — the "Legg til oppskrift"
+    // accordion at the top of that page is the primary entry point.
     el.innerHTML = '';
   }
 }
@@ -2904,7 +3176,12 @@ function computeStats() {
 
   hist.forEach(entry => {
     entry.meals?.forEach(m => {
-      mealCount[m.label] = (mealCount[m.label] || 0) + 1;
+      // Old history entries may have `label: undefined` (saved before the
+      // `generateList` bug was fixed). Skip those so "undefined" doesn't
+      // end up as the top meal label.
+      const label = m?.label;
+      if (!label || label === 'undefined') return;
+      mealCount[label] = (mealCount[label] || 0) + 1;
     });
     if (!entry.days) return;
     const inSix = new Date(entry.date).getTime() > sixMonthsAgo;
@@ -2938,17 +3215,18 @@ function computeStats() {
 function renderStats() {
   const container = document.getElementById('stats-content');
   if (!container) return;
-  const hist = loadHistoryData();
 
-  if (!hist.length) {
+  const s = computeStats();
+  // If there's no history at all, or the history entries contain no usable
+  // data (e.g. only legacy entries with undefined labels), show an inline
+  // empty-state instead of rendering a broken grid.
+  const hasAnyData = s && (s.topMeal || s.topIng || s.eggQty > 0 || s.totalGens > 0);
+  if (!hasAnyData) {
     container.innerHTML = `<div class="no-stats-hint">
-      📊 Statistikk dukker opp her etter at du har generert din første handleliste.
+      📊 Ikke nok data ennå. Generer en handleliste for å se morsomme matfakta her.
     </div>`;
     return;
   }
-
-  const s = computeStats();
-  if (!s) { container.innerHTML = ''; return; }
 
   // "Reuse last week" button
   const reuseBtn = s.hasLastWeek
@@ -3012,6 +3290,21 @@ function renderStats() {
 }
 
 // ── Settings page ─────────────────────────────────────────────────────────────
+// Shortcut from Kjøleskap → opens Innstillinger and scrolls to the
+// Basisvarer accordion with it already expanded.
+function openBasisvarerFromFridge() {
+  showPage('innstillinger');
+  // Defer until after showPage has activated the section so scrollIntoView
+  // can measure the correct layout.
+  setTimeout(() => {
+    const acc = document.getElementById('staples-section');
+    if (acc) {
+      acc.open = true;
+      acc.scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+  }, 60);
+}
+
 function renderSettingsHHCode() {
   const body = document.getElementById('settings-hh-body');
   if (!body) return;
@@ -3053,6 +3346,116 @@ function toggleNotifications() {
   } else {
     localStorage.removeItem('notifications_enabled');
     showSyncToast('🔕 Varslinger slått av');
+  }
+}
+
+// ── Tillatelser (Permissions) ────────────────────────────────────────────────
+// Shows mic + camera permission state and lets the user trigger a
+// permission request. Browsers can't *grant* permissions without a
+// getUserMedia() call, so clicking a row attempts to open the media
+// stream which triggers the native prompt.
+
+// Norwegian instructions for re-enabling a denied permission (varies slightly
+// per browser, but this covers the common flow users recognise).
+const _PERM_HINTS = {
+  microphone: 'For å gi tilgang på nytt: åpne nettleser-innstillingene (trykk på 🔒 i adressefeltet) → Tillatelser → Mikrofon → Tillat. Last deretter siden på nytt.',
+  camera:     'For å gi tilgang på nytt: åpne nettleser-innstillingene (trykk på 🔒 i adressefeltet) → Tillatelser → Kamera → Tillat. Last deretter siden på nytt.',
+};
+
+// Read the current permission state via the Permissions API (best-effort —
+// some browsers don't implement it for microphone/camera, in which case we
+// fall back to the neutral "ikke spurt ennå" state).
+async function _getPermissionState(name) {
+  if (!navigator.permissions?.query) return 'unknown';
+  try {
+    const status = await navigator.permissions.query({ name });
+    return status.state; // 'granted' | 'denied' | 'prompt'
+  } catch {
+    return 'unknown';
+  }
+}
+
+function _renderPermissionRow(kind, state) {
+  const row    = document.querySelector(`.permission-row[onclick*="${kind}"]`);
+  const status = document.getElementById('perm-status-' + kind);
+  const badge  = document.getElementById('perm-badge-'  + kind);
+  const hint   = document.getElementById('perm-hint-'   + kind);
+  if (!row || !status || !badge || !hint) return;
+
+  row.classList.remove('granted', 'denied');
+  hint.style.display = 'none';
+
+  if (state === 'granted') {
+    row.classList.add('granted');
+    status.textContent = 'Tilgang gitt ✅';
+    badge.textContent = '✓';
+  } else if (state === 'denied') {
+    row.classList.add('denied');
+    status.textContent = 'Tilgang nektet ❌';
+    badge.textContent = '!';
+    hint.textContent = _PERM_HINTS[kind] || '';
+    hint.style.display = '';
+  } else if (state === 'prompt') {
+    status.textContent = 'Ikke spurt ennå — trykk for å gi tilgang';
+    badge.textContent = '›';
+  } else {
+    // Permissions API unavailable — show a neutral prompt
+    status.textContent = 'Ikke spurt ennå — trykk for å gi tilgang';
+    badge.textContent = '›';
+  }
+}
+
+async function syncPermissions() {
+  // Guard: only run if the settings page is in the DOM
+  if (!document.getElementById('perm-status-microphone')) return;
+  const [mic, cam] = await Promise.all([
+    _getPermissionState('microphone'),
+    _getPermissionState('camera'),
+  ]);
+  _renderPermissionRow('microphone', mic);
+  _renderPermissionRow('camera',     cam);
+}
+
+async function requestPermission(kind) {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    _renderPermissionRow(kind, 'denied');
+    showSyncToast('Nettleseren din støtter ikke denne tillatelsen.');
+    return;
+  }
+  // If already denied, clicking the row shows the instructions (already
+  // shown via the denied state) and prompts the user to fix it manually.
+  const current = await _getPermissionState(kind);
+  if (current === 'denied') {
+    _renderPermissionRow(kind, 'denied');
+    showSyncToast('Tilgang er nektet — se instruksjoner under ' + (kind === 'microphone' ? 'Mikrofon' : 'Kamera'));
+    return;
+  }
+  // Attempt the native prompt by opening a short-lived stream and
+  // immediately stopping it — we don't actually need the data, just the
+  // permission flip.
+  const constraints = kind === 'microphone'
+    ? { audio: true, video: false }
+    : { audio: false, video: { facingMode: { ideal: 'environment' } } };
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    stream.getTracks().forEach(t => t.stop());
+    _renderPermissionRow(kind, 'granted');
+    showSyncToast((kind === 'microphone' ? '🎤' : '📷') + ' Tilgang gitt');
+  } catch (err) {
+    const name = err?.name || '';
+    if (name === 'NotAllowedError' || name === 'SecurityError') {
+      _renderPermissionRow(kind, 'denied');
+      showSyncToast('Tilgang nektet');
+    } else if (name === 'NotFoundError' || name === 'OverconstrainedError') {
+      _renderPermissionRow(kind, 'denied');
+      const hint = document.getElementById('perm-hint-' + kind);
+      const status = document.getElementById('perm-status-' + kind);
+      if (status) status.textContent = (kind === 'microphone' ? 'Fant ingen mikrofon på enheten' : 'Fant ingen kamera på enheten');
+      if (hint) hint.style.display = 'none';
+    } else {
+      _renderPermissionRow(kind, 'unknown');
+      showSyncToast('Kunne ikke åpne ' + (kind === 'microphone' ? 'mikrofonen' : 'kameraet') + ': ' + (err?.message || name));
+    }
   }
 }
 
@@ -3209,9 +3612,10 @@ let MEALS = {
   ]},
 };
 
+// `customMeals` is kept only for data-model compatibility — legacy recipes
+// and existing week plans may still reference `custom__…` keys via getMeal().
+// The editor UI was removed; use the recipe library instead.
 let customMeals = JSON.parse(localStorage.getItem('custom_meals') || '{}');
-let editingMealName = '';
-let ingredientCount = 0;
 
 function saveToStorage() {
   const s = JSON.stringify(customMeals);
@@ -3490,12 +3894,17 @@ function buildGrid() {
   renderWeekSelector();
 }
 function rebuildSelects() {
+  // Re-read values from the week plan, not the DOM. The DOM value can be
+  // stale if the options were rebuilt after recipes were seeded — in that
+  // case `prev` would be empty and we'd lose the user's selections.
   DAYS.forEach((_,i) => {
     const sel = document.getElementById(`dinner-${i}`);
     if (!sel) return;
-    const prev = sel.value;
     sel.innerHTML = getMealOptions();
-    sel.value = prev;
+    const saved = getDayMeal(i);
+    sel.value = saved;
+    const card = document.getElementById(`card-${i}`);
+    if (card) card.className = 'day-card' + (saved ? ' active' : '');
   });
 }
 function updateCard(i) {
@@ -3676,71 +4085,11 @@ function showRandomToast(msg) {
   el._t = setTimeout(() => el.classList.remove('show'), 3000);
 }
 
-// ── Custom meal editor ────────────────────────────────────────────────────────
-function startNewMeal() {
-  const name = document.getElementById('new-meal-name').value.trim();
-  if (!name) { document.getElementById('new-meal-name').focus(); return; }
-  editingMealName = name;
-  document.getElementById('editing-name').textContent = name;
-  document.getElementById('ingredient-rows').innerHTML = '';
-  ingredientCount = 0;
-  addIngredientRow(); addIngredientRow();
-  document.getElementById('ingredient-editor').style.display = 'block';
-}
-function addIngredientRow() {
-  const id = ingredientCount++;
-  const row = document.createElement('div');
-  row.className = 'ing-row';
-  row.id = `ing-${id}`;
-  row.innerHTML = `
-    <input type="text" class="r-name" placeholder="Ingrediens" id="ing-name-${id}">
-    <input type="number" class="r-qty" placeholder="0" min="0" step="0.5" id="ing-qty-${id}" value="1">
-    <select class="r-unit" id="ing-unit-${id}">${UNIT_OPTIONS}</select>
-    <select class="r-cat" id="ing-cat-${id}">${CAT_OPTIONS}</select>
-    <button class="btn btn-red btn-sm r-del" onclick="document.getElementById('ing-${id}').remove()" style="min-height:36px;padding:6px 10px">✕</button>
-  `;
-  document.getElementById('ingredient-rows').appendChild(row);
-}
-function saveCustomMeal() {
-  const rows = document.querySelectorAll('#ingredient-rows .ing-row');
-  const ingredients = [];
-  rows.forEach(row => {
-    const id = row.id.replace('ing-','');
-    const name = document.getElementById(`ing-name-${id}`).value.trim();
-    const qty  = parseFloat(document.getElementById(`ing-qty-${id}`).value) || 0;
-    const unit = document.getElementById(`ing-unit-${id}`).value;
-    const cat  = document.getElementById(`ing-cat-${id}`).value;
-    if (name && qty > 0) ingredients.push([name, qty, unit, cat]);
-  });
-  if (!ingredients.length) { alert('Legg til minst én ingrediens!'); return; }
-  const key = editingMealName.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_æøå]/g,'');
-  customMeals[key] = { label: editingMealName, ingredients };
-  saveToStorage();
-  document.getElementById('new-meal-name').value = '';
-  document.getElementById('ingredient-editor').style.display = 'none';
-  renderCustomList(); rebuildSelects();
-}
-function cancelMeal() {
-  document.getElementById('ingredient-editor').style.display = 'none';
-  document.getElementById('new-meal-name').value = '';
-}
-function deleteCustomMeal(key) {
-  delete customMeals[key];
-  saveToStorage(); renderCustomList(); rebuildSelects();
-}
-function renderCustomList() {
-  const el = document.getElementById('custom-meals-list');
-  if (!Object.keys(customMeals).length) { el.innerHTML = ''; return; }
-  el.innerHTML = '<div class="fld-lbl" style="margin-bottom:8px;margin-top:12px">Dine retter</div>' +
-    Object.entries(customMeals).map(([k,v]) => `
-      <div class="custom-meal-item">
-        <div>
-          <strong>${v.label}</strong>
-          <div class="ing-tags">${v.ingredients.map(i=>i[0]).join(', ')}</div>
-        </div>
-        <button class="btn btn-red btn-sm" onclick="deleteCustomMeal('${k}')">Slett</button>
-      </div>`).join('');
-}
+// The old "Egne retter" editor UI is gone — the recipe library (with its
+// Manuelt + Analyser tekst tabs) replaces it. We keep `renderCustomList` as
+// a safe no-op so any remaining legacy call sites (fbApply, realtime
+// listener, init) don't throw if the DOM element doesn't exist.
+function renderCustomList() { /* no-op — UI removed */ }
 
 // ── Shopping list ─────────────────────────────────────────────────────────────
 function getMeal(key) {
@@ -3751,18 +4100,74 @@ function getMeal(key) {
   }
   return MEALS[key];
 }
+// Exclusion list — these words signal that an ingredient has been
+// transformed into a different product. When one side has an exclusion
+// word glued into a compound (e.g. "tomatpuré", "hvitløkspulver",
+// "tomatsaus") and the other side doesn't, they are considered different
+// products and won't match.
+//
+// Standalone modifier words — e.g. "tørket koriander", "fersk basilikum",
+// "revet ost" — do NOT trigger the exclusion, because they describe a
+// variant of the same base ingredient rather than a new product. That's
+// the difference between "tomatsaus" (sauce, compound) and "tørket
+// koriander" (dried herb, space-separated modifier).
+const _MATCH_EXCLUSIONS = [
+  'puré','pure','pulver','ekstrakt','essens','konsentrat',
+  'hermetisk','hermetisert',
+  'tørket','frystørket','røkt',
+  'syltet','marinert','fermentert',
+  'juice','saft',
+  'fløte','smør','ost','mel','olje','pasta','saus',
+  'buljong','kraft',
+  'stekt','kokt','bakt','grillet','dampet',
+  'frossen','tint',
+];
+
+function _normIngredient(s) {
+  return String(s || '').toLowerCase().replace(/[.,;()!?"'`]/g, '').trim();
+}
+
+// True if `name` contains an exclusion word as part of a compound
+// (word longer than the exclusion itself). Words that are *exactly* an
+// exclusion don't count — they're treated as standalone modifiers.
+function _hasCompoundExclusion(name) {
+  const words = name.split(/\s+/).filter(Boolean);
+  return words.some(w => {
+    if (_MATCH_EXCLUSIONS.includes(w)) return false; // standalone modifier
+    return _MATCH_EXCLUSIONS.some(ex => w.length > ex.length && w.includes(ex));
+  });
+}
+
 function ingredientMatchesList(ingredientName, list) {
-  const norm = s => s.toLowerCase().replace(/[.,;]/g,'').trim();
-  const item = norm(ingredientName);
-  return list.some(entry => {
-    const d = norm(entry);
+  const item = _normIngredient(ingredientName);
+  if (!item) return false;
+  const itemExcl = _hasCompoundExclusion(item);
+
+  return list.some(rawEntry => {
+    const d = _normIngredient(rawEntry);
+    if (!d) return false;
     if (item === d) return true;
-    if (d.length >= 4 && item.includes(d)) return true;
-    if (item.length >= 4 && d.includes(item)) return true;
-    return item.split(/\s+/).some(iw => d.split(/\s+/).some(dw => {
-      if (iw === dw) return true;
-      return iw.length >= 4 && dw.length >= 4 && (iw.includes(dw) || dw.includes(iw));
-    }));
+
+    // Exclusion gate: if one side has a compound-exclusion (e.g. "tomatpuré"
+    // or "hvitløkspulver") and the other doesn't, they're different products
+    // — reject the match even if the base word overlaps.
+    if (itemExcl !== _hasCompoundExclusion(d)) return false;
+
+    // Whole-string substring match in either direction, min 4 chars so
+    // tiny words like "is" or "eg" can't cause false positives.
+    if (d.length    >= 4 && item.includes(d))    return true;
+    if (item.length >= 4 && d.includes(item))    return true;
+
+    // Word-level fuzzy match: any key word in one is a substring of any
+    // key word in the other (min 4 chars each).
+    const itemWords = item.split(/\s+/);
+    const dWords    = d.split(/\s+/);
+    return itemWords.some(iw =>
+      dWords.some(dw => {
+        if (iw === dw) return true;
+        return iw.length >= 4 && dw.length >= 4 && (iw.includes(dw) || dw.includes(iw));
+      })
+    );
   });
 }
 function formatQty(n) {
@@ -3777,11 +4182,19 @@ function generateList() {
   const summary = [];
   const dayAssignments = [];
 
+  // Read directly from the week plan state (not the DOM). This is the
+  // single source of truth and works regardless of whether the Planlegg
+  // grid is currently rendered or what week is being viewed.
+  const plan = _weekPlans[_currentWeek] || {};
+
   DAYS.forEach((day, i) => {
-    const key = document.getElementById(`dinner-${i}`).value;
+    const key = plan[`day${i}`] || '';
     if (!key) return;
     const meal = getMeal(key);
-    if (!meal) return;
+    if (!meal) {
+      console.warn('[generateList] Could not resolve meal for key', key);
+      return;
+    }
 
     // Scale factor: MEALS/custom = per 1 person; recipes = total for meal.servings persons
     const hh = getEffectiveDayHH(i);
@@ -3792,8 +4205,20 @@ function generateList() {
     const mealLabel = meal.name || meal.label || 'Ukjent rett';
     summary.push({ day, label: mealLabel, hh });
     dayAssignments.push({ idx: i, key });
-    meal.ingredients.forEach(([name, qty, unit, cat]) => {
+
+    // Defensive: guard against recipes with missing or malformed ingredient
+    // arrays (can happen with user-imported data or corrupted localStorage).
+    const ingredients = Array.isArray(meal.ingredients) ? meal.ingredients : [];
+    if (!ingredients.length) {
+      console.warn('[generateList] Recipe has no ingredients:', mealLabel);
+    }
+    ingredients.forEach(ing => {
+      if (!Array.isArray(ing) || !ing[0]) return;
+      const [name, rawQty, rawUnit, rawCat] = ing;
       if (isStaple(name)) { skipped[name] = true; return; }
+      const unit = rawUnit || 'stk';
+      const cat  = rawCat  || 'annet';
+      const qty  = Number(rawQty) || 1;
       const k = `${name}||${unit}||${cat}`;
       const scaled = qty * scaleFactor;
       if (totals[k]) totals[k].qty += scaled;
@@ -4320,7 +4745,11 @@ function saveRecipes() {
 function openAddRecipeForm() {
   const acc = document.getElementById('acc-add-recipe');
   if (acc) { acc.open = true; acc.scrollIntoView({ behavior:'smooth', block:'start' }); }
+  // Make sure the form starts on the Manuelt tab with a blank ingredient row
+  // and a rendered tags grid.
+  if (!document.querySelector('#recipe-ing-rows .ing-row')) addRecipeIngRow();
   renderRecipeTagsForm();
+  switchRecipeTab('manuelt');
 }
 function cancelRecipeForm() {
   const acc = document.getElementById('acc-add-recipe');
@@ -4333,13 +4762,8 @@ function resetRecipeForm() {
   document.getElementById('recipe-ing-rows').innerHTML = '';
   const ta = document.getElementById('ing-paste-area');
   if (ta) ta.value = '';
-  _preview = [];
-  const importWrap   = document.getElementById('ing-import-wrap');
-  const previewWrap  = document.getElementById('ing-preview-wrap');
-  const rowsWrap     = document.getElementById('ing-rows-wrap');
-  if (importWrap)  importWrap.style.display  = '';
-  if (previewWrap) previewWrap.style.display = 'none';
-  if (rowsWrap)    rowsWrap.style.display    = 'none';
+  const notice = document.getElementById('ing-skipped-notice');
+  if (notice) { notice.textContent = ''; notice.style.display = 'none'; }
   recipeIngCount = 0;
   // Reset category to middag
   document.querySelectorAll('.recipe-cat-chip').forEach(c => c.classList.remove('active'));
@@ -4347,12 +4771,26 @@ function resetRecipeForm() {
   if (middag) middag.classList.add('active');
   const radio = document.querySelector('input[name="recipe-cat"][value="middag"]');
   if (radio) radio.checked = true;
-  // Clear day chips
-  document.querySelectorAll('#recipe-day-chips-form .recipe-day-chip').forEach(c => c.classList.remove('selected'));
   // Reset tag selections and re-render the tag form
   _selectedRecipeTags = new Set();
   _autoSuggestedTags  = new Set();
   renderRecipeTagsForm();
+  // Back to Manuelt tab as default
+  switchRecipeTab('manuelt');
+  // Start with one empty ingredient row so users have something to fill in
+  addRecipeIngRow();
+}
+
+// ── Recipe form tabs ──────────────────────────────────────────────────────────
+function switchRecipeTab(name) {
+  const valid = ['manuelt','analyser'];
+  if (!valid.includes(name)) name = 'manuelt';
+  valid.forEach(t => {
+    const panel = document.getElementById('recipe-tab-' + t);
+    const tab   = document.getElementById('rft-' + t);
+    if (panel) panel.style.display = t === name ? '' : 'none';
+    if (tab)   tab.classList.toggle('active', t === name);
+  });
 }
 
 function selectRecipeCat(label, value) {
@@ -4407,14 +4845,6 @@ function refreshRecipeTagSuggestions() {
   const auto = autoDetectRecipeTags(ings, name);
   _autoSuggestedTags = new Set(auto.filter(t => !_selectedRecipeTags.has(t)));
   renderRecipeTagsForm();
-}
-
-function buildRecipeDayChips() {
-  const container = document.getElementById('recipe-day-chips-form');
-  if (!container) return;
-  container.innerHTML = DAYS.map(d =>
-    `<span class="recipe-day-chip" onclick="this.classList.toggle('selected')" data-day="${d}">${d}</span>`
-  ).join('');
 }
 
 // ── Ingredient import parser ──────────────────────────────────────────────────
@@ -4555,97 +4985,92 @@ function parseIngredientLine(raw) {
   return { name, qty: Math.round(qty * 100) / 100, unit, cat: autoCategorizeing(name) };
 }
 
-// ── Preview state ──────────────────────────────────────────────────────────────
-let _preview = [];
-
-function renderPreview() {
-  const list    = document.getElementById('ing-preview-list');
-  const countEl = document.getElementById('ing-preview-count');
-  if (countEl) countEl.textContent = _preview.length;
-  if (!list) return;
-  if (!_preview.length) { resetIngImport(); return; }
-
-  list.innerHTML = _preview.map((p, i) => {
-    const qtyLbl = (p.qty !== 1 || p.unit !== 'stk')
-      ? `${p.qty === Math.floor(p.qty) ? p.qty : p.qty} ${p.unit}`
-      : '';
-    const catOpts = CAT_ORDER.map(k =>
-      `<option value="${k}"${p.cat === k ? ' selected' : ''}>${CAT_LABELS[k]}</option>`
-    ).join('');
-    return `<div class="ing-preview-item" id="pip-${i}">
-      <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0;overflow:hidden">
-        ${qtyLbl ? `<span class="ing-preview-qty">${escHtml(qtyLbl)}</span>` : ''}
-        <span class="ing-preview-name" title="${escHtml(p.name)}">${escHtml(p.name)}</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
-        <select class="ing-preview-cat-sel" onchange="_preview[${i}].cat=this.value">${catOpts}</select>
-        <button class="ing-preview-del" onclick="removePreviewItem(${i})" aria-label="Fjern ${escHtml(p.name)}">✕</button>
-      </div>
-    </div>`;
-  }).join('');
+// ── Analyser tekst: extract name/servings/ingredients from pasted recipe ─────
+// Pulls the first sensible title-looking line out of pasted text. Skips lines
+// that look like ingredients ("2 dl melk"), headings ("Ingredienser:"), or
+// cooking instructions ("Kok opp vannet…").
+function _extractRecipeName(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  for (const raw of lines) {
+    const line = raw.replace(/^[#*\-•·›»]+\s*/, '').replace(/[:\s]+$/, '');
+    if (!line) continue;
+    if (line.length < 3 || line.length > 70) continue;
+    if (hasMeasurement(line)) continue;              // looks like an ingredient
+    if (/^(ingredi|fremgangs|tilberedning|slik|porsjoner|bruk)/i.test(line)) continue;
+    if (INSTRUCTION_RE.test(line)) continue;
+    return line.charAt(0).toUpperCase() + line.slice(1);
+  }
+  return '';
 }
 
-function removePreviewItem(i) {
-  _preview.splice(i, 1);
-  renderPreview(); // handles empty case → calls resetIngImport
+// Parse out a portion count from text like "4 porsjoner" / "til 2 personer".
+function _extractServings(text) {
+  const m = /(\d+)\s*(porsjoner|porsjon|personer|pers\.?|stk)\b/i.exec(text);
+  return m ? Math.max(1, parseInt(m[1], 10)) : null;
 }
 
-function confirmPreview() {
-  if (!_preview.length) return;
-  document.getElementById('recipe-ing-rows').innerHTML = '';
-  recipeIngCount = 0;
-  _preview.forEach(p => addRecipeIngRow(p));
-  document.getElementById('ing-preview-wrap').style.display = 'none';
-  document.getElementById('ing-rows-wrap').style.display    = '';
-  refreshRecipeTagSuggestions();
-}
-
-function parseAndShowIngredients() {
+function analyzeRecipeText() {
   const ta  = document.getElementById('ing-paste-area');
   const raw = ta ? ta.value.trim() : '';
-  if (!raw) { switchToManualIng(); return; }
+  const notice = document.getElementById('ing-skipped-notice');
+  if (!raw) {
+    if (notice) {
+      notice.textContent = 'Lim inn tekst først.';
+      notice.style.display = '';
+    }
+    return;
+  }
 
+  // Split into candidate lines (fall back to comma-separated on single line)
   let lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
   if (lines.length === 1) lines = raw.split(',').map(l => l.trim()).filter(Boolean);
 
-  const results = lines.map(parseIngredientLine);
-  const parsed  = results.filter(Boolean);
+  const parsed  = lines.map(parseIngredientLine).filter(Boolean);
   const skipped = lines.length - parsed.length;
 
-  if (!parsed.length) { switchToManualIng(); return; }
-
-  _preview = parsed;
-  renderPreview();
-
-  const notice = document.getElementById('ing-skipped-notice');
-  if (notice) {
-    if (skipped > 0) {
-      notice.textContent = `${skipped} linje${skipped !== 1 ? 'r' : ''} hoppet over`
-        + ` (overskrifter, instruksjoner eller basisvarer som salt/pepper/olje/vann).`;
+  if (!parsed.length) {
+    if (notice) {
+      notice.textContent = 'Fant ingen ingredienser i teksten. Prøv igjen eller legg dem til manuelt.';
       notice.style.display = '';
-    } else {
-      notice.style.display = 'none';
     }
+    return;
   }
 
-  document.getElementById('ing-import-wrap').style.display   = 'none';
-  document.getElementById('ing-preview-wrap').style.display  = '';
-}
+  // Pre-fill the Manuelt form with what we extracted
+  const extractedName     = _extractRecipeName(raw);
+  const extractedServings = _extractServings(raw);
 
-function switchToManualIng() {
-  document.getElementById('ing-import-wrap').style.display  = 'none';
-  document.getElementById('ing-preview-wrap').style.display = 'none';
-  document.getElementById('ing-rows-wrap').style.display    = '';
-  if (!document.querySelector('#recipe-ing-rows .ing-row')) addRecipeIngRow();
-}
+  const nameEl = document.getElementById('recipe-name-input');
+  if (nameEl && extractedName) nameEl.value = extractedName;
+  const servingsEl = document.getElementById('recipe-servings');
+  if (servingsEl && extractedServings) servingsEl.value = String(extractedServings);
 
-function resetIngImport() {
-  _preview = [];
-  document.getElementById('recipe-ing-rows').innerHTML      = '';
+  // Replace any existing ingredient rows with the parsed ones
+  const rowsWrap = document.getElementById('recipe-ing-rows');
+  if (rowsWrap) rowsWrap.innerHTML = '';
   recipeIngCount = 0;
-  document.getElementById('ing-import-wrap').style.display  = '';
-  document.getElementById('ing-preview-wrap').style.display = 'none';
-  document.getElementById('ing-rows-wrap').style.display    = 'none';
+  parsed.forEach(p => addRecipeIngRow(p));
+
+  // Refresh tag suggestions based on the new ingredients + name
+  refreshRecipeTagSuggestions();
+
+  // Switch to Manuelt tab so the user can review and save
+  switchRecipeTab('manuelt');
+
+  // Feedback: success + (if relevant) skipped-line notice
+  const parts = [];
+  parts.push(`✓ Fant ${parsed.length} ingrediens${parsed.length !== 1 ? 'er' : ''}`);
+  if (extractedName)     parts.push(`navn «${extractedName}»`);
+  if (extractedServings) parts.push(`${extractedServings} porsjoner`);
+  const msg = parts.join(', ');
+  if (notice) {
+    const skippedMsg = skipped > 0
+      ? ` · ${skipped} linje${skipped !== 1 ? 'r' : ''} hoppet over (overskrifter/instruksjoner/basisvarer)`
+      : '';
+    notice.textContent = msg + skippedMsg;
+    notice.style.display = '';
+  }
+  showSyncToast(msg);
 }
 
 // ── Recipe ingredient rows ─────────────────────────────────────────────────────
@@ -4676,17 +5101,22 @@ function saveRecipe() {
 
   const category = document.querySelector('input[name="recipe-cat"]:checked')?.value || 'middag';
   const servings = parseInt(document.getElementById('recipe-servings').value) || 4;
-  const days = [...document.querySelectorAll('#recipe-day-chips-form .recipe-day-chip.selected')].map(c => c.dataset.day);
 
+  // Collect ingredients. Filter only by name — a missing / unparseable qty
+  // defaults to 1 instead of silently dropping the row, which was the root
+  // cause of "ingredients disappearing" on user-created recipes.
   const rows = document.querySelectorAll('#recipe-ing-rows .ing-row');
   const ingredients = [];
   rows.forEach(row => {
     const id = row.id.replace('ring-','');
-    const iname = document.getElementById(`ring-name-${id}`)?.value.trim();
-    const qty   = parseFloat(document.getElementById(`ring-qty-${id}`)?.value) || 0;
-    const unit  = document.getElementById(`ring-unit-${id}`)?.value;
-    const cat   = document.getElementById(`ring-cat-${id}`)?.value;
-    if (iname && qty > 0) ingredients.push([iname, qty, unit, cat]);
+    const iname = document.getElementById(`ring-name-${id}`)?.value?.trim();
+    if (!iname) return;           // no name → truly empty row, skip
+    const rawQty = document.getElementById(`ring-qty-${id}`)?.value;
+    const parsedQty = parseFloat(rawQty);
+    const qty   = Number.isFinite(parsedQty) && parsedQty > 0 ? parsedQty : 1;
+    const unit  = document.getElementById(`ring-unit-${id}`)?.value || 'stk';
+    const cat   = document.getElementById(`ring-cat-${id}`)?.value || 'annet';
+    ingredients.push([iname, qty, unit, cat]);
   });
 
   // Merge manually-selected tags with auto-detected ones from the ingredient list.
@@ -4695,7 +5125,8 @@ function saveRecipe() {
   const auto = new Set(autoDetectRecipeTags(ingredients, name));
   const tags = Array.from(new Set([..._selectedRecipeTags, ...auto]));
 
-  const recipe = { id: Date.now().toString(), name, category, days, servings, ingredients, tags, createdAt: new Date().toISOString() };
+  const recipe = { id: Date.now().toString(), name, category, servings, ingredients, tags, createdAt: new Date().toISOString() };
+  console.log('[saveRecipe] Saving recipe with', ingredients.length, 'ingredients:', recipe);
   recipes.push(recipe);
   saveRecipes();
   cancelRecipeForm();
@@ -4716,12 +5147,36 @@ function deleteRecipe(id) {
 // ── Recipe library render ─────────────────────────────────────────────────────
 // Active filter tag IDs — multi-select, applied with AND semantics.
 let _recipeFilterTags = new Set();
+// Live search query from the search bar — matches recipe name + ingredients.
+let _recipeSearchQuery = '';
+
+// Check whether a recipe matches the current search query. Matches on:
+//   · recipe name (case-insensitive substring)
+//   · any ingredient name (case-insensitive substring)
+function _recipeMatchesSearch(r, q) {
+  if (!q) return true;
+  const query = q.toLowerCase();
+  const name = String(r.name || r.label || '').toLowerCase();
+  if (name.includes(query)) return true;
+  const ings = Array.isArray(r.ingredients) ? r.ingredients : [];
+  return ings.some(ing => {
+    if (!Array.isArray(ing) || !ing[0]) return false;
+    return String(ing[0]).toLowerCase().includes(query);
+  });
+}
 
 function _filteredRecipes() {
-  if (!_recipeFilterTags.size) return recipes.slice();
+  const q = _recipeSearchQuery.trim();
+  const hasTags = _recipeFilterTags.size > 0;
+  if (!q && !hasTags) return recipes.slice();
   return recipes.filter(r => {
-    const rt = new Set(r.tags || []);
-    for (const t of _recipeFilterTags) { if (!rt.has(t)) return false; }
+    // Tag filter (AND semantics)
+    if (hasTags) {
+      const rt = new Set(r.tags || []);
+      for (const t of _recipeFilterTags) { if (!rt.has(t)) return false; }
+    }
+    // Search filter (name + ingredients)
+    if (q && !_recipeMatchesSearch(r, q)) return false;
     return true;
   });
 }
@@ -4734,6 +5189,37 @@ function toggleRecipeFilter(id) {
 function clearRecipeFilters() {
   _recipeFilterTags.clear();
   renderRecipes();
+}
+
+// Real-time search — runs on every keystroke. No debounce needed since
+// filtering N recipes locally is basically instant. Also auto-collapses
+// the filter tags section when a query is active so results fit on screen.
+function onRecipeSearchInput() {
+  const input = document.getElementById('recipe-search-input');
+  if (!input) return;
+  _recipeSearchQuery = input.value;
+  const clearBtn = document.getElementById('recipe-search-clear');
+  if (clearBtn) clearBtn.classList.toggle('on', _recipeSearchQuery.trim().length > 0);
+  _applyFilterBarCollapse();
+  renderRecipes();
+}
+function clearRecipeSearch() {
+  _recipeSearchQuery = '';
+  const input = document.getElementById('recipe-search-input');
+  if (input) { input.value = ''; input.focus(); }
+  const clearBtn = document.getElementById('recipe-search-clear');
+  if (clearBtn) clearBtn.classList.remove('on');
+  _applyFilterBarCollapse();
+  renderRecipes();
+}
+// Toggle the collapsed-state class on the filter bar based on whether a
+// search query is currently active. When collapsed the filter groups hide,
+// saving vertical space so search results land above the fold.
+function _applyFilterBarCollapse() {
+  const bar = document.getElementById('recipe-filter-bar');
+  if (!bar) return;
+  const active = _recipeSearchQuery.trim().length > 0;
+  bar.classList.toggle('collapsed', active);
 }
 
 function renderRecipeFilterBar() {
@@ -4760,13 +5246,14 @@ function renderRecipeFilterBar() {
   `).join('');
 
   const matches = _filteredRecipes().length;
-  if (_recipeFilterTags.size) {
+  const isFiltering = _recipeFilterTags.size > 0 || _recipeSearchQuery.trim().length > 0;
+  if (isFiltering) {
     countEl.textContent = `${matches} av ${recipes.length} oppskrifter`;
-    clearEl.classList.add('on');
   } else {
     countEl.textContent = `${recipes.length} oppskrifter totalt`;
-    clearEl.classList.remove('on');
   }
+  // The "Nullstill"-link in the filter bar only clears tag filters
+  clearEl.classList.toggle('on', _recipeFilterTags.size > 0);
 }
 
 function renderRecipes() {
@@ -4786,12 +5273,24 @@ function renderRecipes() {
     (a.name || '').localeCompare(b.name || '', 'no')
   );
   if (!list.length) {
-    container.innerHTML = `<div class="empty-state" style="min-height:20vh;padding:30px 20px">
-      <span class="empty-icon">🔍</span>
-      <h2>Ingen treff</h2>
-      <p>Ingen oppskrifter matcher de valgte filtrene. Prøv å fjerne noen filtre.</p>
-      <button class="btn btn-gray btn-sm" onclick="clearRecipeFilters()">Nullstill filtre</button>
-    </div>`;
+    const q = _recipeSearchQuery.trim();
+    // Show a search-specific empty state when a query is active, otherwise
+    // the generic "no filter matches" message.
+    if (q) {
+      container.innerHTML = `<div class="empty-state" style="min-height:20vh;padding:30px 20px">
+        <span class="empty-icon">🔍</span>
+        <h2>Ingen treff</h2>
+        <p>Ingen oppskrifter funnet for «${escHtml(q)}».</p>
+        <button class="btn btn-gray btn-sm" onclick="clearRecipeSearch()">Nullstill søk</button>
+      </div>`;
+    } else {
+      container.innerHTML = `<div class="empty-state" style="min-height:20vh;padding:30px 20px">
+        <span class="empty-icon">🔍</span>
+        <h2>Ingen treff</h2>
+        <p>Ingen oppskrifter matcher de valgte filtrene. Prøv å fjerne noen filtre.</p>
+        <button class="btn btn-gray btn-sm" onclick="clearRecipeFilters()">Nullstill filtre</button>
+      </div>`;
+    }
     return;
   }
   container.innerHTML = `<div class="recipe-grid">${list.map(r => buildRecipeCard(r)).join('')}</div>`;
@@ -4803,9 +5302,6 @@ function buildRecipeCard(r) {
   const emoji   = RECIPE_EMOJI[r.category]  || '🍽️';
   const catLbl  = RECIPE_CATS[r.category]   || r.category;
   const catCls  = `cat-badge-${r.category}`;
-  const dayTags = r.days?.length
-    ? `<div class="recipe-days">${r.days.map(d=>`<span class="recipe-day-tag">${d.slice(0,3)}</span>`).join('')}</div>`
-    : '';
   const ingInfo = r.ingredients?.length ? `<div class="recipe-ing-count">${r.ingredients.length} ingredienser</div>` : '';
 
   // Up to 4 tag pills per card — grouped colours
@@ -4827,7 +5323,6 @@ function buildRecipeCard(r) {
     ${r.servings ? `<div class="recipe-meta">👥 ${r.servings} porsjoner</div>` : ''}
     ${ingInfo}
     ${tagPills}
-    ${dayTags}
     <div class="recipe-card-actions" onclick="event.stopPropagation()">
       <button class="btn btn-red btn-sm" onclick="deleteRecipe('${r.id}')">Slett</button>
     </div>
@@ -4839,27 +5334,54 @@ function escHtml(s) {
 }
 
 // ── Recipe detail modal ───────────────────────────────────────────────────────
+// Two different primary-action flows depending on category:
+//   · middag          → "Legg til uke" opens a day picker for the current week
+//   · frokost / lunsj → "Legg til handleliste" drops ingredients straight
+//                        into the shopping list without touching the meal plan
 function openRecipeModal(id) {
   const r = recipes.find(x => x.id === id);
-  if (!r) return;
+  if (!r) {
+    console.warn('[openRecipeModal] Recipe not found for id:', id);
+    return;
+  }
+  // Debug log so we can verify the recipe object actually contains the
+  // expected fields when the modal opens. Check DevTools console if the
+  // ingredient list looks wrong.
+  console.log('[openRecipeModal] Opening recipe:', {
+    id: r.id,
+    name: r.name,
+    category: r.category,
+    servings: r.servings,
+    ingredientCount: Array.isArray(r.ingredients) ? r.ingredients.length : 'NOT AN ARRAY',
+    ingredients: r.ingredients,
+    tags: r.tags,
+  });
+
   const emoji  = RECIPE_EMOJI[r.category]  || '🍽️';
   const catLbl = RECIPE_CATS[r.category]   || r.category;
   const catCls = `cat-badge-${r.category}`;
 
-  const ingsHtml = r.ingredients?.length
+  // Defensive: a recipe may have no ingredients or a malformed array.
+  // Show an explicit "no ingredients" placeholder so the user sees
+  // *something* instead of wondering where the list went.
+  const validIngs = Array.isArray(r.ingredients)
+    ? r.ingredients.filter(ing => Array.isArray(ing) && ing[0])
+    : [];
+  const ingsHtml = validIngs.length
     ? `<div class="recipe-modal-ing" style="margin-bottom:14px">
-        <h4>Ingredienser (${r.ingredients.length})</h4>
-        <ul>${r.ingredients.map(([n,q,u]) =>
-          `<li>${escHtml(n)}<span style="margin-left:auto;color:var(--t4);font-size:.82rem">${formatQty(q)} ${u}</span></li>`
-        ).join('')}</ul>
+        <h4>Ingredienser (${validIngs.length})</h4>
+        <ul>${validIngs.map(([n,q,u]) => `
+          <li>
+            <span class="rmi-name">${escHtml(n)}</span>
+            <span class="rmi-qty">${formatQty(Number(q) || 1)} ${escHtml(u || 'stk')}</span>
+          </li>`).join('')}</ul>
        </div>`
-    : '';
-
-  const dayBtns = DAYS.map((d,i) => {
-    const cur = document.getElementById(`dinner-${i}`)?.value || '';
-    const active = cur === `recipe__${r.id}` ? ' has-meal' : '';
-    return `<button class="day-pick-btn${active}" onclick="addRecipeToDay(${i},'${r.id}')">${d}</button>`;
-  }).join('');
+    : `<div class="recipe-modal-ing" style="margin-bottom:14px">
+        <h4>Ingredienser</h4>
+        <p style="font-size:.85rem;color:var(--t3);padding:8px 0;line-height:1.5">
+          Denne oppskriften mangler ingredienser. Slett den og legg den til på nytt for å bruke den på handlelisten.
+        </p>
+       </div>`;
 
   const tagPills = (r.tags?.length)
     ? `<div class="recipe-card-tags" style="margin-bottom:10px">${r.tags.map(id => {
@@ -4870,6 +5392,28 @@ function openRecipeModal(id) {
       }).join('')}</div>`
     : '';
 
+  // Primary action + optional day picker depending on category
+  let actionHtml;
+  if (r.category === 'middag') {
+    const wk = weekLabelFor(_currentWeek);
+    actionHtml = `
+      <div class="planner-section">
+        <h4>Legg til i uke ${wk.week} (${escHtml(wk.short)})</h4>
+        <div class="day-picker" id="recipe-day-picker" style="display:none"></div>
+        <button class="btn btn-gen" style="width:100%" id="recipe-add-week-btn"
+                onclick="showRecipeDayPicker('${r.id}')">📅 Legg til uke</button>
+      </div>`;
+  } else {
+    actionHtml = `
+      <div class="planner-section">
+        <button class="btn btn-gen" style="width:100%"
+                onclick="addRecipeIngredientsToShoppingList('${r.id}')">🛍️ Legg til handleliste</button>
+        <p style="font-size:.78rem;color:var(--t3);margin-top:10px;line-height:1.55">
+          Ingrediensene legges rett i handlelisten uten å gå via ukeplanen.
+        </p>
+      </div>`;
+  }
+
   document.getElementById('recipe-modal-content').innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
       <span style="font-size:2rem">${emoji}</span>
@@ -4878,14 +5422,10 @@ function openRecipeModal(id) {
     <div class="recipe-modal-title">${escHtml(r.name)}</div>
     <div class="recipe-modal-meta">
       ${r.servings ? `<span>👥 ${r.servings} porsjoner</span>` : ''}
-      ${r.days?.length ? `<span>📅 ${r.days.join(', ')}</span>` : ''}
     </div>
     ${tagPills}
     ${ingsHtml}
-    <div class="planner-section">
-      <h4>Legg til i ukesmeny</h4>
-      <div class="day-picker">${dayBtns}</div>
-    </div>
+    ${actionHtml}
     <div style="margin-top:16px">
       <button class="btn btn-gray btn-sm" onclick="closeRecipeModal()">Lukk</button>
     </div>
@@ -4899,14 +5439,76 @@ function closeRecipeModal() {
   document.body.style.overflow = '';
 }
 
+// ── Middag: day picker flow ───────────────────────────────────────────────────
+// The day picker is hidden until the user taps "Legg til uke". We build it
+// lazily so the day buttons always reflect the currently-viewed week's plan.
+function showRecipeDayPicker(recipeId) {
+  const picker = document.getElementById('recipe-day-picker');
+  const btn    = document.getElementById('recipe-add-week-btn');
+  if (!picker) return;
+  const plan = _weekPlans[_currentWeek] || {};
+  const wkMonday = parseWeekKey(_currentWeek);
+  picker.innerHTML = DAYS.map((d, i) => {
+    const cur    = plan[`day${i}`] || '';
+    const active = cur === `recipe__${recipeId}` ? ' has-meal' : '';
+    const date   = new Date(wkMonday); date.setDate(wkMonday.getDate() + i);
+    return `<button class="day-pick-btn${active}" onclick="addRecipeToDay(${i},'${recipeId}')">
+      <span>${d.slice(0,3)}</span>
+      <span style="font-size:.72rem;color:var(--t4);font-weight:600;display:block">${date.getDate()}.</span>
+    </button>`;
+  }).join('');
+  picker.style.display = 'grid';
+  if (btn) btn.style.display = 'none';
+}
+
 function addRecipeToDay(dayIdx, recipeId) {
   const key = `recipe__${recipeId}`;
+  // Write to the current week plan directly (no DOM dependency, so this also
+  // works when the recipe modal is opened from another page).
+  const plan = _ensureCurrentWeekPlan();
+  plan[`day${dayIdx}`] = key;
+  saveWeekPlans();
+  // If the Planlegg grid is already on screen, sync the <select> too.
   const sel = document.getElementById(`dinner-${dayIdx}`);
-  if (!sel) return;
-  sel.value = key;
-  updateCard(dayIdx);
+  if (sel) {
+    sel.value = key;
+    const card = document.getElementById(`card-${dayIdx}`);
+    if (card) card.className = 'day-card active';
+  }
   closeRecipeModal();
   showPage('meny');
+  showSyncToast(`✓ Lagt til ${DAYS[dayIdx]} (uke ${weekLabelFor(_currentWeek).week})`);
+}
+
+// ── Frokost/lunsj: add ingredients straight to shopping list ──────────────────
+function addRecipeIngredientsToShoppingList(recipeId) {
+  const r = recipes.find(x => x.id === recipeId);
+  if (!r) { showSyncToast('Fant ikke oppskriften.'); return; }
+  const ings = Array.isArray(r.ingredients) ? r.ingredients : [];
+  if (!ings.length) {
+    showSyncToast('Oppskriften har ingen ingredienser.');
+    return;
+  }
+  let added = 0, skippedStaples = 0;
+  ings.forEach(ing => {
+    if (!Array.isArray(ing) || !ing[0]) return;
+    const [name, qty, unit] = ing;
+    if (isStaple(name)) { skippedStaples++; return; }
+    const display = qty
+      ? `${formatQty(qty)} ${unit || ''} ${name}`.replace(/\s+/g,' ').trim()
+      : name;
+    if (!manualItems.some(i => i.name.toLowerCase() === display.toLowerCase())) {
+      manualItems.push({ name: display, checked: false });
+      added++;
+    }
+  });
+  saveManualItems();
+  renderManualItems();
+  closeRecipeModal();
+  showPage('handleliste');
+  const parts = [`✓ ${added} ingrediens${added !== 1 ? 'er' : ''} lagt til handlelisten`];
+  if (skippedStaples > 0) parts.push(`${skippedStaples} basisvarer hoppet over`);
+  showSyncToast(parts.join(' · '));
 }
 
 // ── Har hjemme — manual list ─────────────────────────────────────────────────
@@ -5947,7 +6549,6 @@ loadRecipes();
 loadHomeItems();
 loadManualItems();
 loadWeekPlans();
-buildRecipeDayChips();
 renderStaplesSettings();
 renderCustomList();
 buildHouseholdChips();
@@ -5960,6 +6561,7 @@ renderManualItems();
 renderSettingsHHCode();
 syncNotificationsToggle();
 syncThemeToggle();
+syncPermissions();
 initFirebaseSync();
 </script>
 </body>
