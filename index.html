@@ -1669,169 +1669,6 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
 }
 .hh-name-input:focus{border-color:var(--g)}
 
-/* ═══════════════════════════════════════════════
-   APPROVAL SYSTEM
-═══════════════════════════════════════════════ */
-/* Fullscreen approval overlay (pending / rejected / revoked) */
-.approval-overlay{
-  position:fixed;inset:0;z-index:10002;
-  background:var(--bg);
-  display:flex;align-items:center;justify-content:center;
-  padding:32px 24px;
-}
-.approval-overlay.hidden{display:none}
-.approval-sheet{
-  text-align:center;max-width:360px;width:100%;
-  animation:slide-up .3s cubic-bezier(.34,1.2,.64,1);
-}
-.approval-icon{font-size:3.2rem;display:block;margin-bottom:14px;line-height:1}
-.approval-sheet h2{font-size:1.25rem;font-weight:800;color:var(--t1);margin-bottom:10px}
-.approval-sheet p{font-size:.88rem;color:var(--t3);line-height:1.65;margin-bottom:8px}
-.approval-spinner{
-  width:36px;height:36px;margin:18px auto;
-  border:3px solid var(--bd);border-top-color:var(--g);
-  border-radius:50%;animation:spin .8s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-.approval-sub{font-size:.74rem;color:var(--t4) !important;margin-top:4px !important}
-/* Spinner inside the modal waiting step */
-.hh-spinner{
-  width:30px;height:30px;margin:14px auto;
-  border:3px solid var(--bd);border-top-color:var(--g);
-  border-radius:50%;animation:spin .8s linear infinite;
-}
-
-/* ─── Admin page ─────────────────────────────────── */
-.admin-user-card{
-  background:var(--card);border:1px solid var(--bd);
-  border-radius:var(--rsm);padding:13px 15px;
-  display:flex;align-items:center;gap:12px;
-  margin-bottom:8px;box-shadow:var(--sh);
-}
-.admin-user-info{flex:1;min-width:0}
-.admin-user-name{font-weight:700;color:var(--t1);font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.admin-user-meta{font-size:.73rem;color:var(--t4);margin-top:3px}
-.admin-user-actions{display:flex;gap:6px;flex-shrink:0}
-.admin-user-actions .btn{font-size:.75rem;padding:5px 11px;min-height:30px}
-.btn-danger{background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca}
-.btn-danger:active{background:#fee2e2}
-.admin-empty{font-size:.84rem;color:var(--t4);padding:14px 0;text-align:center}
-.admin-rules-pre{
-  background:var(--bg);border:1px solid var(--bd);
-  border-radius:var(--rxs);padding:12px;
-  font-size:.68rem;overflow-x:auto;white-space:pre;
-  color:var(--t2);line-height:1.6;
-  font-family:'Courier New',monospace;
-  margin-bottom:10px;max-height:220px;overflow-y:auto;
-}
-
-/* Nav badge (number badge on admin nav button) */
-.nav-badge{
-  position:absolute;top:4px;right:calc(50% - 22px);
-  background:#ef4444;color:white;
-  font-size:.58rem;font-weight:800;line-height:1;
-  padding:2px 5px;border-radius:10px;
-  min-width:16px;text-align:center;
-  border:1.5px solid white;display:none;
-}
-.nav-badge.on{display:block}
-
-/* ─── Admin household cards ─────────────────────── */
-.admin-hh-card{
-  background:var(--card);border:1px solid var(--bd);
-  border-radius:var(--r);padding:14px 15px;
-  margin-bottom:12px;box-shadow:var(--sh);
-}
-.admin-hh-header{
-  display:flex;align-items:center;gap:10px;
-  margin-bottom:10px;
-}
-.admin-hh-code{
-  font-family:'Courier New',monospace;font-size:1.05rem;
-  font-weight:800;letter-spacing:2px;color:var(--g);
-  flex:1;
-}
-.admin-hh-count{
-  font-size:.75rem;color:var(--t4);white-space:nowrap;
-}
-.admin-hh-members{
-  display:flex;flex-wrap:wrap;gap:6px;min-height:22px;
-  margin-bottom:4px;
-}
-.admin-member-chip{
-  background:var(--bg);border:1px solid var(--bd);
-  border-radius:20px;padding:3px 10px;
-  font-size:.76rem;color:var(--t2);font-weight:600;
-}
-.admin-member-chip.is-admin{
-  background:#fef9c3;border-color:#fde68a;color:#92400e;
-}
-.admin-hh-divider{
-  border:none;border-top:1px solid var(--bd);
-  margin:10px 0 8px;
-}
-
-/* Admin pending requests — prominent alert box */
-.admin-pending-box{
-  background:#fff7ed;border:2px solid #fdba74;
-  border-radius:var(--r);padding:14px 15px;
-  margin-bottom:16px;
-}
-.admin-pending-hdr{
-  display:flex;align-items:center;gap:8px;
-  font-weight:800;font-size:.92rem;color:#92400e;
-  margin-bottom:12px;
-}
-.admin-pending-cnt{
-  background:#ef4444;color:#fff;
-  font-size:.65rem;padding:2px 7px;
-  border-radius:10px;font-weight:800;line-height:1.4;
-}
-.admin-pending-empty{
-  font-size:.84rem;color:var(--t4);
-  text-align:center;padding:8px 0 2px;
-}
-.admin-hh-pending-lbl{
-  font-size:.74rem;font-weight:700;color:var(--t3);
-  margin:8px 0 6px;text-transform:uppercase;letter-spacing:.5px;
-}
-
-/* ─── Admin setup modal ──────────────────────────── */
-.admin-setup-overlay{
-  position:fixed;inset:0;z-index:10003;
-  background:rgba(0,0,0,.55);
-  display:flex;align-items:center;justify-content:center;
-  padding:24px;
-}
-.admin-setup-overlay.hidden{display:none}
-.admin-setup-sheet{
-  background:var(--card);border-radius:22px;
-  padding:28px 24px 22px;width:100%;max-width:340px;
-  animation:slide-up .25s cubic-bezier(.34,1.2,.64,1);
-  box-shadow:0 8px 32px rgba(0,0,0,.18);
-}
-.admin-setup-title{
-  font-size:1.1rem;font-weight:800;color:var(--t1);
-  margin-bottom:8px;text-align:center;letter-spacing:-.2px;
-}
-.admin-setup-desc{
-  font-size:.83rem;color:var(--t3);line-height:1.55;
-  margin-bottom:18px;text-align:center;
-}
-.admin-setup-input{
-  width:100%;box-sizing:border-box;
-  padding:12px 14px;border-radius:11px;
-  border:1.5px solid var(--bd);background:var(--bg);
-  font-size:.95rem;color:var(--t1);outline:none;
-  margin-bottom:6px;
-}
-.admin-setup-input:focus{border-color:var(--g)}
-.admin-setup-error{
-  font-size:.78rem;color:#dc2626;min-height:18px;
-  margin-bottom:14px;text-align:center;
-}
-.admin-setup-actions{display:flex;gap:9px;justify-content:flex-end}
-.admin-setup-actions .btn{min-width:90px}
 </style>
 </head>
 <body>
@@ -2165,32 +2002,6 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
     </div>
   </section>
 
-  <!-- PAGE: ADMIN ────────────────────────────────────────────── -->
-  <section class="page" id="page-admin">
-    <div class="pg">
-      <div class="sec-lbl">👑 Global admin</div>
-
-      <!-- Pending access requests — prominent real-time section -->
-      <div id="admin-pending-global"></div>
-
-      <!-- Approved users and households -->
-      <div id="admin-hh-list"></div>
-
-      <!-- Firebase security rules -->
-      <details class="acc" style="margin-top:20px">
-        <summary>🔒 Firebase sikkerhetsregler</summary>
-        <div class="acc-body" style="padding-top:10px">
-          <p style="font-size:.8rem;color:var(--t3);margin-bottom:6px;line-height:1.6">
-            Lim inn disse reglene i <strong>Firebase Console → Realtime Database → Rules</strong>.
-            Dette er nødvendig for at appen skal fungere — uten disse reglene vises «tilkoblingsfeil».
-          </p>
-          <pre class="admin-rules-pre" id="admin-rules-pre"></pre>
-          <button class="btn btn-gray btn-sm" onclick="copyFirebaseRules()">📋 Kopier regler</button>
-        </div>
-      </details>
-    </div>
-  </section>
-
 </main>
 
 <!-- ══ RECIPE DETAIL MODAL ═══════════════════════════════════ -->
@@ -2225,11 +2036,6 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
     <span class="nav-icon">📖</span>
     <span class="nav-lbl">Oppskrifter</span>
   </button>
-  <button class="nav-btn" onclick="showPage('admin');renderAdminPanel()" id="nav-admin" style="display:none">
-    <span class="nav-icon">👑</span>
-    <span class="nav-lbl">Admin</span>
-    <span class="nav-badge" id="nav-badge-admin"></span>
-  </button>
 </nav>
 
 </div><!-- /#app -->
@@ -2249,90 +2055,8 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
   <div class="dsp-chips" id="dsp-chips"></div>
 </div>
 
-<!-- ══ APPROVAL OVERLAY ══════════════════════════════════════ -->
-<div id="approval-overlay" class="approval-overlay hidden" role="dialog" aria-modal="true">
-
-  <!-- Checking access (shown immediately on load) -->
-  <div id="approval-checking" class="approval-sheet" style="display:none">
-    <div class="approval-spinner"></div>
-    <p style="margin-top:12px">Sjekker tilgang…</p>
-  </div>
-
-  <!-- Request access (unapproved new device) -->
-  <div id="approval-request" class="approval-sheet" style="display:none">
-    <span class="approval-icon">🔑</span>
-    <h2>Søk om tilgang</h2>
-    <p>Skriv inn navnet ditt for å sende en tilgangsforespørsel til admin. Du får tilgang når admin godkjenner deg.</p>
-    <div style="text-align:left;width:100%;margin:4px 0 6px">
-      <div class="fld-lbl" style="margin-bottom:6px">Ditt navn</div>
-      <input type="text" id="access-name-input" class="hh-name-input"
-             placeholder="Ola Nordmann" maxlength="40" autocomplete="name"
-             oninput="document.getElementById('access-name-error').textContent=''"
-             onkeydown="if(event.key==='Enter')submitAccessRequest()">
-      <div id="access-name-error" class="hh-error"></div>
-    </div>
-    <button class="btn btn-gen" id="access-submit-btn" onclick="submitAccessRequest()"
-            style="width:100%;margin-top:4px;margin-bottom:0">📨 Send forespørsel</button>
-  </div>
-
-  <!-- Waiting for approval -->
-  <div id="approval-waiting" class="approval-sheet" style="display:none">
-    <span class="approval-icon">⏳</span>
-    <h2>Venter på godkjenning…</h2>
-    <p>Hei, <strong id="approval-waiting-name"></strong>!<br>Forespørselen din er sendt til admin.</p>
-    <div class="approval-spinner"></div>
-    <p class="approval-sub">Sjekker automatisk hvert 10. sekund…</p>
-    <button class="hh-skip-btn" style="margin-top:20px" onclick="approvalTryAgain()">Avbryt og start på nytt</button>
-  </div>
-
-  <!-- Rejected -->
-  <div id="approval-rejected" class="approval-sheet" style="display:none">
-    <span class="approval-icon">😔</span>
-    <h2>Forespørsel avvist</h2>
-    <p>Forespørselen din ble dessverre avvist av admin.</p>
-    <button class="btn btn-gen" style="max-width:280px;width:100%;margin-top:16px" onclick="approvalTryAgain()">Prøv igjen</button>
-  </div>
-
-  <!-- Revoked -->
-  <div id="approval-revoked" class="approval-sheet" style="display:none">
-    <span class="approval-icon">🔒</span>
-    <h2>Tilgang fjernet</h2>
-    <p>Tilgangen din er fjernet av admin.</p>
-    <button class="btn btn-gen" style="max-width:280px;width:100%;margin-top:16px" onclick="approvalTryAgain()">Be om tilgang igjen</button>
-  </div>
-
-  <!-- Offline / connection error -->
-  <div id="approval-offline" class="approval-sheet" style="display:none">
-    <span class="approval-icon">📡</span>
-    <h2 id="approval-offline-title">Ingen internettforbindelse</h2>
-    <p id="approval-offline-msg">Koble til internett og prøv igjen.</p>
-    <button class="btn btn-gen" style="max-width:280px;width:100%;margin-top:16px" onclick="retryAccessCheck()">🔄 Prøv igjen</button>
-    <details id="approval-offline-details" style="margin-top:18px;text-align:left;width:100%;display:none">
-      <summary style="font-size:.78rem;color:var(--t4);cursor:pointer">Tekniske detaljer</summary>
-      <pre id="approval-offline-err" style="font-size:.7rem;color:var(--t3);margin-top:8px;white-space:pre-wrap;word-break:break-all;background:var(--bg);padding:10px;border-radius:8px;border:1px solid var(--bd)"></pre>
-    </details>
-  </div>
-
-</div>
-
 <!-- ══ SYNC TOAST ════════════════════════════════════════════ -->
 <div id="sync-toast" role="status" aria-live="polite"></div>
-
-<!-- ══ ADMIN SETUP MODAL ═════════════════════════════════════ -->
-<div id="admin-setup-modal" class="admin-setup-overlay hidden" role="dialog" aria-modal="true">
-  <div class="admin-setup-sheet">
-    <div class="admin-setup-title">🔐 Admin-tilgang</div>
-    <p class="admin-setup-desc">Skriv inn adminkoden for å aktivere admin-tilgang på denne enheten.</p>
-    <input type="password" id="admin-setup-code-input" class="admin-setup-input"
-      placeholder="Adminkode" autocomplete="off"
-      onkeydown="if(event.key==='Enter')submitAdminCode()">
-    <div id="admin-setup-error" class="admin-setup-error"></div>
-    <div class="admin-setup-actions">
-      <button class="btn btn-gray" onclick="closeAdminSetupModal()">Avbryt</button>
-      <button class="btn btn-green" onclick="submitAdminCode()">Bekreft</button>
-    </div>
-  </div>
-</div>
 
 <!-- ══ HH INFO POPOVER ═══════════════════════════════════════ -->
 <div id="hh-info-popover" class="hh-info-popover hidden">
@@ -2352,7 +2076,7 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
     <div id="hh-step-start">
       <span class="hh-modal-icon">🏠</span>
       <h2>Hei! Hva heter du?</h2>
-      <p id="hh-start-desc">Skriv inn navnet ditt og koden du har fått av en husstandsadmin.</p>
+      <p id="hh-start-desc">Opprett en husstand eller bli med i en eksisterende husstand for å synkronisere middagsplanen og handlelisten.</p>
       <div style="text-align:left;margin-bottom:14px">
         <div class="fld-lbl" style="margin-bottom:6px">Ditt navn</div>
         <input type="text" class="hh-name-input" id="hh-start-name"
@@ -2361,12 +2085,10 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
         <div id="hh-name-error" class="hh-error" style="min-height:18px"></div>
       </div>
       <div class="hh-btn-row">
-        <!-- Only shown to the admin device -->
-        <button class="btn btn-gen" id="hh-create-btn" onclick="hhStartCreate()" style="display:none">🏡 Opprett husstand</button>
+        <button class="btn btn-gen" id="hh-create-btn" onclick="hhStartCreate()">🏡 Opprett husstand</button>
         <button class="btn btn-blue" onclick="hhShowJoin()">🔗 Bli med i husstand</button>
       </div>
-      <!-- Only shown to the admin device -->
-      <button class="hh-skip-btn" id="hh-skip-btn" onclick="hhSkip()" style="display:none">Bruk uten synkronisering</button>
+      <button class="hh-skip-btn" id="hh-skip-btn" onclick="hhSkip()">Bruk uten synkronisering</button>
     </div>
 
     <!-- Step: create -->
@@ -2386,32 +2108,13 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
     <div id="hh-step-join" style="display:none">
       <span class="hh-modal-icon">🔗</span>
       <h2>Skriv inn koden</h2>
-      <p>Skriv inn 6-tegns koden du har fått fra et husstandsmedlem. En admin godkjenner deg.</p>
+      <p>Skriv inn 6-tegns koden du har fått fra et husstandsmedlem.</p>
       <input type="text" class="hh-join-input" id="hh-join-input"
              placeholder="MAT42X" maxlength="6"
              oninput="this.value=this.value.toUpperCase();document.getElementById('hh-join-error').textContent=''">
       <div id="hh-join-error" class="hh-error"></div>
-      <button class="btn btn-gen" id="hh-join-btn" onclick="hhDoJoin()" style="width:100%;margin-bottom:8px">📨 Send forespørsel</button>
+      <button class="btn btn-gen" id="hh-join-btn" onclick="hhDoJoin()" style="width:100%;margin-bottom:8px">🔗 Bli med</button>
       <button class="hh-back-link" onclick="hhBackToStart()">← Tilbake</button>
-    </div>
-
-    <!-- Step: waiting (inline, first time request) -->
-    <div id="hh-step-waiting" style="display:none">
-      <span class="hh-modal-icon">⏳</span>
-      <h2>Venter på godkjenning…</h2>
-      <p>Hei, <strong id="hh-waiting-name"></strong>!<br>
-         En admin i husstand <strong id="hh-waiting-code"></strong> må godkjenne deg.</p>
-      <div class="hh-spinner"></div>
-      <p style="font-size:.75rem;color:var(--t4);margin-bottom:16px">Sjekker automatisk hvert 10. sekund…</p>
-      <button class="hh-skip-btn" onclick="hhCancelJoin()">Avbryt og prøv på nytt</button>
-    </div>
-
-    <!-- Step: rejected (inline) -->
-    <div id="hh-step-rejected" style="display:none">
-      <span class="hh-modal-icon">😔</span>
-      <h2>Forespørsel avvist</h2>
-      <p>Forespørselen din ble dessverre avvist av admin.</p>
-      <button class="btn btn-gen" style="width:100%;margin-bottom:10px" onclick="hhBackToStart()">Prøv igjen</button>
     </div>
 
   </div>
@@ -2551,7 +2254,6 @@ const PAGE_META = {
   harjeg:      { emoji:'🧊', lbl:'Kjøleskap' },
   historikk:   { emoji:'🕐', lbl:'Statistikk' },
   oppskrifter: { emoji:'📖', lbl:'Oppskrifter' },
-  admin:       { emoji:'👑', lbl:'Admin' },
 };
 
 function updateHeaderActions(page) {
@@ -2569,8 +2271,6 @@ function updateHeaderActions(page) {
       : '';
   } else if (page === 'oppskrifter') {
     el.innerHTML = `<button class="hdr-btn" onclick="openAddRecipeForm()">➕ Legg til</button>`;
-  } else if (page === 'admin') {
-    el.innerHTML = `<button class="hdr-btn" onclick="renderAdminPanel()">↻ Oppdater</button>`;
   } else {
     el.innerHTML = '';
   }
@@ -4508,9 +4208,6 @@ if (!_deviceId) {
   localStorage.setItem('_fb_device', _deviceId);
 }
 
-// Global admin flag — set by checkGlobalAdmin() on load, or after entering the admin code
-let _isGlobalAdmin = false;
-
 // ── Low-level write ────────────────────────────────────────────────────────────
 function fbSet(section, value) {
   if (!_fbRef) return Promise.resolve();
@@ -4757,12 +4454,11 @@ function copyHHCode() {
 function leaveHousehold() {
   if (!confirm('Forlate husstanden og koble fra synkroniseringen?')) return;
   if (_fbRef) { _fbRef.off(); _fbRef = null; }
-  stopApprovalPolling();
-  ['firebase_hh_id','_user_name','_approval_status'].forEach(k => localStorage.removeItem(k));
+  ['firebase_hh_id','_user_name'].forEach(k => localStorage.removeItem(k));
   document.getElementById('hh-info-popover').classList.add('hidden');
   updateHHIndicator(null);
-  updateAdminNavVisibility();
   showSyncToast('Du har forlatt husstanden');
+  showHHModal();
 }
 
 // ── Onboarding modal ───────────────────────────────────────────────────────────
@@ -4774,21 +4470,10 @@ let _pendingHHCode = null;
 
 function showHHModal() {
   document.getElementById('hh-modal').classList.remove('hidden');
-
-  // Admin device — show household creation and skip options
-  const createBtn = document.getElementById('hh-create-btn');
-  const skipBtn   = document.getElementById('hh-skip-btn');
-  const descEl    = document.getElementById('hh-start-desc');
-  if (createBtn) createBtn.style.display = _isGlobalAdmin ? '' : 'none';
-  if (skipBtn)   skipBtn.style.display   = _isGlobalAdmin ? '' : 'none';
-  if (descEl)    descEl.textContent      = _isGlobalAdmin
-    ? 'Synkroniser middagsplanen og handlelisten med hele husstanden i sanntid.'
-    : 'Skriv inn navnet ditt og koden du har fått av en husstandsadmin. Tilgangen godkjennes av admin.';
-
   hhShowStep('start');
 }
 function hhShowStep(s) {
-  ['start','create','join','waiting','rejected'].forEach(id => {
+  ['start','create','join'].forEach(id => {
     const el = document.getElementById(`hh-step-${id}`);
     if (el) el.style.display = id === s ? '' : 'none';
   });
@@ -4808,7 +4493,6 @@ function hhValidateName() {
 }
 
 function hhStartCreate() {
-  if (!_isGlobalAdmin) return; // Only admin device can create households
   if (!hhValidateName()) return;
   _pendingHHCode = _hhCode();
   document.getElementById('hh-code-value').textContent = _pendingHHCode;
@@ -4816,30 +4500,26 @@ function hhStartCreate() {
 }
 
 async function hhConfirmCreate() {
-  const name = document.getElementById('hh-start-name').value.trim() || 'Admin';
+  const name = document.getElementById('hh-start-name').value.trim() || 'Bruker';
   const btn  = document.getElementById('hh-create-confirm-btn');
   btn.disabled = true; btn.textContent = 'Oppretter…';
   try {
     const hhId = _pendingHHCode;
-    // Create household meta + register self as admin in approvedUsers
+    // Create household meta + register self as member
     await _fbDb.ref('households/' + hhId).update({
-      'meta': { createdAt: firebase.database.ServerValue.TIMESTAMP, adminDeviceId: _deviceId },
-      ['approvedUsers/' + _deviceId]: {
+      'meta': { createdAt: firebase.database.ServerValue.TIMESTAMP, createdBy: _deviceId },
+      ['members/' + _deviceId]: {
         name,
-        role:       'admin',
-        approvedAt: firebase.database.ServerValue.TIMESTAMP,
+        joinedAt: firebase.database.ServerValue.TIMESTAMP,
       },
     });
-    localStorage.setItem('firebase_hh_id',      hhId);
-    localStorage.setItem('_user_name',           name);
-    localStorage.setItem('_approval_status',     'admin');
+    localStorage.setItem('firebase_hh_id', hhId);
+    localStorage.setItem('_user_name',      name);
     _fbRef = _fbDb.ref('households/' + hhId);
     fbStartListeners();
-    fbStartAdminListeners();
     fbPushAll();
     _seedDefaultRecipesIfEmpty();
     updateHHIndicator(hhId);
-    updateAdminNavVisibility();
     document.getElementById('hh-modal').classList.add('hidden');
   } catch {
     btn.disabled = false; btn.textContent = '✓ Klar, la oss begynne!';
@@ -4861,197 +4541,47 @@ async function hhDoJoin() {
   if (code.length !== 6) { errEl.textContent = 'Koden skal være 6 tegn.'; return; }
   errEl.textContent = '';
   const btn = document.getElementById('hh-join-btn');
-  btn.disabled = true; btn.textContent = 'Sjekker…';
+  btn.disabled = true; btn.textContent = 'Kobler til…';
   try {
     // Verify household exists
     const snap = await _fbDb.ref('households/' + code + '/meta').once('value');
     if (!snap.exists()) {
       errEl.textContent = 'Koden ble ikke funnet. Sjekk at du skrev riktig.';
-      btn.disabled = false; btn.textContent = '📨 Send forespørsel';
+      btn.disabled = false; btn.textContent = '🔗 Bli med';
       return;
     }
-    // Register as pending
-    await _fbDb.ref(`households/${code}/pendingUsers/${_deviceId}`).set({
+    // Register as member immediately (no approval required)
+    await _fbDb.ref(`households/${code}/members/${_deviceId}`).set({
       name,
-      requestedAt: firebase.database.ServerValue.TIMESTAMP,
-      status:      'pending',
+      joinedAt: firebase.database.ServerValue.TIMESTAMP,
     });
-    localStorage.setItem('firebase_hh_id',  code);
-    localStorage.setItem('_user_name',      name);
-    localStorage.setItem('_approval_status','pending');
-    // Show inline waiting step
-    document.getElementById('hh-waiting-name').textContent = name;
-    document.getElementById('hh-waiting-code').textContent = code;
-    hhShowStep('waiting');
-    startHHApprovalPolling(code);
+    localStorage.setItem('firebase_hh_id', code);
+    localStorage.setItem('_user_name',     name);
+    document.getElementById('hh-modal').classList.add('hidden');
+    connectHouseholdData(code);
+    updateHHIndicator(code);
+    showSyncToast('✓ Ble med i husstanden!');
   } catch {
     errEl.textContent = 'Kunne ikke koble til. Sjekk internettforbindelsen.';
-    btn.disabled = false; btn.textContent = '📨 Send forespørsel';
+    btn.disabled = false; btn.textContent = '🔗 Bli med';
   }
 }
 
-// ── Per-household approval polling (used when admin joins an existing household) ──
-let _hhApprovalPollInterval = null;
-
-function startHHApprovalPolling(hhId) {
-  if (_hhApprovalPollInterval) clearInterval(_hhApprovalPollInterval);
-  _hhApprovalPollInterval = setInterval(() => _checkHHApproval(hhId), 10000);
-}
-
-async function _checkHHApproval(hhId) {
-  if (!_fbDb) return;
-  try {
-    const approvedSnap = await _fbDb.ref(`households/${hhId}/approvedUsers/${_deviceId}`).once('value');
-    if (approvedSnap.exists()) {
-      clearInterval(_hhApprovalPollInterval); _hhApprovalPollInterval = null;
-      localStorage.setItem('firebase_hh_id', hhId);
-      localStorage.setItem('_approval_status', 'approved');
-      document.getElementById('hh-modal').classList.add('hidden');
-      connectHouseholdData(hhId);
-      updateHHIndicator(hhId);
-      showSyncToast('✓ Ble med i husstanden!');
-      return;
-    }
-    const pendingSnap = await _fbDb.ref(`households/${hhId}/pendingUsers/${_deviceId}/status`).once('value');
-    if (pendingSnap.val() === 'rejected') {
-      clearInterval(_hhApprovalPollInterval); _hhApprovalPollInterval = null;
-      hhShowStep('rejected');
-    }
-  } catch { /* retry next tick */ }
-}
-
-function hhCancelJoin() {
-  if (_hhApprovalPollInterval) { clearInterval(_hhApprovalPollInterval); _hhApprovalPollInterval = null; }
-  localStorage.removeItem('firebase_hh_id');
-  localStorage.removeItem('_approval_status');
-  hhShowStep('start');
-}
-
 function hhSkip() {
-  if (!_isGlobalAdmin) return; // Only admin device can bypass sync
   localStorage.setItem('firebase_hh_id', '__local__');
   document.getElementById('hh-modal').classList.add('hidden');
   _seedDefaultRecipesIfEmpty();
 }
+
 function hhBackToStart() {
-  // Reset any inline rejection/waiting state
-  stopApprovalPolling();
   hhShowStep('start');
 }
 
-// ── Global approval: submit request ────────────────────────────────────────────
-async function submitAccessRequest() {
-  const nameEl = document.getElementById('access-name-input');
-  const errEl  = document.getElementById('access-name-error');
-  const name   = nameEl.value.trim();
-  if (!name) {
-    errEl.textContent = 'Skriv inn ditt navn.';
-    nameEl.focus();
-    return;
-  }
-  const btn = document.getElementById('access-submit-btn');
-  btn.disabled = true; btn.textContent = 'Sender…';
-  try {
-    await _fbDb.ref('pendingUsers/' + _deviceId).set({
-      name,
-      requestedAt: firebase.database.ServerValue.TIMESTAMP,
-      status: 'pending',
-    });
-    localStorage.setItem('_user_name', name);
-    localStorage.setItem('_approval_status', 'pending');
-    showApprovalOverlay('waiting');
-    startApprovalPolling();
-  } catch {
-    errEl.textContent = 'Kunne ikke sende. Sjekk internettforbindelsen.';
-    btn.disabled = false; btn.textContent = '📨 Send forespørsel';
-  }
-}
-
-// ── Approval polling (global /approvedUsers) ────────────────────────────────────
-let _approvalPollInterval = null;
-
-function startApprovalPolling() {
-  stopApprovalPolling();
-  _approvalPollInterval = setInterval(_checkGlobalApproval, 10000);
-}
-function stopApprovalPolling() {
-  if (_approvalPollInterval) { clearInterval(_approvalPollInterval); _approvalPollInterval = null; }
-}
-
-async function _checkGlobalApproval() {
-  if (!_fbDb) return;
-  try {
-    const approvedSnap = await _fbDb.ref('approvedUsers/' + _deviceId).once('value');
-    if (approvedSnap.exists()) {
-      stopApprovalPolling();
-      localStorage.setItem('_approval_status', 'approved');
-      _onGlobalApprovalGranted();
-      return;
-    }
-    const pendingSnap = await _fbDb.ref('pendingUsers/' + _deviceId + '/status').once('value');
-    if (pendingSnap.val() === 'rejected') {
-      stopApprovalPolling();
-      localStorage.setItem('_approval_status', 'rejected');
-      showApprovalOverlay('rejected');
-    }
-  } catch { /* network error — retry next tick */ }
-}
-
-function _onGlobalApprovalGranted() {
-  hideApprovalOverlay();
-  _seedDefaultRecipesIfEmpty();
-  showHHModal(); // Now the user can set up their household
-  showSyncToast('✓ Tilgang godkjent! Velg eller opprett en husstand 🎉');
-}
-
-function retryAccessCheck() {
-  // Reset error display before retrying
-  document.getElementById('approval-offline-title').textContent = 'Sjekker tilgang…';
-  document.getElementById('approval-offline-msg').textContent   = '';
-  const detailsEl = document.getElementById('approval-offline-details');
-  if (detailsEl) detailsEl.style.display = 'none';
-  initFirebaseSync();
-}
-
-// ── Approval overlay ───────────────────────────────────────────────────────────
-const _APPROVAL_STATES = ['checking','request','waiting','rejected','revoked','offline'];
-
-function showApprovalOverlay(state) {
-  _APPROVAL_STATES.forEach(s => {
-    const el = document.getElementById('approval-' + s);
-    if (el) el.style.display = s === state ? '' : 'none';
-  });
-  if (state === 'waiting') {
-    const name = localStorage.getItem('_user_name') || '';
-    document.getElementById('approval-waiting-name').textContent = name;
-  }
-  if (state === 'request') {
-    // Reset form
-    const nameEl = document.getElementById('access-name-input');
-    const btn    = document.getElementById('access-submit-btn');
-    if (nameEl) nameEl.value = '';
-    if (btn)  { btn.disabled = false; btn.textContent = '📨 Send forespørsel'; }
-    document.getElementById('access-name-error').textContent = '';
-    setTimeout(() => document.getElementById('access-name-input')?.focus(), 80);
-  }
-  document.getElementById('approval-overlay').classList.remove('hidden');
-}
-function hideApprovalOverlay() {
-  document.getElementById('approval-overlay').classList.add('hidden');
-}
-function approvalTryAgain() {
-  stopApprovalPolling();
-  localStorage.removeItem('_user_name');
-  localStorage.removeItem('_approval_status');
-  showApprovalOverlay('request');
-}
-
-// ── Connect household data (for approved / admin users) ────────────────────────
+// ── Connect household data ────────────────────────────────────────────────────
 function connectHouseholdData(hhId) {
   _fbRef = _fbDb.ref('households/' + hhId);
   if (!recipes.length) renderRecipesLoading();
   fbStartListeners();
-  fbStartAdminListeners();
   _fbRef.once('value').then(snap => {
     const data = snap.val() || {};
     const hasData = data.recipes || data.menu || data.homeItems ||
@@ -5061,363 +4591,15 @@ function connectHouseholdData(hhId) {
   }).catch(() => { _seedDefaultRecipesIfEmpty(); });
 }
 
-// ── Admin: listeners and panel ────────────────────────────────────────────────
-function fbStartAdminListeners() {
-  if (!_fbDb) return;
-  // Listen for global pending access requests — update badge + pending box in real-time
-  _fbDb.ref('pendingUsers').on('value', snap => {
-    const data = snap.val() || {};
-    const pendingList = Object.entries(data)
-      .filter(([, u]) => u.status === 'pending')
-      .sort(([, a], [, b]) => (a.requestedAt || 0) - (b.requestedAt || 0));
-    updateAdminBadge(pendingList.length);
-    // Always update the pending section so it's ready when admin navigates to the page
-    const pendingEl = document.getElementById('admin-pending-global');
-    if (pendingEl) pendingEl.innerHTML = _buildPendingSection(pendingList);
-    // Re-render approved + households only if admin page is currently active
-    if (document.getElementById('page-admin')?.classList.contains('active')) {
-      renderAdminPanel();
-    }
-  });
-}
-
-function updateAdminBadge(n) {
-  const el = document.getElementById('nav-badge-admin');
-  if (!el) return;
-  el.textContent = n > 9 ? '9+' : String(n);
-  el.classList.toggle('on', n > 0);
-}
-
-function updateAdminNavVisibility() {
-  const btn = document.getElementById('nav-admin');
-  if (btn) btn.style.display = _isGlobalAdmin ? '' : 'none';
-}
-
-async function checkGlobalAdmin() {
-  if (!_fbDb) return;
-  try {
-    const snap = await _fbDb.ref('globalAdmin/' + _deviceId).once('value');
-    if (snap.exists()) {
-      _isGlobalAdmin = true;
-      updateAdminNavVisibility();
-    }
-  } catch {
-    // Offline or error — remain non-admin
-  }
-}
-
-// ── Admin setup modal ──────────────────────────────────────────────────────────
-function showAdminSetupModal() {
-  const modal = document.getElementById('admin-setup-modal');
-  if (!modal) return;
-  document.getElementById('admin-setup-code-input').value = '';
-  document.getElementById('admin-setup-error').textContent = '';
-  modal.classList.remove('hidden');
-  setTimeout(() => document.getElementById('admin-setup-code-input').focus(), 80);
-}
-
-function closeAdminSetupModal() {
-  const modal = document.getElementById('admin-setup-modal');
-  if (modal) modal.classList.add('hidden');
-}
-
-async function submitAdminCode() {
-  const code  = document.getElementById('admin-setup-code-input').value.trim();
-  const errEl = document.getElementById('admin-setup-error');
-  if (code !== 'kanayo-admin-2026') {
-    errEl.textContent = 'Feil kode. Prøv igjen.';
-    document.getElementById('admin-setup-code-input').select();
-    return;
-  }
-  if (!_fbDb) {
-    errEl.textContent = 'Ikke tilkoblet — prøv igjen om litt.';
-    return;
-  }
-  try {
-    await _fbDb.ref('globalAdmin/' + _deviceId).set({
-      grantedAt: firebase.database.ServerValue.TIMESTAMP,
-    });
-    _isGlobalAdmin = true;
-    updateAdminNavVisibility();
-    closeAdminSetupModal();
-    showSyncToast('👑 Admin-tilgang aktivert på denne enheten!');
-  } catch {
-    errEl.textContent = 'Kunne ikke lagre. Sjekk internettforbindelsen.';
-  }
-}
-
-function _fmtTs(ts) {
-  if (!ts) return '';
-  return new Date(ts).toLocaleDateString('nb-NO', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
-}
-
-async function renderAdminPanel() {
-  const pendingEl = document.getElementById('admin-pending-global');
-  const hhListEl  = document.getElementById('admin-hh-list');
-  const rulesEl   = document.getElementById('admin-rules-pre');
-  if (!hhListEl) return;
-  if (rulesEl && !rulesEl.textContent) rulesEl.textContent = FIREBASE_RULES;
-
-  hhListEl.innerHTML = '<p class="admin-empty">Laster…</p>';
-
-  try {
-    // Fetch global pending/approved + all households in parallel
-    const [pendingGlobalSnap, approvedGlobalSnap, householdsSnap] = await Promise.all([
-      _fbDb.ref('pendingUsers').once('value'),
-      _fbDb.ref('approvedUsers').once('value'),
-      _fbDb.ref('households').once('value'),
-    ]);
-
-    const pendingGlobal  = pendingGlobalSnap.val()  || {};
-    const approvedGlobal = approvedGlobalSnap.val() || {};
-    const allHH          = householdsSnap.val()     || {};
-
-    const pendingList = Object.entries(pendingGlobal)
-      .filter(([, u]) => u.status === 'pending')
-      .sort(([, a], [, b]) => (a.requestedAt || 0) - (b.requestedAt || 0));
-
-    const approvedList = Object.entries(approvedGlobal)
-      .sort(([, a], [, b]) => (a.approvedAt || 0) - (b.approvedAt || 0));
-
-    updateAdminBadge(pendingList.length);
-
-    // ── Pending section (prominent top box — also updated live via listener) ───
-    if (pendingEl) pendingEl.innerHTML = _buildPendingSection(pendingList);
-
-    // ── Approved users ─────────────────────────────────────────────────────────
-    const approvedSection = approvedList.length ? `
-      <div class="fld-lbl" style="margin:0 0 8px">Godkjente brukere</div>
-      <div class="admin-hh-members" style="margin-bottom:4px">
-        ${approvedList.map(([did, u]) => `<span class="admin-member-chip" title="ID: ${escHtml(did)}">✓ ${escHtml(u.name)}</span>`).join('')}
-      </div>` : '';
-
-    // ── Households overview ────────────────────────────────────────────────────
-    const hhEntries = Object.entries(allHH).sort(([a], [b]) => a.localeCompare(b));
-    const hhSection = hhEntries.length ? `
-      <div class="fld-lbl" style="margin:${approvedList.length ? '16px' : '0'} 0 8px">Husstander</div>
-      ${hhEntries.map(([hhId, hhData]) => {
-        const approved = Object.entries(hhData.approvedUsers || {})
-          .sort(([, a], [, b]) => (a.approvedAt || 0) - (b.approvedAt || 0));
-        const chips = approved.length
-          ? approved.map(([, u]) => {
-              const isHHAdmin = u.role === 'admin';
-              return `<span class="admin-member-chip${isHHAdmin ? ' is-admin' : ''}">${isHHAdmin ? '👑 ' : ''}${escHtml(u.name)}</span>`;
-            }).join('')
-          : '<span style="font-size:.76rem;color:var(--t4)">Ingen</span>';
-        return `
-          <div class="admin-hh-card">
-            <div class="admin-hh-header">
-              <div class="admin-hh-code">${escHtml(hhId)}</div>
-              <div class="admin-hh-count">${approved.length} ${approved.length === 1 ? 'bruker' : 'brukere'}</div>
-              <button class="btn btn-gray btn-sm" style="padding:5px 10px;font-size:.75rem" onclick="adminCopyCode('${escHtml(hhId)}')">📋 Kopier</button>
-            </div>
-            <div class="admin-hh-members">${chips}</div>
-          </div>`;
-      }).join('')}` : '';
-
-    hhListEl.innerHTML = (approvedSection + hhSection) ||
-      '<p class="admin-empty">Ingen godkjente brukere eller husstander ennå</p>';
-
-  } catch {
-    if (pendingEl) pendingEl.innerHTML = '';
-    hhListEl.innerHTML = '<p class="admin-empty">Kunne ikke laste data — sjekk internettforbindelsen</p>';
-  }
-}
-
-// Builds the pending-requests HTML (used by renderAdminPanel + live listener)
-function _buildPendingSection(pendingList) {
-  if (!pendingList.length) {
-    return '<p class="admin-pending-empty">Ingen ventende forespørsler ✓</p>';
-  }
-  return `<div class="admin-pending-box">
-    <div class="admin-pending-hdr">
-      🔔 Ventende brukere
-      <span class="admin-pending-cnt">${pendingList.length}</span>
-    </div>
-    ${pendingList.map(([did, u]) => `
-      <div class="admin-user-card" style="margin-bottom:6px">
-        <div class="admin-user-info">
-          <div class="admin-user-name">👤 ${escHtml(u.name)}</div>
-          <div class="admin-user-meta">${_fmtTs(u.requestedAt)}</div>
-        </div>
-        <div class="admin-user-actions">
-          <button class="btn btn-green btn-sm" onclick="globalAdminApprove('${escHtml(did)}','${escHtml(u.name)}')">Godkjenn</button>
-          <button class="btn btn-danger btn-sm" onclick="globalAdminReject('${escHtml(did)}','${escHtml(u.name)}')">Avvis</button>
-        </div>
-      </div>`).join('')}
-  </div>`;
-}
-
-// ── Global approve / reject (writes to root /approvedUsers) ───────────────────
-async function globalAdminApprove(deviceId, name) {
-  try {
-    await _fbDb.ref('approvedUsers/' + deviceId).set({
-      name,
-      approvedAt: firebase.database.ServerValue.TIMESTAMP,
-      approvedBy: _deviceId,
-    });
-    await _fbDb.ref('pendingUsers/' + deviceId).remove();
-    showSyncToast('✓ ' + name + ' har fått tilgang til appen');
-  } catch { showSyncToast('Kunne ikke godkjenne — prøv igjen'); }
-}
-
-async function globalAdminReject(deviceId, name) {
-  try {
-    await _fbDb.ref('pendingUsers/' + deviceId + '/status').set('rejected');
-    showSyncToast('Forespørsel fra ' + name + ' avvist');
-  } catch { showSyncToast('Kunne ikke avvise — prøv igjen'); }
-}
-
-async function globalAdminRevoke(deviceId, name) {
-  if (!confirm('Fjerne tilgangen til ' + name + '?')) return;
-  try {
-    await _fbDb.ref('approvedUsers/' + deviceId).remove();
-    showSyncToast(name + ' har mistet tilgangen');
-  } catch { showSyncToast('Kunne ikke fjerne — prøv igjen'); }
-}
-
-// ── Per-household actions (manage household membership) ────────────────────────
-async function adminApprove(hhId, deviceId, name) {
-  if (!hhId) return;
-  try {
-    await _fbDb.ref(`households/${hhId}/approvedUsers/${deviceId}`).set({
-      name,
-      approvedAt: firebase.database.ServerValue.TIMESTAMP,
-      approvedBy: _deviceId,
-    });
-    await _fbDb.ref(`households/${hhId}/pendingUsers/${deviceId}`).remove();
-    showSyncToast('✓ ' + name + ' lagt til i husstand ' + hhId);
-  } catch { showSyncToast('Kunne ikke godkjenne — prøv igjen'); }
-}
-
-async function adminReject(hhId, deviceId, name) {
-  if (!hhId) return;
-  try {
-    await _fbDb.ref(`households/${hhId}/pendingUsers/${deviceId}/status`).set('rejected');
-    showSyncToast('Forespørsel fra ' + name + ' avvist');
-  } catch { showSyncToast('Kunne ikke avvise — prøv igjen'); }
-}
-
-async function adminRemove(hhId, deviceId, name) {
-  if (!hhId || !confirm('Fjerne ' + name + ' fra husstanden ' + hhId + '?')) return;
-  try {
-    await _fbDb.ref(`households/${hhId}/approvedUsers/${deviceId}`).remove();
-    showSyncToast(name + ' er fjernet fra husstanden');
-  } catch { showSyncToast('Kunne ikke fjerne — prøv igjen'); }
-}
-
-function adminCopyCode(code) {
-  navigator.clipboard.writeText(code)
-    .then(() => showSyncToast('✓ Kode kopiert: ' + code))
-    .catch(() => showSyncToast('Kode: ' + code));
-}
-
-// ── Firebase rules (shown in admin panel) ─────────────────────────────────────
-const FIREBASE_RULES = `{
-  "rules": {
-
-    // Global admin registry
-    "globalAdmin": {
-      ".read": true,
-      ".write": true
-    },
-
-    // Global access control — any device can write a pending request,
-    // only admin can write to approvedUsers
-    "pendingUsers": {
-      ".read": true,
-      ".write": true
-    },
-    "approvedUsers": {
-      ".read": true,
-      ".write": true
-    },
-
-    "households": {
-      "$hhId": {
-        "pendingUsers":  { ".read": true, ".write": true  },
-        "approvedUsers": { ".read": true, ".write": false },
-        "meta":          { ".read": true, ".write": false },
-
-        // NOTE: household data requires .read true for realtime sync.
-        // For full member-only enforcement, add Firebase Authentication.
-        "menu":         { ".read": true, ".write": true },
-        "household":    { ".read": true, ".write": true },
-        "recipes":      { ".read": true, ".write": true },
-        "customMeals":  { ".read": true, ".write": true },
-        "homeItems":    { ".read": true, ".write": true },
-        "staplesState": { ".read": true, ".write": true }
-      }
-    }
-  }
-}`;
-
-function copyFirebaseRules() {
-  navigator.clipboard.writeText(FIREBASE_RULES)
-    .then(() => showSyncToast('✓ Regler kopiert!'))
-    .catch(() => showSyncToast('Kopier teksten fra admin-panelet manuelt'));
-}
-
-// ── Firebase helpers ───────────────────────────────────────────────────────────
-// Wrap a Firebase .once('value') with a 12-second timeout so the app never hangs
-function _fbRead(path) {
-  if (!_fbDb) return Promise.reject(Object.assign(new Error('Firebase ikke initialisert'), { code: 'not-initialized' }));
-  return Promise.race([
-    _fbDb.ref(path).once('value'),
-    new Promise((_, rej) =>
-      setTimeout(() => rej(Object.assign(new Error('Firebase-tilkobling tok for lang tid (timeout)'), { code: 'timeout' })), 12000)
-    ),
-  ]);
-}
-
-function _showConnectionError(err) {
-  const code    = err?.code || '';
-  const message = err?.message || String(err);
-  console.error('[Firebase] Connection error:', code, message);
-
-  let title = 'Tilkoblingsfeil';
-  let msg   = 'Klarte ikke koble til databasen. Prøv igjen.';
-
-  if (code === 'not-initialized' || message.includes('not initialized') || message.includes('No Firebase App')) {
-    title = 'Firebase ikke klar';
-    msg   = 'Firebase SDK kunne ikke lastes. Sjekk internettforbindelsen og last siden på nytt.';
-  } else if (code === 'PERMISSION_DENIED' || message.includes('PERMISSION_DENIED')) {
-    title = 'Tilgangsregler mangler';
-    msg   = 'Firebase-reglene er ikke oppdatert. Åpne admin-panelet (5 trykk på tittelen), kopier reglene og lim dem inn i Firebase Console → Realtime Database → Rules.';
-  } else if (code === 'timeout') {
-    title = 'Tilkoblingen tok for lang tid';
-    msg   = 'Firebase svarte ikke. Sjekk internettforbindelsen og prøv igjen.';
-  } else if (code === 'unavailable' || message.includes('network') || message.includes('Failed to fetch') || message.includes('Network')) {
-    title = 'Ingen internettforbindelse';
-    msg   = 'Koble til internett og prøv igjen.';
-  }
-
-  document.getElementById('approval-offline-title').textContent = title;
-  document.getElementById('approval-offline-msg').textContent   = msg;
-  const detailsEl = document.getElementById('approval-offline-details');
-  const errEl     = document.getElementById('approval-offline-err');
-  if (detailsEl && errEl) {
-    detailsEl.style.display = '';
-    errEl.textContent = (code ? 'Kode: ' + code + '\n' : '') + message;
-  }
-  showApprovalOverlay('offline');
-}
-
 // ── Bootstrap Firebase ─────────────────────────────────────────────────────────
 async function initFirebaseSync() {
-  // Block the entire UI immediately — nothing is accessible until access is verified
-  showApprovalOverlay('checking');
-
-  // ── 1. Ensure Firebase SDK is loaded ────────────────────────────────────────
   if (typeof firebase === 'undefined') {
-    _showConnectionError(Object.assign(
-      new Error('Firebase SDK ikke lastet — CDN utilgjengelig'),
-      { code: 'sdk-missing' }
-    ));
+    console.warn('[Firebase] SDK ikke lastet — kjører lokalt');
+    _seedDefaultRecipesIfEmpty();
     return;
   }
 
-  // ── 2. Initialize Firebase database ─────────────────────────────────────────
+  // Initialize Firebase database
   try {
     const app = firebase.initializeApp(FB_CONFIG);
     _fbDb = firebase.database(app);
@@ -5426,97 +4608,21 @@ async function initFirebaseSync() {
     try {
       _fbDb = firebase.database(firebase.app());
     } catch (e2) {
-      _showConnectionError(e2);
+      console.error('[Firebase] Init feilet:', e2);
+      _seedDefaultRecipesIfEmpty();
       return;
     }
   }
 
   const savedId = localStorage.getItem('firebase_hh_id');
-  const status  = localStorage.getItem('_approval_status');
-
-  try {
-    // ── 3. Check global admin ────────────────────────────────────────────────
-    const adminSnap = await _fbRead('globalAdmin/' + _deviceId);
-    if (adminSnap.exists()) {
-      _isGlobalAdmin = true;
-      updateAdminNavVisibility();
-      hideApprovalOverlay();
-      if (!savedId) {
-        _seedDefaultRecipesIfEmpty();
-        showHHModal();
-      } else if (savedId === '__local__') {
-        _seedDefaultRecipesIfEmpty();
-      } else {
-        connectHouseholdData(savedId);
-        updateHHIndicator(savedId);
-      }
-      return;
-    }
-
-    // ── 4. Check global approval ─────────────────────────────────────────────
-    const approvedSnap = await _fbRead('approvedUsers/' + _deviceId);
-    if (approvedSnap.exists()) {
-      localStorage.setItem('_approval_status', 'approved');
-      hideApprovalOverlay();
-      if (!savedId) {
-        _seedDefaultRecipesIfEmpty();
-        showHHModal();
-      } else if (savedId === '__local__') {
-        _seedDefaultRecipesIfEmpty();
-      } else {
-        const hhSnap = await _fbRead(`households/${savedId}/approvedUsers/${_deviceId}`);
-        if (hhSnap.exists()) {
-          connectHouseholdData(savedId);
-          updateHHIndicator(savedId);
-        } else {
-          localStorage.removeItem('firebase_hh_id');
-          _seedDefaultRecipesIfEmpty();
-          showHHModal();
-        }
-      }
-      return;
-    }
-
-    // ── 5. Check if pending ───────────────────────────────────────────────────
-    const pendingSnap = await _fbRead('pendingUsers/' + _deviceId);
-    if (pendingSnap.exists()) {
-      const pData = pendingSnap.val();
-      if (pData.status === 'pending') {
-        localStorage.setItem('_user_name', pData.name || '');
-        localStorage.setItem('_approval_status', 'pending');
-        showApprovalOverlay('waiting');
-        startApprovalPolling();
-        return;
-      }
-      if (pData.status === 'rejected') {
-        localStorage.setItem('_approval_status', 'rejected');
-        showApprovalOverlay('rejected');
-        return;
-      }
-    }
-
-    // ── 6. Unknown / first-time device ───────────────────────────────────────
-    showApprovalOverlay('request');
-
-  } catch (err) {
-    // ── Fallback for existing approved sessions (offline-first) ──────────────
-    if ((status === 'approved' || status === 'admin') && savedId && savedId !== '__local__') {
-      console.warn('[Firebase] Using localStorage fallback for existing session:', err?.code);
-      if (status === 'admin') { _isGlobalAdmin = true; updateAdminNavVisibility(); }
-      hideApprovalOverlay();
-      connectHouseholdData(savedId);
-      updateHHIndicator(savedId);
-    } else if (status === 'admin' && savedId === '__local__') {
-      _isGlobalAdmin = true;
-      updateAdminNavVisibility();
-      hideApprovalOverlay();
-      _seedDefaultRecipesIfEmpty();
-    } else if (status === 'pending') {
-      showApprovalOverlay('waiting');
-      startApprovalPolling();
-    } else {
-      _showConnectionError(err);
-    }
+  if (!savedId) {
+    _seedDefaultRecipesIfEmpty();
+    showHHModal();
+  } else if (savedId === '__local__') {
+    _seedDefaultRecipesIfEmpty();
+  } else {
+    connectHouseholdData(savedId);
+    updateHHIndicator(savedId);
   }
 }
 
@@ -5535,28 +4641,7 @@ renderHistory();
 renderStats();
 renderRecipes();
 renderHomeItems();
-updateAdminNavVisibility();
 initFirebaseSync();
-
-// ── 5-tap on header title to open hidden admin setup ───────────────────────────
-(function() {
-  let _tapCount = 0;
-  let _tapTimer = null;
-  const hdrTitle = document.querySelector('.hdr-title') || document.getElementById('app-header');
-  if (!hdrTitle) return;
-  hdrTitle.addEventListener('click', function(e) {
-    // Only count taps on the title area itself, not action buttons
-    if (e.target.closest('button') || e.target.closest('#hdr-actions')) return;
-    _tapCount++;
-    clearTimeout(_tapTimer);
-    if (_tapCount >= 5) {
-      _tapCount = 0;
-      showAdminSetupModal();
-    } else {
-      _tapTimer = setTimeout(function() { _tapCount = 0; }, 2000);
-    }
-  });
-})();
 </script>
 </body>
 </html>
