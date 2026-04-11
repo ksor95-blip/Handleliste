@@ -468,6 +468,43 @@ details[open].acc>summary::after{transform:rotate(180deg)}
 .meal-summary li::before{content:'🍽️';font-size:.75rem}
 
 /* ═══════════════════════════════════════════════
+   MANUAL ADD ITEM
+═══════════════════════════════════════════════ */
+.manual-add-wrap{margin-bottom:14px}
+.manual-add-form{
+  display:flex;gap:8px;margin-top:10px;
+  background:var(--card);border:1.5px solid var(--bd);
+  border-radius:var(--rsm);padding:10px;
+  box-shadow:var(--sh);
+  animation:slide-up .2s ease-out;
+}
+.manual-item-input{
+  flex:1;padding:10px 12px;
+  border:1.5px solid var(--bd);background:var(--bg);
+  border-radius:10px;font-size:.92rem;color:var(--t1);
+  outline:none;font-family:inherit;
+}
+.manual-item-input:focus{border-color:var(--g)}
+.manual-add-form .btn{flex-shrink:0;white-space:nowrap}
+.manual-cat .cat-title{background:#eef2ff;color:#3730a3}
+.manual-item-tag{
+  background:#eef2ff;color:#4338ca;
+  font-size:.62rem;font-weight:700;
+  padding:2px 7px;border-radius:10px;
+  margin-left:6px;white-space:nowrap;
+  letter-spacing:.2px;
+}
+.manual-item-del{
+  background:#fef2f2;border:1px solid #fecaca;
+  color:#dc2626;border-radius:8px;
+  width:28px;height:28px;flex-shrink:0;
+  font-size:.85rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  margin-left:6px;padding:0;
+}
+.manual-item-del:active{background:#fee2e2}
+
+/* ═══════════════════════════════════════════════
    CATEGORY SECTIONS
 ═══════════════════════════════════════════════ */
 .cat-block{
@@ -1749,6 +1786,22 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
   <!-- PAGE: HANDLELISTE ──────────────────────────────────── -->
   <section class="page" id="page-handleliste">
     <div class="pg">
+      <!-- Manual add section — always visible -->
+      <div class="manual-add-wrap">
+        <button class="btn btn-blue" id="manual-add-toggle" onclick="toggleManualAddForm()" style="width:100%">
+          ✏️ Legg til vare manuelt
+        </button>
+        <div id="manual-add-form" class="manual-add-form" style="display:none">
+          <input type="text" id="manual-item-input" class="manual-item-input"
+                 placeholder="F.eks. Melk, brød, sjampo…" maxlength="60" autocomplete="off"
+                 onkeydown="if(event.key==='Enter')addManualItem();if(event.key==='Escape')toggleManualAddForm()">
+          <button class="btn btn-green btn-sm" onclick="addManualItem()">+ Legg til</button>
+        </div>
+      </div>
+
+      <!-- Manual items block (shown if any manual items exist) -->
+      <div id="manual-items-block"></div>
+
       <!-- Empty state -->
       <div id="handleliste-empty">
         <div class="empty-state">
@@ -2326,8 +2379,8 @@ async function shareList() {
 
 // ── Progress bar ──────────────────────────────────────────────────────────────
 function updateProgress() {
-  const all     = document.querySelectorAll('#list-content .item-list li');
-  const checked = document.querySelectorAll('#list-content .item-list li.checked');
+  const all     = document.querySelectorAll('#list-content .item-list li, #manual-items-block .item-list li');
+  const checked = document.querySelectorAll('#list-content .item-list li.checked, #manual-items-block .item-list li.checked');
   const total   = all.length;
   const done    = checked.length;
   const pct     = total > 0 ? Math.round(done / total * 100) : 0;
@@ -3426,6 +3479,243 @@ const DEFAULT_RECIPES = [
       ['Honning',     2, 'ss',  'tørvarer'],
     ],
   },
+  {
+    id:'default_7', name:'Kjøttkaker', category:'middag', days:[], servings:4,
+    createdAt:'2024-01-01T00:00:00.000Z',
+    ingredients:[
+      ['Kjøttdeig', 500, 'g',   'kjott'],
+      ['Egg',         1, 'stk', 'meieri'],
+      ['Løk',         1, 'stk', 'gronnsaker'],
+      ['Mel',         2, 'ss',  'brød'],
+      ['Muskat',      1, 'ts',  'tørvarer'],
+      ['Pepper',      1, 'ts',  'tørvarer'],
+      ['Brun saus',   1, 'pose','tørvarer'],
+    ],
+  },
+  {
+    id:'default_8', name:'Fiskegrateng', category:'middag', days:[], servings:4,
+    createdAt:'2024-01-01T00:00:00.000Z',
+    ingredients:[
+      ['Torsk',      500, 'g',  'fisk'],
+      ['Melk',         3, 'dl', 'meieri'],
+      ['Egg',          2, 'stk','meieri'],
+      ['Makaroni',   200, 'g',  'tørvarer'],
+      ['Revet ost',  150, 'g',  'meieri'],
+    ],
+  },
+  {
+    id:'default_9', name:'Pølse med lompe', category:'middag', days:[], servings:2,
+    createdAt:'2024-01-01T00:00:00.000Z',
+    ingredients:[
+      ['Pølser',   4, 'stk',  'kjott'],
+      ['Lomper',   4, 'stk',  'brød'],
+      ['Sennep',   1, 'ss',   'tørvarer'],
+      ['Ketchup',  1, 'ss',   'tørvarer'],
+      ['Løk',      1, 'stk',  'gronnsaker'],
+    ],
+  },
+  {
+    id:'default_10', name:'Kyllingsuppe', category:'middag', days:[], servings:4,
+    createdAt:'2024-01-01T00:00:00.000Z',
+    ingredients:[
+      ['Kylling',    600, 'g',       'kjott'],
+      ['Gulrot',       3, 'stk',     'gronnsaker'],
+      ['Poteter',      2, 'stk',     'gronnsaker'],
+      ['Purre',        1, 'stk',     'gronnsaker'],
+      ['Hønsebuljong', 2, 'terning', 'tørvarer'],
+      ['Persille',     1, 'bunt',    'gronnsaker'],
+    ],
+  },
+  {
+    id:'default_11', name:'Omelett', category:'frokost', days:[], servings:2,
+    createdAt:'2024-01-01T00:00:00.000Z',
+    ingredients:[
+      ['Egg',     4, 'stk', 'meieri'],
+      ['Melk',    1, 'dl',  'meieri'],
+      ['Ost',    80, 'g',   'meieri'],
+      ['Skinke', 80, 'g',   'kjott'],
+      ['Smør',   20, 'g',   'meieri'],
+    ],
+  },
+  {
+    id:'default_12', name:'Bananpannekaker', category:'frokost', days:[], servings:2,
+    createdAt:'2024-01-01T00:00:00.000Z',
+    ingredients:[
+      ['Banan',      2, 'stk', 'gronnsaker'],
+      ['Egg',        2, 'stk', 'meieri'],
+      ['Havregryn', 80, 'g',   'brød'],
+      ['Kanel',      1, 'ts',  'tørvarer'],
+    ],
+  },
+  {
+    id:'default_13', name:'Wraps med kylling', category:'lunsj', days:[], servings:2,
+    createdAt:'2024-01-01T00:00:00.000Z',
+    ingredients:[
+      ['Wraps',         2, 'stk', 'brød'],
+      ['Kyllingfilet',200, 'g',   'kjott'],
+      ['Salat',        .5, 'hode','gronnsaker'],
+      ['Tomat',         1, 'stk', 'gronnsaker'],
+      ['Rømme',         1, 'dl',  'meieri'],
+      ['Revet ost',    50, 'g',   'meieri'],
+    ],
+  },
+  {
+    id:'default_14', name:'Gresk salat', category:'lunsj', days:[], servings:2,
+    createdAt:'2024-01-01T00:00:00.000Z',
+    ingredients:[
+      ['Fetaost',    150, 'g',   'meieri'],
+      ['Agurk',        1, 'stk', 'gronnsaker'],
+      ['Tomat',        3, 'stk', 'gronnsaker'],
+      ['Oliven',     100, 'g',   'tørvarer'],
+      ['Rødløk',       1, 'stk', 'gronnsaker'],
+      ['Olivenolje',   2, 'ss',  'annet'],
+    ],
+  },
+  {
+    id:'default_15', name:'Tomatsupe', category:'lunsj', days:[], servings:4,
+    createdAt:'2024-01-01T00:00:00.000Z',
+    ingredients:[
+      ['Hermetiske tomater', 2, 'boks',    'tørvarer'],
+      ['Løk',                1, 'stk',     'gronnsaker'],
+      ['Hvitløk',            2, 'fedd',    'gronnsaker'],
+      ['Grønnsaksbuljong',   2, 'terning', 'tørvarer'],
+      ['Fløte',              2, 'dl',      'meieri'],
+      ['Basilikum',          1, 'bunt',    'gronnsaker'],
+    ],
+  },
+  {
+    id:'default_16', name:'Pasta med pesto', category:'lunsj', days:[], servings:2,
+    createdAt:'2024-01-01T00:00:00.000Z',
+    ingredients:[
+      ['Pasta',         200, 'g',    'tørvarer'],
+      ['Pesto',           3, 'ss',   'tørvarer'],
+      ['Parmesan',       50, 'g',    'meieri'],
+      ['Cherrytomater', 200, 'g',    'gronnsaker'],
+    ],
+  },
+  {
+    id:'default_17', name:'Lammegryte', category:'middag', days:[], servings:4,
+    createdAt:'2024-01-01T00:00:00.000Z',
+    ingredients:[
+      ['Lammekjøtt', 600, 'g',    'kjott'],
+      ['Poteter',    600, 'g',    'gronnsaker'],
+      ['Gulrot',       4, 'stk',  'gronnsaker'],
+      ['Løk',          2, 'stk',  'gronnsaker'],
+      ['Rosmarin',     2, 'kvist','gronnsaker'],
+      ['Hvitløk',      3, 'fedd', 'gronnsaker'],
+    ],
+  },
+  {
+    id:'default_18', name:'Kylling tikka masala', category:'middag', days:[], servings:4,
+    createdAt:'2024-01-01T00:00:00.000Z',
+    ingredients:[
+      ['Kyllingfilet',       600, 'g',    'kjott'],
+      ['Hermetiske tomater',   2, 'boks', 'tørvarer'],
+      ['Fløte',                3, 'dl',   'meieri'],
+      ['Løk',                  1, 'stk',  'gronnsaker'],
+      ['Hvitløk',              3, 'fedd', 'gronnsaker'],
+      ['Ingefær',              2, 'cm',   'gronnsaker'],
+      ['Tikka masala-krydder', 3, 'ss',   'tørvarer'],
+      ['Ris',                300, 'g',    'tørvarer'],
+    ],
+  },
+  {
+    id:'default_19', name:'Pasta carbonara', category:'middag', days:[], servings:2,
+    createdAt:'2024-01-01T00:00:00.000Z',
+    ingredients:[
+      ['Spaghetti',200, 'g',   'tørvarer'],
+      ['Bacon',    150, 'g',   'kjott'],
+      ['Egg',        3, 'stk', 'meieri'],
+      ['Parmesan',  80, 'g',   'meieri'],
+      ['Pepper',     1, 'ts',  'tørvarer'],
+    ],
+  },
+  {
+    id:'default_20', name:'Ovnsbakt kylling', category:'middag', days:[], servings:4,
+    createdAt:'2024-01-01T00:00:00.000Z',
+    ingredients:[
+      ['Hel kylling', 1, 'stk',   'kjott'],
+      ['Poteter',   800, 'g',     'gronnsaker'],
+      ['Gulrot',      4, 'stk',   'gronnsaker'],
+      ['Hvitløk',     1, 'hode',  'gronnsaker'],
+      ['Rosmarin',    3, 'kvist', 'gronnsaker'],
+      ['Olivenolje',  3, 'ss',    'annet'],
+    ],
+  },
+  {
+    id:'default_21', name:'Fiskesuppe', category:'middag', days:[], servings:4,
+    createdAt:'2024-01-01T00:00:00.000Z',
+    ingredients:[
+      ['Laksefilet',       400, 'g',       'fisk'],
+      ['Torsk',            400, 'g',       'fisk'],
+      ['Poteter',          500, 'g',       'gronnsaker'],
+      ['Gulrot',             3, 'stk',     'gronnsaker'],
+      ['Purre',              1, 'stk',     'gronnsaker'],
+      ['Fløte',              3, 'dl',      'meieri'],
+      ['Fiskebuljong',       2, 'terning', 'tørvarer'],
+    ],
+  },
+  {
+    id:'default_22', name:'Biff med løk', category:'middag', days:[], servings:2,
+    createdAt:'2024-01-01T00:00:00.000Z',
+    ingredients:[
+      ['Biff',    400, 'g',   'kjott'],
+      ['Løk',       2, 'stk', 'gronnsaker'],
+      ['Smør',     30, 'g',   'meieri'],
+      ['Pepper',    1, 'ts',  'tørvarer'],
+      ['Salt',      1, 'ts',  'tørvarer'],
+    ],
+  },
+  {
+    id:'default_23', name:'Pho suppe', category:'middag', days:[], servings:2,
+    createdAt:'2024-01-01T00:00:00.000Z',
+    ingredients:[
+      ['Risnudler',    200, 'g',       'tørvarer'],
+      ['Kylling',      300, 'g',       'kjott'],
+      ['Hønsebuljong',   2, 'terning', 'tørvarer'],
+      ['Ingefær',        3, 'cm',      'gronnsaker'],
+      ['Vårløk',         3, 'stk',     'gronnsaker'],
+      ['Bønnespirer',  100, 'g',       'gronnsaker'],
+      ['Lime',           1, 'stk',     'gronnsaker'],
+    ],
+  },
+  {
+    id:'default_24', name:'Shakshuka', category:'frokost', days:[], servings:2,
+    createdAt:'2024-01-01T00:00:00.000Z',
+    ingredients:[
+      ['Egg',                 4, 'stk', 'meieri'],
+      ['Hermetiske tomater',  2, 'boks','tørvarer'],
+      ['Løk',                 1, 'stk', 'gronnsaker'],
+      ['Hvitløk',             2, 'fedd','gronnsaker'],
+      ['Paprika',             1, 'stk', 'gronnsaker'],
+      ['Spisskummen',         1, 'ts',  'tørvarer'],
+    ],
+  },
+  {
+    id:'default_25', name:'Avokadotoast', category:'frokost', days:[], servings:1,
+    createdAt:'2024-01-01T00:00:00.000Z',
+    ingredients:[
+      ['Brødskiver',  2, 'stk', 'brød'],
+      ['Avokado',     1, 'stk', 'gronnsaker'],
+      ['Sitronsaft',  1, 'ts',  'tørvarer'],
+      ['Salt',        1, 'klype','tørvarer'],
+      ['Pepper',      1, 'klype','tørvarer'],
+      ['Chiliflak',   1, 'klype','tørvarer'],
+    ],
+  },
+  {
+    id:'default_26', name:'Buddha bowl', category:'lunsj', days:[], servings:2,
+    createdAt:'2024-01-01T00:00:00.000Z',
+    ingredients:[
+      ['Quinoa',        200, 'g',   'tørvarer'],
+      ['Kyllingfilet',  300, 'g',   'kjott'],
+      ['Agurk',           1, 'stk', 'gronnsaker'],
+      ['Cherrytomater', 200, 'g',   'gronnsaker'],
+      ['Avokado',         1, 'stk', 'gronnsaker'],
+      ['Hummus',        150, 'g',   'tørvarer'],
+      ['Sitron',          1, 'stk', 'gronnsaker'],
+    ],
+  },
 ];
 
 function loadRecipes() {
@@ -3932,7 +4222,7 @@ function renderHomeItems() {
 }
 
 function checkOffFromShoppingList(names) {
-  document.querySelectorAll('#list-content .item-list li').forEach(li => {
+  document.querySelectorAll('#list-content .item-list li, #manual-items-block .item-list li').forEach(li => {
     const nameEl = li.querySelector('.item-name');
     if (!nameEl) return;
     if (ingredientMatchesList(nameEl.textContent, names)) {
@@ -3945,6 +4235,93 @@ function checkOffFromShoppingList(names) {
     }
   });
   updateProgress();
+}
+
+// ── Manual shopping list items ────────────────────────────────────────────────
+let manualItems = [];
+
+function loadManualItems() {
+  try { manualItems = JSON.parse(localStorage.getItem('manual_items') || '[]'); }
+  catch { manualItems = []; }
+}
+function saveManualItems() {
+  const s = JSON.stringify(manualItems);
+  localStorage.setItem('manual_items', s);
+  fbSet('manualItems', s);
+}
+
+function toggleManualAddForm() {
+  const form = document.getElementById('manual-add-form');
+  const toggleBtn = document.getElementById('manual-add-toggle');
+  if (!form) return;
+  const isHidden = form.style.display === 'none' || form.style.display === '';
+  form.style.display = isHidden ? 'flex' : 'none';
+  if (toggleBtn) toggleBtn.style.display = isHidden ? 'none' : '';
+  if (isHidden) {
+    setTimeout(() => document.getElementById('manual-item-input')?.focus(), 60);
+  }
+}
+
+function addManualItem() {
+  const input = document.getElementById('manual-item-input');
+  if (!input) return;
+  const name = input.value.trim();
+  if (!name) { input.focus(); return; }
+  // Avoid duplicates (case-insensitive)
+  if (!manualItems.some(i => i.name.toLowerCase() === name.toLowerCase())) {
+    manualItems.push({ name, checked: false });
+    saveManualItems();
+    renderManualItems();
+  }
+  input.value = '';
+  input.focus();
+}
+
+function removeManualItem(idx) {
+  manualItems.splice(idx, 1);
+  saveManualItems();
+  renderManualItems();
+}
+
+function toggleManualItem(idx) {
+  if (!manualItems[idx]) return;
+  manualItems[idx].checked = !manualItems[idx].checked;
+  saveManualItems();
+  renderManualItems();
+}
+
+function renderManualItems() {
+  const block = document.getElementById('manual-items-block');
+  if (!block) return;
+  if (!manualItems.length) {
+    block.innerHTML = '';
+    updateHandlelisteVisibility();
+    updateProgress();
+    return;
+  }
+  block.innerHTML = `
+    <div class="cat-block manual-cat">
+      <div class="cat-title">✏️ Manuelt lagt til (${manualItems.length})</div>
+      <ul class="item-list">
+        ${manualItems.map((item, i) => `
+          <li class="${item.checked ? 'checked' : ''}" onclick="toggleManualItem(${i})">
+            <input type="checkbox" ${item.checked ? 'checked' : ''}>
+            <span class="item-cb"></span>
+            <span class="item-name">${escHtml(item.name)}</span>
+            <span class="manual-item-tag">manuelt lagt til</span>
+            <button class="manual-item-del" onclick="event.stopPropagation();removeManualItem(${i})" aria-label="Slett ${escHtml(item.name)}">✕</button>
+          </li>`).join('')}
+      </ul>
+    </div>`;
+  updateHandlelisteVisibility();
+  updateProgress();
+}
+
+function updateHandlelisteVisibility() {
+  const hasManual = manualItems.length > 0;
+  const hasGenerated = document.querySelectorAll('#list-content .item-list li').length > 0;
+  const emptyEl = document.getElementById('handleliste-empty');
+  if (emptyEl) emptyEl.style.display = (hasManual || hasGenerated) ? 'none' : '';
 }
 
 // ── Voice input ───────────────────────────────────────────────────────────────
@@ -4271,6 +4648,7 @@ function fbPushAll() {
     customMeals: { v: localStorage.getItem('custom_meals') || '{}', by: _deviceId },
     homeItems:   { v: localStorage.getItem('home_items') || '[]', by: _deviceId },
     staplesState:{ v: localStorage.getItem('staples_state') || '{}', by: _deviceId },
+    manualItems: { v: localStorage.getItem('manual_items') || '[]', by: _deviceId },
   });
 }
 
@@ -4308,6 +4686,9 @@ function fbApply(data, silent) {
       localStorage.setItem('staples_state', data.staplesState.v);
     } catch {}
   }
+  if (data.manualItems?.v) {
+    try { manualItems = JSON.parse(data.manualItems.v); localStorage.setItem('manual_items', data.manualItems.v); } catch {}
+  }
   // Re-render everything
   buildGrid();
   buildHouseholdChips();
@@ -4317,6 +4698,7 @@ function fbApply(data, silent) {
   renderCustomList();
   renderHomeItems();
   renderStaplesSettings();
+  renderManualItems();
   if (!silent) showSyncToast();
 }
 
@@ -4397,6 +4779,17 @@ function fbStartListeners() {
       staplesState = { disabled: new Set(s.disabled || []), custom: s.custom || [] };
       localStorage.setItem('staples_state', d.v);
       renderStaplesSettings();
+    } catch {}
+    showSyncToast();
+  });
+
+  _fbRef.child('manualItems').on('value', snap => {
+    const d = snap.val();
+    if (!d || d.by === _deviceId) return;
+    try {
+      manualItems = JSON.parse(d.v);
+      localStorage.setItem('manual_items', d.v);
+      renderManualItems();
     } catch {}
     showSyncToast();
   });
@@ -4585,7 +4978,7 @@ function connectHouseholdData(hhId) {
   _fbRef.once('value').then(snap => {
     const data = snap.val() || {};
     const hasData = data.recipes || data.menu || data.homeItems ||
-                    data.customMeals || data.household || data.staplesState;
+                    data.customMeals || data.household || data.staplesState || data.manualItems;
     if (hasData) fbApply(data, true);
     if (!data.recipes && !recipes.length) _seedDefaultRecipesIfEmpty();
   }).catch(() => { _seedDefaultRecipesIfEmpty(); });
@@ -4631,6 +5024,7 @@ async function initFirebaseSync() {
 // ── Init ──────────────────────────────────────────────────────────────────────
 loadRecipes();
 loadHomeItems();
+loadManualItems();
 buildRecipeDayChips();
 renderStaplesSettings();
 renderCustomList();
@@ -4641,6 +5035,7 @@ renderHistory();
 renderStats();
 renderRecipes();
 renderHomeItems();
+renderManualItems();
 initFirebaseSync();
 </script>
 </body>
