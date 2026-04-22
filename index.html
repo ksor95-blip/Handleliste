@@ -2129,6 +2129,125 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
   .onb-slide{padding:24px 22px 16px;gap:10px}
 }
 
+/* ═══════════════════════════════════════════════
+   INVITE GATE — first-launch access control
+═══════════════════════════════════════════════ */
+.invite-gate{
+  position:fixed;inset:0;
+  z-index:10002;
+  background:var(--bg);
+  display:flex;flex-direction:column;
+  padding:env(safe-area-inset-top) 22px calc(env(safe-area-inset-bottom) + 22px);
+  animation:onb-fade .25s ease;
+}
+.invite-gate.hidden{display:none}
+.inv-inner{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:14px;text-align:center;
+  width:100%;max-width:420px;margin:0 auto;
+}
+.inv-icon{
+  font-size:4.8rem;line-height:1;margin-bottom:4px;
+  filter:drop-shadow(0 8px 22px rgba(74,156,93,.22));
+}
+.inv-title{
+  font-size:1.55rem;font-weight:800;color:var(--t1);
+  letter-spacing:-.4px;line-height:1.2;
+}
+.inv-desc{
+  font-size:.95rem;color:var(--t3);line-height:1.55;
+  margin-bottom:6px;max-width:360px;
+}
+.invite-gate input[type=text]{
+  width:100%;padding:14px 16px;
+  font-size:1rem;font-weight:600;
+  border:2px solid var(--bd);border-radius:var(--rsm);
+  background:var(--card);color:var(--t1);font-family:inherit;
+  outline:none;transition:border-color .2s;
+}
+.invite-gate input[type=text]:focus{border-color:var(--g)}
+.inv-code-input{
+  text-align:center;letter-spacing:4px;text-transform:uppercase;
+  font-family:'Courier New',monospace;font-size:1.2rem;
+}
+.inv-error{
+  min-height:20px;color:#dc2626;font-size:.85rem;font-weight:600;
+}
+.inv-cta{width:100%;max-width:360px}
+
+/* ═══════════════════════════════════════════════
+   ADMIN PANEL — invite code management
+═══════════════════════════════════════════════ */
+.admin-panel{
+  position:fixed;inset:0;
+  z-index:10003;
+  background:var(--bg);
+  display:flex;flex-direction:column;
+  padding-top:env(safe-area-inset-top);
+  animation:onb-fade .25s ease;
+}
+.admin-panel.hidden{display:none}
+.admin-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;border-bottom:1px solid var(--bd);
+  background:var(--card);
+}
+.admin-hdr h2{
+  font-size:1.1rem;font-weight:800;color:var(--t1);
+  letter-spacing:-.3px;
+}
+.admin-close{
+  background:none;border:none;
+  font-size:1.4rem;color:var(--t3);
+  cursor:pointer;padding:4px 10px;border-radius:var(--rxs);
+  font-family:inherit;
+}
+.admin-close:active{background:var(--bd);color:var(--t1)}
+.admin-body{
+  flex:1;overflow-y:auto;
+  padding:16px;
+  padding-bottom:calc(env(safe-area-inset-bottom) + 24px);
+}
+.admin-generate-btn{width:100%;margin-bottom:18px}
+.admin-section-title{
+  font-size:.76rem;font-weight:700;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.8px;
+  margin:18px 0 8px;padding:0 4px;
+}
+.admin-section-title:first-child{margin-top:0}
+.admin-code-row{
+  display:flex;align-items:center;gap:10px;
+  background:var(--card);border:1px solid var(--bd);
+  border-radius:var(--rsm);padding:12px 14px;margin-bottom:8px;
+}
+.admin-code-row.used{opacity:.72}
+.admin-code-row.inactive{opacity:.5;border-style:dashed}
+.admin-code-val{
+  font-family:'Courier New',monospace;font-weight:800;
+  font-size:1rem;color:var(--t1);letter-spacing:1px;
+  word-break:break-all;
+}
+.admin-code-meta{
+  font-size:.72rem;color:var(--t3);margin-top:4px;
+  font-family:'Inter',sans-serif;font-weight:500;
+  letter-spacing:0;line-height:1.4;word-break:break-all;
+}
+.admin-code-main{flex:1;min-width:0}
+.admin-code-btns{display:flex;gap:6px;flex-shrink:0}
+.admin-code-btns button{
+  background:var(--bg);border:1px solid var(--bd);
+  border-radius:var(--rxs);padding:6px 10px;
+  font-family:inherit;font-size:.85rem;font-weight:600;
+  color:var(--t2);cursor:pointer;min-height:34px;
+}
+.admin-code-btns button:active{background:var(--bd)}
+.admin-code-btns .btn-deact{color:#dc2626}
+.admin-empty{
+  padding:14px;text-align:center;color:var(--t3);
+  font-size:.85rem;font-style:italic;
+}
+
 </style>
 </head>
 <body>
@@ -2629,6 +2748,40 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
       <span class="onb-dot"></span>
     </div>
     <button type="button" class="btn btn-gen onb-cta" id="onb-cta" onclick="onboardingNext()">Neste</button>
+  </div>
+</div>
+
+<!-- ══ INVITE GATE ═══════════════════════════════════════════ -->
+<div id="invite-gate" class="invite-gate hidden" role="dialog" aria-modal="true" aria-labelledby="inv-title">
+  <div class="inv-inner">
+    <div class="inv-icon" aria-hidden="true">🔑</div>
+    <h2 id="inv-title" class="inv-title">Skriv inn invitasjonskode</h2>
+    <p class="inv-desc">Matplanlegger er kun tilgjengelig med en gyldig invitasjonskode. Skriv inn navnet ditt og koden du har fått.</p>
+    <input type="text" id="inv-name" placeholder="Ditt navn" autocomplete="name" maxlength="40"
+           oninput="document.getElementById('inv-error').textContent=''">
+    <input type="text" id="inv-code" class="inv-code-input" placeholder="TACO-3M8W" maxlength="20"
+           autocomplete="off" autocapitalize="characters" spellcheck="false"
+           oninput="this.value=this.value.toUpperCase();document.getElementById('inv-error').textContent=''"
+           onkeydown="if(event.key==='Enter')submitInviteCode()">
+    <div id="inv-error" class="inv-error" aria-live="polite"></div>
+    <button type="button" class="btn btn-gen inv-cta" id="inv-submit" onclick="submitInviteCode()">Aktiver</button>
+  </div>
+</div>
+
+<!-- ══ ADMIN PANEL ═══════════════════════════════════════════ -->
+<div id="admin-panel" class="admin-panel hidden" role="dialog" aria-modal="true" aria-label="Administrator">
+  <div class="admin-hdr">
+    <h2>🔐 Administrator</h2>
+    <button class="admin-close" onclick="closeAdminPanel()" aria-label="Lukk">✕</button>
+  </div>
+  <div class="admin-body">
+    <button class="btn btn-gen admin-generate-btn" onclick="adminGenerateCode()">➕ Generer ny kode</button>
+    <div class="admin-section-title">Ubrukte koder</div>
+    <div id="admin-unused-list"></div>
+    <div class="admin-section-title">Brukte koder</div>
+    <div id="admin-used-list"></div>
+    <div class="admin-section-title">Deaktiverte koder</div>
+    <div id="admin-inactive-list"></div>
   </div>
 </div>
 
@@ -5752,27 +5905,29 @@ function connectHouseholdData(hhId) {
   }).catch(() => { _seedDefaultRecipesIfEmpty(); });
 }
 
-// ── Bootstrap Firebase ─────────────────────────────────────────────────────────
-async function initFirebaseSync() {
-  if (typeof firebase === 'undefined') {
-    console.warn('[Firebase] SDK ikke lastet — kjører lokalt');
-    _seedDefaultRecipesIfEmpty();
-    return;
-  }
-
-  // Initialize Firebase database
+// Shared: ensure Firebase is initialised and the RTDB handle is on _fbDb.
+// Returns the handle, or null if the SDK is missing / init fails.
+// Used both by the invite gate (pre-onboarding) and the main sync bootstrap.
+function _ensureFbDb() {
+  if (_fbDb) return _fbDb;
+  if (typeof firebase === 'undefined') return null;
   try {
     const app = firebase.initializeApp(FB_CONFIG);
     _fbDb = firebase.database(app);
   } catch (e) {
-    // initializeApp throws if already initialized — get the existing instance
-    try {
-      _fbDb = firebase.database(firebase.app());
-    } catch (e2) {
-      console.error('[Firebase] Init feilet:', e2);
-      _seedDefaultRecipesIfEmpty();
-      return;
-    }
+    try { _fbDb = firebase.database(firebase.app()); }
+    catch (e2) { console.error('[Firebase] Init feilet:', e2); return null; }
+  }
+  return _fbDb;
+}
+
+// ── Bootstrap Firebase ─────────────────────────────────────────────────────────
+async function initFirebaseSync() {
+  const db = _ensureFbDb();
+  if (!db) {
+    console.warn('[Firebase] SDK ikke lastet — kjører lokalt');
+    _seedDefaultRecipesIfEmpty();
+    return;
   }
 
   const savedId = localStorage.getItem('firebase_hh_id');
@@ -5899,6 +6054,326 @@ function _onbBindSwipe() {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// ── Invite-code gate ─────────────────────────────────────────────────────────
+// First-launch access control. Until the user enters a valid code stored at
+// /inviteCodes/{code}, nothing else in the app is reachable. On success we
+// persist `invite_activated` in localStorage so the screen never returns.
+//
+// Codes are stored in Firebase with their literal key form (hyphens preserved,
+// Norwegian letters allowed, variable length). Normalisation only trims and
+// uppercases — no stripping — so seeded codes like "GRØNT-9X4L" round-trip.
+
+const ADMIN_SECRET = 'kanayo-admin-2026';
+
+// Codes the app guarantees to exist in Firebase. Seeded lazily on first
+// Firebase contact; writes are skipped per-key if the code already exists.
+const SEED_INVITE_CODES = [
+  'MAT-7K2P',
+  'GRØNT-9X4L',
+  'TACO-3M8W',
+  'LAKS-5N1Q',
+  'BIFF-2R6T',
+  'SUPPE-4J9V',
+  'PASTA-8H3F',
+  'KYLLING-6B5D',
+  'PIZZA-1Y7C',
+  'MIDDAG-0Z2E',
+];
+
+function isInviteActivated() {
+  return localStorage.getItem('invite_activated') === '1';
+}
+
+// Trim + uppercase + drop internal whitespace. Preserves hyphens and
+// non-ASCII letters (e.g. Ø in GRØNT-9X4L) since Firebase keys support them.
+function _canonCode(s) {
+  return String(s || '').trim().toUpperCase().replace(/\s+/g, '');
+}
+
+function _escHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => (
+    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
+  ));
+}
+function _fmtAdminDate(ts) {
+  if (!ts) return '';
+  try {
+    return new Date(ts).toLocaleString('no-NO', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+  } catch { return ''; }
+}
+
+// Seed the predefined invite codes if they aren't already in Firebase.
+// Idempotent — uses a single /inviteCodes read, then writes only missing keys.
+// The localStorage sentinel avoids the round-trip after the first success,
+// but it's cleared on failure so a flaky launch retries next time.
+let _seedPromise = null;
+async function _seedInviteCodes() {
+  if (localStorage.getItem('invite_codes_seeded_v1') === '1') return;
+  const db = _ensureFbDb();
+  if (!db) return;
+  const snap = await db.ref('inviteCodes').once('value');
+  const existing = snap.val() || {};
+  const missing = SEED_INVITE_CODES.filter(c => !existing[c]);
+  if (missing.length) {
+    await Promise.all(missing.map(code =>
+      db.ref('inviteCodes/' + code).set({
+        active: true,
+        createdBy: 'admin',
+        usedBy: null,
+        usedAt: null,
+      })
+    ));
+  }
+  localStorage.setItem('invite_codes_seeded_v1', '1');
+}
+
+function _startSeedInviteCodes() {
+  if (_seedPromise) return _seedPromise;
+  _seedPromise = _seedInviteCodes().catch(e => {
+    console.warn('[Invite] Seeding failed:', e);
+    _seedPromise = null; // allow retry on next trigger
+    throw e;
+  });
+  return _seedPromise;
+}
+
+function showInviteGate() {
+  const gate = document.getElementById('invite-gate');
+  const app  = document.getElementById('app');
+  if (app)  app.setAttribute('aria-hidden', 'true');
+  if (gate) {
+    gate.classList.remove('hidden');
+    setTimeout(() => { const n = document.getElementById('inv-name'); if (n) n.focus(); }, 150);
+  }
+}
+
+function hideInviteGate() {
+  const gate = document.getElementById('invite-gate');
+  const app  = document.getElementById('app');
+  if (gate) gate.classList.add('hidden');
+  if (app)  app.removeAttribute('aria-hidden');
+}
+
+async function validateInviteCode(canon) {
+  const db = _ensureFbDb();
+  if (!db) return { ok: false, err: 'Ingen nettverkstilgang, prøv igjen' };
+  try {
+    const ref  = db.ref('inviteCodes/' + canon);
+    const snap = await ref.once('value');
+    const data = snap.val();
+    if (!data || data.active === false || data.usedBy) {
+      return { ok: false, err: 'Ugyldig eller allerede brukt kode' };
+    }
+    await ref.update({
+      usedBy: _deviceId,
+      usedAt: firebase.database.ServerValue.TIMESTAMP,
+    });
+    return { ok: true };
+  } catch (e) {
+    console.error('[Invite] Validation failed:', e);
+    return { ok: false, err: 'Klarte ikke å bekrefte koden, prøv igjen' };
+  }
+}
+
+async function submitInviteCode() {
+  const nameEl = document.getElementById('inv-name');
+  const codeEl = document.getElementById('inv-code');
+  const errEl  = document.getElementById('inv-error');
+  const btn    = document.getElementById('inv-submit');
+  const name   = (nameEl.value || '').trim();
+  const canon  = _canonCode(codeEl.value);
+
+  errEl.textContent = '';
+  if (!name)  { errEl.textContent = 'Skriv inn navnet ditt'; nameEl.focus(); return; }
+  if (!canon) { errEl.textContent = 'Skriv inn invitasjonskoden'; codeEl.focus(); return; }
+
+  btn.disabled = true;
+  const origLabel = btn.textContent;
+  btn.textContent = 'Sjekker…';
+
+  // Make sure seeded codes are in place before first-ever validation. If the
+  // seed is already done (or was done on an earlier launch), this is a no-op.
+  try { await _startSeedInviteCodes(); } catch { /* validator will surface the real error */ }
+
+  const res = await validateInviteCode(canon);
+
+  btn.disabled = false;
+  btn.textContent = origLabel;
+
+  if (!res.ok) {
+    errEl.textContent = res.err || 'Ugyldig eller allerede brukt kode';
+    return;
+  }
+
+  localStorage.setItem('invite_activated', '1');
+  localStorage.setItem('_user_name', name);
+  hideInviteGate();
+  maybeShowOnboarding();
+  initFirebaseSync();
+}
+
+// ── Admin panel ──────────────────────────────────────────────────────────────
+// Hidden entry: 5 quick taps on the header title, then the admin password.
+
+function _promptAdminAccess() {
+  const input = prompt('Administrator-kode:');
+  if (input === null) return;
+  if (input === ADMIN_SECRET) openAdminPanel();
+  else alert('Feil kode');
+}
+
+function openAdminPanel() {
+  const panel = document.getElementById('admin-panel');
+  if (!panel) return;
+  panel.classList.remove('hidden');
+  renderAdminCodes();
+}
+
+function closeAdminPanel() {
+  const panel = document.getElementById('admin-panel');
+  if (panel) panel.classList.add('hidden');
+}
+
+// Generated admin codes follow the seed scheme: "XXXX-YYYY" with the hyphen as
+// part of the Firebase key, so the whole /inviteCodes namespace stays consistent.
+function _generateInviteCode() {
+  const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // skip I, O
+  const digits  = '23456789';                  // skip 0, 1
+  const pick = (src, n) => Array.from({ length: n },
+    () => src[Math.floor(Math.random() * src.length)]).join('');
+  return pick(letters, 4) + '-' + pick(digits, 4);
+}
+
+async function adminGenerateCode() {
+  const db = _ensureFbDb();
+  if (!db) { alert('Ingen nettverkstilgang'); return; }
+  let code = '';
+  for (let i = 0; i < 10; i++) {
+    code = _generateInviteCode();
+    const exists = await db.ref('inviteCodes/' + code).once('value').then(s => s.exists());
+    if (!exists) break;
+  }
+  await db.ref('inviteCodes/' + code).set({
+    createdBy: 'admin',
+    createdAt: firebase.database.ServerValue.TIMESTAMP,
+    usedBy: null,
+    usedAt: null,
+    active: true,
+  });
+  showSyncToast('✓ Ny kode: ' + code);
+  renderAdminCodes();
+}
+
+async function adminDeactivate(code) {
+  if (!confirm('Deaktivere kode ' + code + '?')) return;
+  const db = _ensureFbDb();
+  if (!db) return;
+  await db.ref('inviteCodes/' + code).update({ active: false });
+  renderAdminCodes();
+}
+
+async function adminCopyCode(code) {
+  try {
+    await navigator.clipboard.writeText(code);
+    showSyncToast('✓ Kopiert: ' + code);
+  } catch {
+    showSyncToast('Kode: ' + code);
+  }
+}
+
+function _adminCodeRowHtml(code, data, state) {
+  const safeCode = _escHtml(code);
+  let meta = '';
+  if (state === 'used') {
+    meta = 'Brukt av ' + _escHtml(data.usedBy || '?') + ' · ' + _escHtml(_fmtAdminDate(data.usedAt));
+  } else if (state === 'inactive') {
+    meta = data.usedBy
+      ? 'Deaktivert · brukt av ' + _escHtml(data.usedBy)
+      : 'Deaktivert';
+  } else if (data.createdAt) {
+    meta = 'Opprettet ' + _escHtml(_fmtAdminDate(data.createdAt));
+  }
+  // onclick passes the literal code via a JSON-encoded string so hyphens and
+  // Norwegian letters survive intact; HTML attribute escaping handles the rest.
+  const callArg = JSON.stringify(code);
+  const deactBtn = state === 'inactive'
+    ? ''
+    : `<button class="btn-deact" onclick='adminDeactivate(${_escHtml(callArg)})' aria-label="Deaktiver">✕</button>`;
+  return `
+    <div class="admin-code-row ${state}">
+      <div class="admin-code-main">
+        <div class="admin-code-val">${safeCode}</div>
+        ${meta ? `<div class="admin-code-meta">${meta}</div>` : ''}
+      </div>
+      <div class="admin-code-btns">
+        <button onclick='adminCopyCode(${_escHtml(callArg)})' aria-label="Kopier">📋</button>
+        ${deactBtn}
+      </div>
+    </div>`;
+}
+
+async function renderAdminCodes() {
+  const unusedEl   = document.getElementById('admin-unused-list');
+  const usedEl     = document.getElementById('admin-used-list');
+  const inactiveEl = document.getElementById('admin-inactive-list');
+  unusedEl.innerHTML   = '<div class="admin-empty">Laster…</div>';
+  usedEl.innerHTML     = '';
+  inactiveEl.innerHTML = '';
+
+  const db = _ensureFbDb();
+  if (!db) {
+    unusedEl.innerHTML = '<div class="admin-empty">Ingen nettverkstilgang</div>';
+    return;
+  }
+
+  let entries = [];
+  try {
+    const snap = await db.ref('inviteCodes').once('value');
+    entries = Object.entries(snap.val() || {});
+  } catch (e) {
+    unusedEl.innerHTML = '<div class="admin-empty">Klarte ikke å hente koder</div>';
+    return;
+  }
+
+  const byCreated = (a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0);
+  const unused   = entries.filter(([, v]) => v && v.active !== false && !v.usedBy).sort(byCreated);
+  const used     = entries.filter(([, v]) => v && v.active !== false && !!v.usedBy).sort(byCreated);
+  const inactive = entries.filter(([, v]) => v && v.active === false).sort(byCreated);
+
+  unusedEl.innerHTML = unused.length
+    ? unused.map(([c, v]) => _adminCodeRowHtml(c, v, 'unused')).join('')
+    : '<div class="admin-empty">Ingen ubrukte koder</div>';
+  usedEl.innerHTML = used.length
+    ? used.map(([c, v]) => _adminCodeRowHtml(c, v, 'used')).join('')
+    : '<div class="admin-empty">Ingen brukte koder</div>';
+  inactiveEl.innerHTML = inactive.length
+    ? inactive.map(([c, v]) => _adminCodeRowHtml(c, v, 'inactive')).join('')
+    : '<div class="admin-empty">Ingen deaktiverte koder</div>';
+}
+
+// 5-tap gesture on the header title opens the admin prompt.
+(function bindAdminGesture() {
+  const attach = () => {
+    const el = document.querySelector('#app-header .hdr-title');
+    if (!el) return false;
+    let count = 0, timer = null;
+    el.addEventListener('click', () => {
+      count++;
+      clearTimeout(timer);
+      timer = setTimeout(() => { count = 0; }, 1500);
+      if (count >= 5) {
+        count = 0;
+        clearTimeout(timer);
+        _promptAdminAccess();
+      }
+    });
+    return true;
+  };
+  if (!attach()) document.addEventListener('DOMContentLoaded', attach, { once: true });
+})();
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 loadRecipes();
@@ -5915,8 +6390,19 @@ renderManualItems();
 renderSettingsHHCode();
 syncNotificationsToggle();
 syncThemeToggle();
-maybeShowOnboarding();
-initFirebaseSync();
+
+// Seed the predefined invite codes eagerly so they're available to the gate's
+// first validation attempt. submitInviteCode awaits the same promise, so if
+// this is still running when the user taps Aktiver the click just waits.
+_startSeedInviteCodes();
+
+if (!isInviteActivated()) {
+  // Block onboarding + household sync until a valid invite code unlocks them.
+  showInviteGate();
+} else {
+  maybeShowOnboarding();
+  initFirebaseSync();
+}
 </script>
 </body>
 </html>
