@@ -742,6 +742,52 @@ details[open].acc>summary::after{transform:rotate(180deg)}
 .meal-summary li::before{content:'🍽️';font-size:.75rem}
 
 /* ═══════════════════════════════════════════════
+   MULTI-WEEK BANNERS — "Uke 16 er også planlagt"
+═══════════════════════════════════════════════ */
+.multi-week-banners{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.multi-week-banners:empty{display:none}
+.week-banner{
+  display:flex;align-items:center;gap:10px;
+  background:var(--g50);
+  border:1px solid var(--g100);
+  border-radius:var(--rsm);
+  padding:10px 14px;
+  cursor:pointer;
+  font-family:inherit;text-align:left;
+  color:var(--g-dk);
+  touch-action:manipulation;
+  width:100%;
+  transition:background .15s,transform .08s;
+  min-height:46px;
+}
+.week-banner:active{background:var(--g100);transform:scale(.98)}
+.week-banner-text{
+  flex:1;min-width:0;
+  font-size:.88rem;font-weight:600;
+  color:var(--t1);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.week-banner-cta{
+  flex-shrink:0;
+  font-size:.82rem;font-weight:700;
+  color:var(--g-dk);
+}
+html[data-theme="dark"] .week-banner{background:var(--g50);border-color:var(--g100)}
+html[data-theme="dark"] .week-banner-cta{color:var(--g-lt)}
+
+/* Week tag on shopping-list items — small chip left of the amount badge */
+.item-week-tag{
+  flex-shrink:0;
+  font-size:.64rem;font-weight:800;
+  background:#eef2ff;color:#4338ca;
+  padding:2px 7px;border-radius:10px;
+  letter-spacing:.3px;white-space:nowrap;
+  line-height:1.4;
+}
+.item-list li.checked .item-week-tag{opacity:.45}
+html[data-theme="dark"] .item-week-tag{background:#1a1d33;color:#a5b4fc}
+
+/* ═══════════════════════════════════════════════
    MANUAL ADD ITEM
 ═══════════════════════════════════════════════ */
 .manual-add-wrap{margin-bottom:14px}
@@ -809,8 +855,8 @@ details[open].acc>summary::after{transform:rotate(180deg)}
 .item-list li{
   display:flex;
   align-items:center;
-  flex-wrap:wrap;
-  gap:10px 12px;
+  flex-wrap:nowrap;
+  gap:10px;
   padding:12px 14px;
   font-size:1rem;
   border-bottom:1px solid #ede5db;
@@ -858,12 +904,17 @@ details[open].acc>summary::after{transform:rotate(180deg)}
   to{opacity:1;transform:rotate(45deg) scale(1)}
 }
 .item-name{
-  flex:1 1 120px;
+  flex:1 1 0;
   min-width:0;
   font-size:1rem;
   transition:color .15s;
   line-height:1.3;
-  word-break:break-word;
+  /* Single-line with ellipsis so the amount badge + Finn på Oda never wrap
+     to a second line. Long names truncate visually but the full text stays
+     in the DOM (tooltip / share text still reads it in full). */
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
 }
 .item-list li.checked .item-name{text-decoration:line-through;color:var(--t4)}
 .item-qty{
@@ -2488,6 +2539,9 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
           </div>
         </div>
         <div id="meal-summary" class="meal-summary" style="display:none"></div>
+        <!-- Subtle banners that let the user fold another week's plan into
+             this list. Populated by _renderMultiWeekBanners(). -->
+        <div id="multi-week-banners" class="multi-week-banners"></div>
         <!-- Manually added items appear first, inside the same list -->
         <div id="manual-items-block"></div>
         <div id="list-content"></div>
@@ -4265,6 +4319,11 @@ function clearAll() {
   if (listContent) listContent.innerHTML = '';
   const mealSummary = document.getElementById('meal-summary');
   if (mealSummary) { mealSummary.innerHTML = ''; mealSummary.style.display = 'none'; }
+  const banners = document.getElementById('multi-week-banners');
+  if (banners) banners.innerHTML = '';
+  // Drop multi-week state so stale banners don't return when the user plans again.
+  _shoppingListWeeks = [];
+  _shoppingListPrimaryWeek = null;
   const navDot = document.getElementById('nav-dot-handleliste');
   if (navDot) navDot.classList.remove('on');
   updateHandlelisteVisibility();
@@ -4554,78 +4613,142 @@ function formatQty(n) {
   return n.toFixed(1).replace('.',',');
 }
 
-function generateList() {
+// ── Multi-week shopping list ─────────────────────────────────────────────────
+// The shopping list can span multiple weeks: the initial Generer button puts
+// just the current week in, but "Uke N er også planlagt" banners let the user
+// fold adjacent weeks into the same list. Aggregation merges across all
+// included weeks; items carry a set of contributing weeks so we can tag any
+// that came from a non-primary week.
+//
+// Items from `_shoppingListPrimaryWeek` render without a tag; every other
+// included week gets a small "Uke N" chip on its items. Regeneration preserves
+// checks. The array is sorted chronologically for display, while the primary
+// stays pinned to whatever week the initial Generer button used.
+let _shoppingListWeeks = [];
+let _shoppingListPrimaryWeek = null;
+
+function _weekHasAnyMeal(weekKey) {
+  const plan = _weekPlans[weekKey] || {};
+  for (let i = 0; i < DAYS.length; i++) {
+    if (plan[`day${i}`]) return true;
+  }
+  return false;
+}
+
+// Snapshot the name+unit of currently-checked items so we can re-apply the
+// checks after regeneration. Each <li> carries a data-unit attribute
+// (matching the aggregation key's unit slot) so a 400g+400g → 800g merge
+// after folding in another week still re-checks — the unit stayed the same.
+function _snapshotCheckedKeys() {
+  const keys = new Set();
+  document.querySelectorAll('#list-content .item-list li.checked').forEach(li => {
+    const name = (li.getAttribute('data-ingredient') || '').toLowerCase();
+    const unit = li.getAttribute('data-unit') || '__hidden__';
+    keys.add(`${name}||${unit}`);
+  });
+  return keys;
+}
+function _restoreCheckedKeys(keys) {
+  if (!keys || !keys.size) return;
+  document.querySelectorAll('#list-content .item-list li').forEach(li => {
+    const name = (li.getAttribute('data-ingredient') || '').toLowerCase();
+    const unit = li.getAttribute('data-unit') || '__hidden__';
+    if (keys.has(`${name}||${unit}`)) {
+      li.classList.add('checked');
+      const cb = li.querySelector('input[type=checkbox]');
+      if (cb) cb.checked = true;
+    }
+  });
+}
+
+// Render subtle "Uke N er også planlagt" banners for adjacent weeks that have
+// any meals planned and aren't already in the list. Called after every render.
+function _renderMultiWeekBanners() {
+  const wrap = document.getElementById('multi-week-banners');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  const primary = _shoppingListPrimaryWeek;
+  if (!primary) return;
+  const candidates = [
+    addWeeksToKey(primary, -1),
+    addWeeksToKey(primary, +1),
+  ];
+  candidates.forEach(key => {
+    if (_shoppingListWeeks.includes(key)) return;
+    if (!_weekHasAnyMeal(key)) return;
+    const info = weekLabelFor(key);
+    const safeKey = escHtml(key);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'week-banner';
+    btn.setAttribute('onclick', `addWeekToShoppingList('${safeKey}')`);
+    btn.innerHTML = `
+      <span class="week-banner-text">Uke ${info.week} er også planlagt</span>
+      <span class="week-banner-cta">👉 Legg til uke ${info.week}</span>
+    `;
+    wrap.appendChild(btn);
+  });
+}
+
+// Core render. Aggregates across _shoppingListWeeks, updates the meal summary,
+// paints list-content, then refreshes the banner area. `preserveChecks` keeps
+// the user's ticks across re-renders when adding a week.
+function _renderShoppingList({ preserveChecks = false } = {}) {
+  const checkedSnap = preserveChecks ? _snapshotCheckedKeys() : null;
+
   const totals = {};
   const skipped = {};
   const summary = [];
   const dayAssignments = [];
+  const primaryCatByName = {};
 
-  // Read directly from the week plan state (not the DOM). This is the
-  // single source of truth and works regardless of whether the Planlegg
-  // grid is currently rendered or what week is being viewed.
-  const plan = _weekPlans[_currentWeek] || {};
+  const primaryWeek = _shoppingListPrimaryWeek || _shoppingListWeeks[0];
 
-  DAYS.forEach((day, i) => {
-    const key = plan[`day${i}`] || '';
-    if (!key) return;
-    const meal = getMeal(key);
-    if (!meal) {
-      console.warn('[generateList] Could not resolve meal for key', key);
-      return;
-    }
-
-    // Scale factor: MEALS/custom = per 1 person; recipes = total for meal.servings persons
-    const hh = getEffectiveDayHH(i);
-    const isRecipe = key.startsWith('recipe__');
-    const scaleFactor = isRecipe ? hh.portions / (meal.servings || 4) : hh.portions;
-
-    // Recipes use .name; MEALS / customMeals use .label
-    const mealLabel = meal.name || meal.label || 'Ukjent rett';
-    summary.push({ day, label: mealLabel, hh });
-    dayAssignments.push({ idx: i, key });
-
-    // Defensive: guard against recipes with missing or malformed ingredient
-    // arrays (can happen with user-imported data or corrupted localStorage).
-    // normalizeIngredient handles both [name,qty,unit,cat] and {name,qty,unit,cat}.
-    const ingredients = Array.isArray(meal.ingredients) ? meal.ingredients : [];
-    if (!ingredients.length) {
-      console.warn('[generateList] Recipe has no ingredients:', mealLabel);
-    }
-    ingredients.forEach(ing => {
-      const norm = normalizeIngredient(ing);
-      if (!norm) return;
-      const name = norm.name;
-      if (isStaple(name)) { skipped[name] = true; return; }
-      // Use ?? so "Ingen enhet" (empty string) isn't coerced to 'stk';
-      // missing/undefined units still default for backwards compatibility.
-      const unit = norm.unit ?? 'stk';
-      const cat  = norm.cat  || 'annet';
-      const qty  = Number(norm.qty) || 1;
-      const scaled = qty * scaleFactor;
-      // Hidden-unit ingredients (dl/ml/ts/ss/klype/...) collapse across
-      // recipes into a single no-amount entry — the qty wouldn't be shown
-      // anyway, and showing "Melk" twice is noise. Shown-unit ingredients
-      // keep the existing name+unit+cat aggregation so 400g + 400g → 800g.
-      // Name is lowercased in the key so "Melk" + "melk" merge; the first-
-      // seen casing wins for display.
-      const hidden = !_unitShowsQty(unit);
-      const nameKey = name.toLowerCase();
-      const k = hidden
-        ? `${nameKey}||__hidden__||${cat}`
-        : `${nameKey}||${unit}||${cat}`;
-      if (totals[k]) {
-        if (!hidden) totals[k].qty += scaled;
-        totals[k].sources.add(mealLabel); // Used by the long-press tooltip
-        // else for qty: dedupe — nothing to add
-      } else {
-        totals[k] = hidden
-          ? { name, qty: 0,      unit: '', cat, hidden: true,  sources: new Set([mealLabel]) }
-          : { name, qty: scaled, unit,     cat, hidden: false, sources: new Set([mealLabel]) };
+  _shoppingListWeeks.forEach(weekKey => {
+    const plan = _weekPlans[weekKey] || {};
+    const wkInfo = weekLabelFor(weekKey);
+    DAYS.forEach((day, i) => {
+      const key = plan[`day${i}`] || '';
+      if (!key) return;
+      const meal = getMeal(key);
+      if (!meal) {
+        console.warn('[generateList] Could not resolve meal for key', key, 'in week', weekKey);
+        return;
       }
+      const hh = getEffectiveDayHH(i);
+      const isRecipe = key.startsWith('recipe__');
+      const scaleFactor = isRecipe ? hh.portions / (meal.servings || 4) : hh.portions;
+      const mealLabel = meal.name || meal.label || 'Ukjent rett';
+      summary.push({ day, label: mealLabel, hh, week: weekKey, weekNum: wkInfo.week });
+      dayAssignments.push({ idx: i, key, week: weekKey });
+
+      const ingredients = Array.isArray(meal.ingredients) ? meal.ingredients : [];
+      ingredients.forEach(ing => {
+        const norm = normalizeIngredient(ing);
+        if (!norm) return;
+        const name = norm.name;
+        if (isStaple(name)) { skipped[name] = true; return; }
+        const unit = norm.unit ?? 'stk';
+        const cat  = norm.cat  || 'annet';
+        const qty  = Number(norm.qty) || 1;
+        const scaled = qty * scaleFactor;
+
+        const hidden = !_unitShowsQty(unit);
+        const nameKey = name.toLowerCase();
+        if (primaryCatByName[nameKey] === undefined) primaryCatByName[nameKey] = cat;
+        const k = hidden ? `${nameKey}||__hidden__` : `${nameKey}||${unit}`;
+        if (totals[k]) {
+          if (!hidden) totals[k].qty += scaled;
+          totals[k].sources.add(mealLabel);
+          totals[k].weeks.add(weekKey);
+        } else {
+          totals[k] = hidden
+            ? { name, qty: 0,      unit: '', cat, hidden: true,  sources: new Set([mealLabel]), weeks: new Set([weekKey]) }
+            : { name, qty: scaled, unit,     cat, hidden: false, sources: new Set([mealLabel]), weeks: new Set([weekKey]) };
+        }
+      });
     });
   });
-
-  if (!summary.length) { alert('Velg minst én middag for å generere handlelisten!'); return; }
 
   const skippedNames = Object.keys(skipped);
   const itemCount = Object.keys(totals).length;
@@ -4633,24 +4756,51 @@ function generateList() {
   // Household note
   const hhIds = [...new Set(summary.map(m => m.hh.id))];
   const hhNote = hhIds.length === 1
-    ? `${summary[0].hh.emoji} ${summary[0].hh.label}`
-    : `Varierende husstand per dag`;
+    ? `${summary[0]?.hh.emoji ?? ''} ${summary[0]?.hh.label ?? ''}`.trim()
+    : 'Varierende husstand per dag';
 
-  // Meal summary
+  // Meal summary — when multiple weeks are folded in, group days by week so
+  // the user can see what came from where.
   const summaryEl = document.getElementById('meal-summary');
   summaryEl.style.display = 'block';
-  const dayItems = summary.map(m => {
-    const note = hhIds.length > 1
-      ? ` <span style="color:var(--t4);font-size:.76rem">(${m.hh.emoji} ${m.hh.label})</span>` : '';
-    return `<li><strong>${m.day}:</strong> ${m.label}${note}</li>`;
-  }).join('');
+  let dayItemsHtml = '';
+  if (_shoppingListWeeks.length === 1) {
+    dayItemsHtml = summary.map(m => {
+      const note = hhIds.length > 1
+        ? ` <span style="color:var(--t4);font-size:.76rem">(${m.hh.emoji} ${m.hh.label})</span>` : '';
+      return `<li><strong>${m.day}:</strong> ${m.label}${note}</li>`;
+    }).join('');
+  } else {
+    // Grouped per week
+    const byWeek = {};
+    summary.forEach(m => { (byWeek[m.week] ??= []).push(m); });
+    dayItemsHtml = _shoppingListWeeks.flatMap(wk => {
+      const meals = byWeek[wk] || [];
+      if (!meals.length) return [];
+      const info = weekLabelFor(wk);
+      const heading = `<li style="font-weight:800;margin-top:6px"><strong>Uke ${info.week}</strong></li>`;
+      const rows = meals.map(m => {
+        const note = hhIds.length > 1
+          ? ` <span style="color:var(--t4);font-size:.76rem">(${m.hh.emoji} ${m.hh.label})</span>` : '';
+        return `<li><strong>${m.day}:</strong> ${m.label}${note}</li>`;
+      });
+      return [heading, ...rows];
+    }).join('');
+  }
   summaryEl.innerHTML = `
     <div class="meal-hh-info">${hhNote}</div>
     <h3>${summary.length} middager planlagt${skippedNames.length
       ? ` &nbsp;<span style="font-weight:400;font-size:.8rem;color:#92400e">${skippedNames.length} basisvare${skippedNames.length!==1?'r':''} ekskludert</span>`
       : ''}</h3>
-    <ul>${dayItems}</ul>
+    <ul>${dayItemsHtml}</ul>
   `;
+
+  // Pin all same-name entries to the first-seen cat so "Spisspaprika 5 stk"
+  // and "Spisspaprika 1 pakke" land in the same block.
+  Object.values(totals).forEach(item => {
+    const pinned = primaryCatByName[item.name.toLowerCase()];
+    if (pinned) item.cat = pinned;
+  });
 
   const bycat = {};
   Object.values(totals).forEach(item => { (bycat[item.cat] ??= []).push(item); });
@@ -4672,11 +4822,24 @@ function generateList() {
           ${items.map(item => {
             const qtyDisplay = _formatShoppingQty(item);
             const sourcesJson = escHtml(JSON.stringify([...(item.sources || [])]));
+            // data-unit is the aggregation-key unit slot: actual unit for
+            // visible items, "__hidden__" for the collapsed volume bucket.
+            // Used by _snapshot/_restoreCheckedKeys to survive regeneration.
+            const dataUnit = item.hidden ? '__hidden__' : (item.unit || '');
+            // Build week tags for any contributing week that isn't the primary.
+            // Sorted by week key so tags read left-to-right chronologically.
+            const extraWeeks = [...(item.weeks || [])]
+              .filter(w => w !== primaryWeek)
+              .sort((a, b) => a.localeCompare(b));
+            const weekTags = extraWeeks.map(w =>
+              `<span class="item-week-tag">Uke ${weekLabelFor(w).week}</span>`
+            ).join('');
             return `
-            <li onclick="toggleItem(this)" data-ingredient="${escHtml(item.name)}" data-sources="${sourcesJson}">
+            <li onclick="toggleItem(this)" data-ingredient="${escHtml(item.name)}" data-unit="${escHtml(dataUnit)}" data-sources="${sourcesJson}">
               <input type="checkbox">
               <span class="item-cb"></span>
               <span class="item-name">${item.name}</span>
+              ${weekTags}
               <span class="item-qty">${qtyDisplay}</span>
               <button class="oda-btn" onclick="event.stopPropagation();odaSearch('${escHtml(item.name)}',this)" title="Søk på Oda.com">Finn på Oda</button>
             </li>`;
@@ -4700,15 +4863,53 @@ function generateList() {
     content.appendChild(skippedSec);
   }
 
-  // Show list, navigate
   document.getElementById('shopping-list').style.display = 'block';
   document.getElementById('handleliste-empty').style.display = 'none';
   document.getElementById('nav-dot-handleliste').classList.add('on');
+
+  // Banners reflect whichever weeks are still candidates to add.
+  _renderMultiWeekBanners();
+
+  if (checkedSnap) _restoreCheckedKeys(checkedSnap);
   updateProgress();
-  saveHistory(summary, itemCount, dayAssignments);
+
+  return { summary, itemCount, dayAssignments };
+}
+
+function generateList() {
+  // Initial generation: reset the week set to just the currently-viewed week.
+  if (!_weekHasAnyMeal(_currentWeek)) {
+    alert('Velg minst én middag for å generere handlelisten!');
+    return;
+  }
+  _shoppingListPrimaryWeek = _currentWeek;
+  _shoppingListWeeks = [_currentWeek];
+  const res = _renderShoppingList({ preserveChecks: false });
+  saveHistory(res.summary, res.itemCount, res.dayAssignments);
   // Regenerating resets all checks, so day indicators reset to 'none'.
   refreshDayIndicators();
   showPage('handleliste');
+}
+
+// Called by the "Uke N er også planlagt" banner. Folds that week's meals
+// into the existing list, preserves any checked ticks, and re-renders so
+// the added items carry a "Uke N" chip.
+function addWeekToShoppingList(weekKey) {
+  if (!weekKey) return;
+  if (_shoppingListWeeks.includes(weekKey)) return; // already in — no-op
+  if (!_shoppingListWeeks.length) {
+    // Defensive: shouldn't happen since the banner only renders post-generation.
+    _shoppingListPrimaryWeek = weekKey;
+    _shoppingListWeeks = [weekKey];
+  } else {
+    _shoppingListWeeks.push(weekKey);
+    // Sort for natural left-to-right tag order; primary is tracked separately.
+    _shoppingListWeeks.sort((a, b) => a.localeCompare(b));
+  }
+  _renderShoppingList({ preserveChecks: true });
+  refreshDayIndicators();
+  const info = weekLabelFor(weekKey);
+  showSyncToast(`✓ Uke ${info.week} lagt til`);
 }
 
 // ── Recipes ───────────────────────────────────────────────────────────────────
