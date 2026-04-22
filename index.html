@@ -6057,13 +6057,15 @@ function _onbBindSwipe() {
 // ── Invite-code gate ─────────────────────────────────────────────────────────
 // First-launch access control. Until the user enters a valid code stored at
 // /inviteCodes/{code}, nothing else in the app is reachable. On success we
-// persist `invite_activated` in localStorage so the screen never returns.
+// persist `invite_activated_v2` in localStorage so the screen never returns.
+// Bumping the suffix (…_v2) invalidates any prior activation and forces all
+// existing devices to re-enter a code.
 //
 // Codes are stored in Firebase with their literal key form (hyphens preserved,
 // Norwegian letters allowed, variable length). Normalisation only trims and
 // uppercases — no stripping — so seeded codes like "GRØNT-9X4L" round-trip.
 
-const ADMIN_SECRET = 'kanayo-admin-2026';
+const ADMIN_SECRET = '14011959abC';
 
 // Codes the app guarantees to exist in Firebase. Seeded lazily on first
 // Firebase contact; writes are skipped per-key if the code already exists.
@@ -6081,7 +6083,7 @@ const SEED_INVITE_CODES = [
 ];
 
 function isInviteActivated() {
-  return localStorage.getItem('invite_activated') === '1';
+  return localStorage.getItem('invite_activated_v2') === '1';
 }
 
 // Trim + uppercase + drop internal whitespace. Preserves hyphens and
@@ -6208,7 +6210,7 @@ async function submitInviteCode() {
     return;
   }
 
-  localStorage.setItem('invite_activated', '1');
+  localStorage.setItem('invite_activated_v2', '1');
   localStorage.setItem('_user_name', name);
   hideInviteGate();
   maybeShowOnboarding();
