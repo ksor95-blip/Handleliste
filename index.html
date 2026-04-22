@@ -467,6 +467,56 @@ select:focus,input:focus{
   color:var(--t4);font-size:1.3rem;
   font-weight:600;line-height:1;
 }
+/* Per-day ingredient-completion pill. Dot colour signals status; label only
+   appears for partial/done so the grey state is visually quiet. */
+.day-status{
+  display:inline-flex;align-items:center;gap:5px;
+  flex-shrink:0;font-size:.74rem;font-weight:700;
+  color:var(--t3);letter-spacing:.1px;
+  line-height:1;
+}
+.day-status-dot{
+  display:inline-block;
+  width:9px;height:9px;border-radius:50%;
+  background:var(--t4);
+  flex-shrink:0;
+}
+.day-status.status-none .day-status-dot{background:var(--t4)}
+.day-status.status-partial .day-status-dot{
+  background:#f4b400;
+  box-shadow:0 0 0 3px rgba(244,180,0,.18);
+}
+.day-status.status-done .day-status-dot{
+  background:var(--g);
+  box-shadow:0 0 0 3px rgba(74,156,93,.22);
+}
+.day-status.status-partial{color:#b87900}
+.day-status.status-done{color:var(--g-dk)}
+html[data-theme="dark"] .day-status.status-partial{color:#fbbf24}
+html[data-theme="dark"] .day-status.status-done{color:var(--g-lt)}
+/* Flytt frem — a small, neutral pill. Rendered as span[role=button] because
+   nesting a real <button> inside the day-row button is invalid HTML. */
+.day-move-btn{
+  display:inline-flex;align-items:center;
+  flex-shrink:0;
+  font-family:inherit;font-size:.72rem;font-weight:700;
+  background:var(--bg);color:var(--t2);
+  border:1px solid var(--bd);border-radius:999px;
+  padding:5px 9px;min-height:28px;
+  cursor:pointer;line-height:1;
+  touch-action:manipulation;
+  -webkit-user-select:none;user-select:none;
+}
+.day-move-btn:active{background:var(--bd);transform:scale(.96)}
+html[data-theme="dark"] .day-move-btn{background:#26221d;color:var(--t2)}
+html[data-theme="dark"] .day-move-btn:active{background:#342e27}
+/* Narrow phones: drop the Delvis/Klar text so the dot + Flytt frem still fit
+   alongside the meal label. Status is still conveyed by colour + aria-label. */
+@media (max-width:420px){
+  .day-status-lbl{display:none}
+  .day-row{gap:8px}
+  .day-move-btn{padding:5px 8px;font-size:.7rem}
+}
 html[data-theme="dark"] .day-row:active{background:#26221d}
 html[data-theme="dark"] .day-row.active{
   background:linear-gradient(90deg,var(--g50),transparent 65%);
@@ -826,10 +876,50 @@ details[open].acc>summary::after{transform:rotate(180deg)}
   white-space:nowrap;
   flex-shrink:0;
 }
+/* Suppress the pill entirely when the qty is hidden by the display rules —
+   otherwise we'd render an empty pink bubble next to the name. */
+.item-qty:empty{display:none}
 .item-list li.checked .item-qty{opacity:.45}
 .item-list li.have{background:var(--g50)}
 .item-list li.have .item-name{color:var(--g)}
 .item-list li.have .item-qty{background:var(--g100);color:#2a5c37}
+
+/* Long-press tooltip on shopping-list items. pointer-events:none keeps the
+   tooltip click-through so outside-tap dismissal works without special-casing. */
+.ing-tip{
+  position:fixed;
+  z-index:10004;
+  background:var(--t1);
+  color:#fff;
+  padding:10px 13px;
+  border-radius:var(--rxs);
+  box-shadow:0 6px 20px rgba(0,0,0,.28);
+  max-width:min(300px,90vw);
+  font-size:.82rem;line-height:1.4;
+  pointer-events:none;
+  opacity:0;transform:translateY(4px);
+  transition:opacity .15s,transform .15s;
+  left:-9999px;top:-9999px; /* pre-position off-screen so we can measure */
+}
+.ing-tip.show{opacity:1;transform:none}
+.ing-tip-title{
+  font-weight:700;font-size:.85rem;
+  margin-bottom:3px;
+  color:#fff;
+  word-break:break-word;
+}
+.ing-tip-body{
+  color:#e4e4e4;
+  font-weight:500;
+  word-break:break-word;
+}
+html[data-theme="dark"] .ing-tip{
+  background:var(--card);
+  color:var(--t1);
+  border:1px solid var(--bd);
+}
+html[data-theme="dark"] .ing-tip-title{color:var(--t1)}
+html[data-theme="dark"] .ing-tip-body{color:var(--t2)}
 
 /* Oda */
 .oda-btn{
@@ -991,6 +1081,62 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
   font-size:16px;min-height:44px;padding:10px 10px;
 }
 .ing-row select{padding-right:28px}
+
+/* Ingredient name autocomplete — anchored to the name input */
+.ing-name-wrap{position:relative;grid-area:name}
+.ing-name-wrap .r-name{width:100%}
+.ing-suggestions{
+  position:absolute;
+  top:calc(100% + 4px);left:0;right:0;
+  background:var(--card);
+  border:1px solid var(--bd);
+  border-radius:var(--rxs);
+  box-shadow:var(--shm);
+  max-height:220px;overflow-y:auto;
+  z-index:5;
+  display:flex;flex-direction:column;
+}
+.ing-sug-item{
+  display:flex;align-items:center;gap:8px;
+  background:none;border:none;
+  padding:10px 12px;
+  text-align:left;font-family:inherit;
+  font-size:.92rem;color:var(--t1);
+  cursor:pointer;min-height:40px;
+  border-bottom:1px solid var(--bd);
+}
+.ing-sug-item:last-child{border-bottom:none}
+.ing-sug-item:hover,.ing-sug-item:active{background:var(--g50)}
+.ing-sug-name{font-weight:600}
+.ing-sug-meta{font-size:.8rem;color:var(--t3)}
+
+/* Title-keyword ingredient chips shown below the recipe name input */
+.recipe-title-sugs{margin:0 0 14px}
+.recipe-title-sug-hdr{
+  font-size:.78rem;color:var(--t3);font-weight:600;
+  margin-bottom:7px;padding:0 2px;letter-spacing:.2px;
+}
+.recipe-title-sug-chips{display:flex;flex-wrap:wrap;gap:6px}
+.title-sug-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--g50);border:1px solid var(--g100);
+  border-radius:999px;padding:6px 12px;min-height:34px;
+  font-family:inherit;font-size:.84rem;font-weight:600;
+  color:var(--g-dk);cursor:pointer;
+  transition:background .15s,transform .08s;
+}
+.title-sug-chip:active{background:var(--g100);transform:scale(.97)}
+.title-sug-chip .title-sug-plus{font-weight:800;font-size:.95rem;line-height:1}
+.title-sug-chip .title-sug-qty{
+  font-weight:500;color:var(--t3);font-size:.76rem;
+}
+.title-sug-chip.added{
+  background:var(--card);border-color:var(--bd);
+  color:var(--t4);cursor:default;
+}
+.title-sug-chip.added .title-sug-qty{color:var(--t4)}
+html[data-theme="dark"] .title-sug-chip{background:var(--g50);border-color:var(--g100);color:var(--g-lt)}
+html[data-theme="dark"] .title-sug-chip.added{background:#26221d;border-color:var(--bd);color:var(--t4)}
 
 .custom-meal-item{
   display:flex;justify-content:space-between;align-items:center;
@@ -2386,8 +2532,9 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
             <div id="recipe-tab-manuelt" class="recipe-tab-panel">
               <div class="fld-lbl" style="margin-bottom:6px">Oppskriftsnavn</div>
               <input type="text" id="recipe-name-input" placeholder="Navn på oppskriften…"
-                     oninput="refreshRecipeTagSuggestions()"
-                     style="margin-bottom:14px">
+                     oninput="refreshRecipeTagSuggestions();updateRecipeTitleSuggestions()"
+                     style="margin-bottom:10px">
+              <div id="recipe-title-suggestions" class="recipe-title-sugs" style="display:none"></div>
 
               <div class="fld-lbl" style="margin-bottom:8px">Kategori</div>
               <div class="recipe-cat-chips" id="recipe-cat-chips" style="margin-bottom:14px">
@@ -2431,7 +2578,7 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
               </div>
 
               <div style="display:flex;gap:8px">
-                <button class="btn btn-gen" style="flex:1" onclick="saveRecipe()">💾 Lagre oppskrift</button>
+                <button class="btn btn-gen" id="recipe-save-btn" style="flex:1" onclick="saveRecipe()">💾 Lagre oppskrift</button>
                 <button class="btn btn-gray btn-sm" onclick="cancelRecipeForm()">Avbryt</button>
               </div>
             </div>
@@ -3027,7 +3174,137 @@ function toggleItem(li) {
   cb.checked = !cb.checked;
   li.classList.toggle('checked', cb.checked);
   updateProgress();
+  refreshDayIndicators();
 }
+
+// ── Long-press ingredient tooltip ────────────────────────────────────────────
+// Pressing a shopping-list item for 500 ms reveals which recipes contributed
+// that ingredient. Mouse and touch share one delegated listener on document;
+// a capture-phase click guard swallows the trailing click so toggleItem
+// doesn't fire when the press was intended as a long-press.
+function _ensureIngTooltipEl() {
+  let tip = document.getElementById('ing-tooltip');
+  if (tip) return tip;
+  tip = document.createElement('div');
+  tip.id = 'ing-tooltip';
+  tip.className = 'ing-tip';
+  tip.setAttribute('role', 'status');
+  tip.setAttribute('aria-live', 'polite');
+  tip.innerHTML = '<div class="ing-tip-title"></div><div class="ing-tip-body"></div>';
+  document.body.appendChild(tip);
+  return tip;
+}
+function _showIngredientTooltip(li) {
+  if (!li) return;
+  const name = li.getAttribute('data-ingredient') || 'Ingrediens';
+  // Manual items live in the #manual-items-block block and carry data-manual-idx.
+  const isManual = li.hasAttribute('data-manual-idx')
+                || !!(li.closest && li.closest('#manual-items-block'));
+  let body;
+  if (isManual) {
+    body = 'Lagt til manuelt';
+  } else {
+    let sources = [];
+    try { sources = JSON.parse(li.getAttribute('data-sources') || '[]'); } catch {}
+    body = sources.length
+      ? 'Brukes i: ' + sources.join(', ')
+      : 'Ingen oppskrifter funnet';
+  }
+  const tip = _ensureIngTooltipEl();
+  tip.querySelector('.ing-tip-title').textContent = name;
+  tip.querySelector('.ing-tip-body').textContent  = body;
+  // Reveal, measure, clamp into viewport, then reposition.
+  tip.classList.add('show');
+  const liRect  = li.getBoundingClientRect();
+  const tipRect = tip.getBoundingClientRect();
+  const pad = 8;
+  let top  = liRect.top - tipRect.height - pad;
+  if (top < pad) top = Math.min(liRect.bottom + pad, window.innerHeight - tipRect.height - pad);
+  let left = liRect.left + (liRect.width - tipRect.width) / 2;
+  if (left < pad) left = pad;
+  if (left + tipRect.width > window.innerWidth - pad) {
+    left = window.innerWidth - pad - tipRect.width;
+  }
+  tip.style.left = left + 'px';
+  tip.style.top  = top  + 'px';
+}
+function _hideIngredientTooltip() {
+  const tip = document.getElementById('ing-tooltip');
+  if (tip) tip.classList.remove('show');
+}
+
+(function bindIngredientLongPress() {
+  const LONG_PRESS_MS = 500;
+  let timer = null;
+  let fired = false; // a long-press completed; used to suppress the trailing click
+  let armedLi = null;
+
+  // Only arm for shopping-list items, and not on the Oda button.
+  function armTarget(e) {
+    const t = e.target;
+    if (!t || !t.closest) return null;
+    if (t.closest('.oda-btn')) return null;
+    return t.closest('#list-content .item-list li, #manual-items-block .item-list li');
+  }
+
+  function start(e, isTouch) {
+    const li = armTarget(e);
+    if (!li) return;
+    if (isTouch && e.touches && e.touches.length !== 1) return;
+    fired = false;
+    armedLi = li;
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      fired = true;
+      _showIngredientTooltip(armedLi);
+    }, LONG_PRESS_MS);
+  }
+
+  function cancelTimer() {
+    clearTimeout(timer);
+    timer = null;
+  }
+
+  function release() {
+    cancelTimer();
+    if (fired) _hideIngredientTooltip();
+    // `fired` stays true until the synthesised click runs — the capture-phase
+    // click guard below resets it after consuming the event.
+  }
+
+  document.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    start(e, false);
+  });
+  document.addEventListener('mouseup',    release);
+  document.addEventListener('mouseleave', cancelTimer);
+
+  document.addEventListener('touchstart',  (e) => start(e, true), { passive: true });
+  document.addEventListener('touchend',    release);
+  document.addEventListener('touchcancel', release);
+  document.addEventListener('touchmove',   cancelTimer);
+
+  // Suppress the native long-press context menu on shopping-list items so we
+  // don't race with the OS-level text-selection menu.
+  document.addEventListener('contextmenu', (e) => {
+    if (armTarget(e)) e.preventDefault();
+  });
+
+  // Capture phase so we run before the li's onclick (toggleItem) or any
+  // bubble-phase listeners. stopImmediatePropagation also blocks same-element
+  // handlers so the toggle can't slip through.
+  document.addEventListener('click', (e) => {
+    if (fired) {
+      fired = false;
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      return;
+    }
+    const tip = document.getElementById('ing-tooltip');
+    if (tip && tip.classList.contains('show')) _hideIngredientTooltip();
+  }, true);
+})();
 
 // ── History ───────────────────────────────────────────────────────────────────
 const MAX_HIST = 15;
@@ -3332,8 +3609,188 @@ const CAT_LABELS = {
 const CAT_ORDER = ['kjott','fisk','meieri','gronnsaker','tørvarer','brød','annet'];
 const CAT_OPTIONS = CAT_ORDER.map(k => `<option value="${k}">${CAT_LABELS[k]}</option>`).join('');
 
-const UNITS = ['stk','g','kg','ml','dl','l','ss','ts','boks','pose','pakke','bunt','kvist','fedd','hode'];
+// 'terning' already appears in seed recipes but wasn't in this list — added so
+// buljong rows render correctly. 'cm' covers root vegetables like ingefær.
+// 'stykk' is the full-word variant of 'stk'; 'kartong' for milk-style cartons;
+// 'cl', 'klype', 'dæsj' round out the volume/pinch classes.
+const UNITS = ['stk','stykk','g','kg','ml','dl','l','ss','ts','cl','boks','pose','pakke','kartong','bunt','kvist','fedd','hode','terning','cm','klype','dæsj'];
 const UNIT_OPTIONS = UNITS.map(u => `<option value="${u}">${u}</option>`).join('');
+
+// ── Unit display classes ──────────────────────────────────────────────────────
+// The shopping list hides amounts that don't help in-store (volumes, pinches,
+// and "no unit"). Weight, count, and package units still render a qty.
+// HIDDEN_UNITS is the authoritative list used both by the shopping-list render
+// path and by the cross-recipe deduplication in generateList.
+const HIDDEN_UNITS = new Set(['dl','ml','l','ts','ss','cl','klype','dæsj','']);
+function _unitShowsQty(unit) {
+  return !HIDDEN_UNITS.has(String(unit || ''));
+}
+// Norwegian plural forms for package units — applied only when qty > 1.
+// Other count-like units (stk, fedd, hode, bunt, kvist, terning) stay invariant.
+const _UNIT_PLURALS = { boks: 'bokser', pose: 'poser', pakke: 'pakker', kartong: 'kartonger' };
+function _pluralizeUnit(unit, qty) {
+  if (qty > 1 && _UNIT_PLURALS[unit]) return _UNIT_PLURALS[unit];
+  return unit;
+}
+// Returns the qty-with-unit string for a shopping-list item, or '' when the
+// unit class says to hide it.
+function _formatShoppingQty(item) {
+  if (!item || item.hidden || !_unitShowsQty(item.unit)) return '';
+  const q = Number(item.qty) || 0;
+  if (q <= 0) return '';
+  const u = _pluralizeUnit(item.unit, q);
+  return `${formatQty(q)} ${u}`;
+}
+// Grouped unit options for the recipe-form ingredient rows. Labels follow the
+// spec; the Volum group explicitly flags that amounts are suppressed on the
+// shopping list. 'Annet' catches count-like legacy units not in the spec.
+const UNIT_GROUPS = [
+  { label: 'Vekt',                          units: [['g','g'], ['kg','kg']] },
+  { label: 'Stykk',                         units: [['stk','stk'], ['stykk','stykk'], ['pakke','pakke'], ['boks','boks'], ['pose','pose'], ['kartong','kartong']] },
+  { label: 'Volum (skjules på handleliste)', units: [['dl','dl'], ['ml','ml'], ['l','l'], ['ts','ts'], ['ss','ss'], ['cl','cl'], ['klype','klype'], ['dæsj','dæsj']] },
+  { label: 'Annet',                         units: [['fedd','fedd'], ['hode','hode'], ['bunt','bunt'], ['kvist','kvist'], ['terning','terning'], ['cm','cm']] },
+  { label: 'Ingen enhet',                   units: [['','–']] },
+];
+function _renderUnitOptions(selected) {
+  return UNIT_GROUPS.map(g => {
+    const opts = g.units.map(([value, label]) =>
+      `<option value="${value}"${value === selected ? ' selected' : ''}>${label}</option>`
+    ).join('');
+    return `<optgroup label="${g.label}">${opts}</optgroup>`;
+  }).join('');
+}
+
+// ── Built-in Norwegian ingredient database ────────────────────────────────────
+// Seeds the recipe-form autocomplete so users get useful suggestions before
+// they've entered any recipes. Tuple layout: [name, qty, unit, cat]. Defaults
+// are sized for 4 servings. User-entered recipes override unit/cat/qty on a
+// per-ingredient basis via _getIngredientIndex — these are just the floor.
+const NORWEGIAN_INGREDIENTS_RAW = [
+  // Kjøtt og fjærkre
+  ['kjøttdeig',         400, 'g',       'kjott'],
+  ['kyllingfilet',      600, 'g',       'kjott'],
+  ['bacon',             150, 'g',       'kjott'],
+  ['svinekjøtt',        500, 'g',       'kjott'],
+  ['lammekjøtt',        600, 'g',       'kjott'],
+  ['biff',              400, 'g',       'kjott'],
+  ['kyllinglår',        600, 'g',       'kjott'],
+  ['pølser',            4,   'stk',     'kjott'],
+  ['skinke',            200, 'g',       'kjott'],
+  ['karbonadedeig',     400, 'g',       'kjott'],
+  ['svinefilet',        500, 'g',       'kjott'],
+  ['kyllingbryst',      600, 'g',       'kjott'],
+  ['lammeribbe',        800, 'g',       'kjott'],
+  // Fisk og sjømat
+  ['laks',              500, 'g',       'fisk'],
+  ['torsk',             500, 'g',       'fisk'],
+  // Frukt og grønnsaker
+  ['løk',               1,   'stk',     'gronnsaker'],
+  ['hvitløk',           3,   'fedd',    'gronnsaker'],
+  ['gulrot',            2,   'stk',     'gronnsaker'],
+  ['potet',             600, 'g',       'gronnsaker'],
+  ['tomat',             2,   'stk',     'gronnsaker'],
+  ['paprika',           1,   'stk',     'gronnsaker'],
+  ['brokkoli',          1,   'stk',     'gronnsaker'],
+  ['blomkål',           1,   'stk',     'gronnsaker'],
+  ['squash',            1,   'stk',     'gronnsaker'],
+  ['spinat',            100, 'g',       'gronnsaker'],
+  ['purre',             1,   'stk',     'gronnsaker'],
+  ['selleri',           2,   'stk',     'gronnsaker'],
+  ['mais',              1,   'boks',    'gronnsaker'],
+  ['erter',             100, 'g',       'gronnsaker'],
+  ['grønnkål',          100, 'g',       'gronnsaker'],
+  ['vårløk',            3,   'stk',     'gronnsaker'],
+  ['chili',             1,   'stk',     'gronnsaker'],
+  ['ingefær',           2,   'cm',      'gronnsaker'],
+  ['sopp',              200, 'g',       'gronnsaker'],
+  ['aubergine',         1,   'stk',     'gronnsaker'],
+  ['søtpotet',          2,   'stk',     'gronnsaker'],
+  ['salat',             1,   'stk',     'gronnsaker'],
+  ['sitron',            1,   'stk',     'gronnsaker'],
+  ['lime',              1,   'stk',     'gronnsaker'],
+  ['avokado',           2,   'stk',     'gronnsaker'],
+  // Meieri og egg
+  ['melk',              4,   'dl',      'meieri'],
+  ['smør',              2,   'ss',      'meieri'],
+  ['fløte',             2,   'dl',      'meieri'],
+  ['rømme',             2,   'dl',      'meieri'],
+  ['ost',               100, 'g',       'meieri'],
+  ['parmesan',          80,  'g',       'meieri'],
+  ['mozzarella',        125, 'g',       'meieri'],
+  ['yoghurt',           2,   'dl',      'meieri'],
+  ['crème fraîche',     2,   'dl',      'meieri'],
+  ['egg',               3,   'stk',     'meieri'],
+  // Tørrvarer og hermetikk
+  ['spaghetti',         400, 'g',       'tørvarer'],
+  ['pasta',             400, 'g',       'tørvarer'],
+  ['ris',               3,   'dl',      'tørvarer'],
+  ['mel',               2,   'ss',      'tørvarer'],
+  ['havregryn',         150, 'g',       'tørvarer'],
+  ['lasagneplater',     12,  'stk',     'tørvarer'],
+  ['couscous',          3,   'dl',      'tørvarer'],
+  ['linser',            2,   'dl',      'tørvarer'],
+  ['kikerter',          1,   'boks',    'tørvarer'],
+  ['bønner',            1,   'boks',    'tørvarer'],
+  ['hermetiske tomater',2,   'boks',    'tørvarer'],
+  ['tomatpuré',         2,   'ss',      'tørvarer'],
+  ['kokosmelk',         1,   'boks',    'tørvarer'],
+  ['hønsebuljong',      1,   'terning', 'tørvarer'],
+  ['kjøttbuljong',      1,   'terning', 'tørvarer'],
+  ['grønnsaksbuljong',  1,   'terning', 'tørvarer'],
+  ['buljong',           1,   'terning', 'tørvarer'],
+  ['soyasaus',          3,   'ss',      'tørvarer'],
+  ['pesto',             3,   'ss',      'tørvarer'],
+  ['sukker',            1,   'ss',      'tørvarer'],
+  // Krydder og annet
+  ['oregano',           1,   'ts',      'annet'],
+  ['basilikum',         1,   'ts',      'annet'],
+  ['timian',            1,   'ts',      'annet'],
+  ['rosmarin',          1,   'ts',      'annet'],
+  ['paprikapulver',     1,   'ts',      'annet'],
+  ['spisskummen',       1,   'ts',      'annet'],
+  ['koriander',         1,   'ts',      'annet'],
+  ['gurkemeie',         1,   'ts',      'annet'],
+  ['curry',             2,   'ts',      'annet'],
+  ['chilipulver',       1,   'ts',      'annet'],
+  ['sennep',            2,   'ss',      'annet'],
+  ['tacokrydder',       1,   'pakke',   'annet'],
+  ['dill',              1,   'ts',      'annet'],
+  ['olivenolje',        3,   'ss',      'annet'],
+  ['rapsolje',          2,   'ss',      'annet'],
+  ['honning',           1,   'ss',      'annet'],
+];
+const NORWEGIAN_INGREDIENTS = NORWEGIAN_INGREDIENTS_RAW.map(
+  ([name, qty, unit, cat]) => ({ name, qty, unit, cat })
+);
+
+// ── Title-keyword → ingredient suggestions ────────────────────────────────────
+// When the user types a recipe title, each rule's keywords are matched as a
+// case-insensitive substring on the title. All matching rules contribute their
+// ingredients; duplicates by name are collapsed (first match wins).
+// Tuple layout: [name, qty, unit] — cat is derived from NORWEGIAN_INGREDIENTS.
+const TITLE_KEYWORD_RULES = [
+  { kw: ['kylling'],                 ings: [['kyllingfilet',600,'g'], ['hvitløk',3,'fedd'], ['løk',1,'stk']] },
+  { kw: ['laks'],                    ings: [['laks',500,'g'], ['sitron',1,'stk'], ['dill',1,'ts'], ['smør',2,'ss']] },
+  { kw: ['torsk','fisk'],            ings: [['torsk',500,'g'], ['smør',2,'ss'], ['sitron',1,'stk']] },
+  { kw: ['kjøtt','biff'],            ings: [['kjøttdeig',400,'g'], ['løk',1,'stk'], ['hvitløk',3,'fedd']] },
+  { kw: ['lam'],                     ings: [['lammekjøtt',600,'g'], ['rosmarin',1,'ts'], ['hvitløk',3,'fedd']] },
+  { kw: ['bacon'],                   ings: [['bacon',150,'g'], ['egg',3,'stk']] },
+  { kw: ['suppe'],                   ings: [['buljong',1,'terning'], ['fløte',2,'dl'], ['løk',1,'stk'], ['gulrot',2,'stk']] },
+  { kw: ['pasta','spaghetti'],       ings: [['pasta',400,'g'], ['parmesan',80,'g'], ['hvitløk',3,'fedd']] },
+  { kw: ['risotto','ris'],           ings: [['ris',3,'dl'], ['parmesan',80,'g'], ['smør',2,'ss'], ['buljong',1,'terning']] },
+  { kw: ['taco'],                    ings: [['kjøttdeig',400,'g'], ['tacokrydder',1,'pakke'], ['rømme',2,'dl'], ['ost',100,'g']] },
+  { kw: ['pizza'],                   ings: [['mozzarella',125,'g'], ['tomatpuré',2,'ss'], ['oregano',1,'ts']] },
+  { kw: ['salat'],                   ings: [['salat',1,'stk'], ['sitron',1,'stk'], ['olivenolje',3,'ss']] },
+  { kw: ['grøt'],                    ings: [['havregryn',150,'g'], ['melk',4,'dl']] },
+  { kw: ['pannekak'],                ings: [['egg',3,'stk'], ['melk',4,'dl'], ['mel',2,'ss'], ['smør',2,'ss']] },
+  { kw: ['tikka','masala','curry'],  ings: [['kyllingfilet',600,'g'], ['kokosmelk',1,'boks'], ['løk',1,'stk'], ['hvitløk',3,'fedd'], ['ingefær',2,'cm'], ['curry',2,'ts']] },
+  { kw: ['wrap'],                    ings: [['kyllingfilet',600,'g'], ['rømme',2,'dl'], ['salat',1,'stk'], ['tomat',2,'stk']] },
+  { kw: ['burger'],                  ings: [['kjøttdeig',400,'g'], ['løk',1,'stk'], ['ost',100,'g'], ['sennep',2,'ss']] },
+  { kw: ['omelet'],                  ings: [['egg',3,'stk'], ['smør',2,'ss'], ['ost',100,'g']] },
+  { kw: ['wok'],                     ings: [['soyasaus',3,'ss'], ['hvitløk',3,'fedd'], ['ingefær',2,'cm'], ['vårløk',3,'stk']] },
+  { kw: ['lasagne'],                 ings: [['kjøttdeig',400,'g'], ['lasagneplater',12,'stk'], ['hermetiske tomater',2,'boks']] },
+  { kw: ['carbonara'],               ings: [['bacon',150,'g'], ['egg',3,'stk'], ['parmesan',80,'g'], ['spaghetti',400,'g']] },
+];
 
 let MEALS = {
   '': { label: '– Ingen –', ingredients: [] },
@@ -3650,13 +4107,89 @@ function _mealLabelForKey(key) {
   if (!meal) return '– Ukjent –';
   return meal.name || meal.label || '– Ukjent –';
 }
+// ── Day completion indicators ────────────────────────────────────────────────
+// Computes how many of a day's meal ingredients are already checked off on
+// the shopping list. Staples are excluded from the denominator because the
+// generator skips them (they're assumed to be at home already), so leaving
+// them in would mean "Delvis" forever.
+//
+// Status mapping:
+//   'none'    → grey dot (no meal, or meal present but nothing checked)
+//   'partial' → yellow dot + "Delvis"
+//   'done'    → green dot + "Klar"
+function _getCheckedShoppingNames() {
+  const lis = document.querySelectorAll(
+    '#list-content .item-list li.checked, #manual-items-block .item-list li.checked'
+  );
+  const out = [];
+  lis.forEach(li => {
+    const n = li.getAttribute('data-ingredient');
+    if (n) out.push(n);
+  });
+  return out;
+}
+function _getDayCompletion(i) {
+  const key = getDayMeal(i);
+  if (!key) return { status: 'none', done: 0, total: 0, hasMeal: false };
+  const meal = getMeal(key);
+  const raw  = (meal && Array.isArray(meal.ingredients)) ? meal.ingredients : [];
+  const ings = raw.map(normalizeIngredient).filter(Boolean).filter(ing => !isStaple(ing.name));
+  if (!ings.length) return { status: 'none', done: 0, total: 0, hasMeal: true };
+
+  const checked = _getCheckedShoppingNames();
+  let done = 0;
+  if (checked.length) {
+    for (const ing of ings) {
+      if (ingredientMatchesList(ing.name, checked)) done++;
+    }
+  }
+  const status = done === 0 ? 'none' : (done === ings.length ? 'done' : 'partial');
+  return { status, done, total: ings.length, hasMeal: true };
+}
+// Orderable score used for the Flytt frem swap. Days without meals rank below
+// even "none" so a bought meal can move into an empty slot.
+function _dayScoreFromCompletion(comp) {
+  if (!comp.hasMeal) return -1;
+  if (comp.status === 'done')    return 2;
+  if (comp.status === 'partial') return 1;
+  return 0;
+}
+function _canMoveDayForward(i) {
+  if (i <= 0) return false;
+  const comp = _getDayCompletion(i);
+  if (!comp.hasMeal) return false;
+  const here = _dayScoreFromCompletion(comp);
+  for (let j = 0; j < i; j++) {
+    if (_dayScoreFromCompletion(_getDayCompletion(j)) < here) return true;
+  }
+  return false;
+}
+
+function _dayStatusInnerHtml(comp) {
+  const lbl = comp.status === 'done' ? 'Klar'
+            : comp.status === 'partial' ? 'Delvis'
+            : '';
+  return `<span class="day-status-dot" aria-hidden="true"></span>${
+    lbl ? `<span class="day-status-lbl">${lbl}</span>` : ''
+  }`;
+}
+
 function _renderDayRowHtml(i, day) {
   const saved = getDayMeal(i);
   const label = _mealLabelForKey(saved);
   const activeCls = saved ? ' active' : '';
+  const comp = _getDayCompletion(i);
+  const ariaLbl = comp.status === 'done' ? 'Klar'
+                : comp.status === 'partial' ? 'Delvis'
+                : '';
+  const canMove = _canMoveDayForward(i);
+  const moveHidden = canMove ? '' : ' style="display:none"';
   return `<button type="button" class="day-row${activeCls}" id="day-row-${i}" onclick="openMealPicker(${i})">
     <span class="day-row-day">${day}</span>
     <span class="day-row-meal">${escHtml(label)}</span>
+    <span class="day-status status-${comp.status}"${ariaLbl ? ` aria-label="${ariaLbl}"` : ''}>${_dayStatusInnerHtml(comp)}</span>
+    <span class="day-move-btn" role="button" tabindex="0" aria-label="Flytt frem"
+          onclick="event.stopPropagation();moveDayForward(${i})"${moveHidden}>↑ Flytt frem</span>
     <span class="day-row-chevron">›</span>
   </button>`;
 }
@@ -3665,6 +4198,50 @@ function buildGrid() {
   if (!list) return;
   list.innerHTML = DAYS.map((day, i) => _renderDayRowHtml(i, day)).join('');
   renderWeekSelector();
+}
+// Lightweight refresh — updates only the status pill and Flytt-frem visibility
+// on each existing day row. Called from check-off handlers on the Handle page
+// so indicators stay live without rebuilding DOM that doesn't need rebuilding.
+function refreshDayIndicators() {
+  DAYS.forEach((_, i) => {
+    const row = document.getElementById(`day-row-${i}`);
+    if (!row) return;
+    const statusEl = row.querySelector('.day-status');
+    if (!statusEl) return; // row pre-dates this feature — wait for buildGrid
+    const comp = _getDayCompletion(i);
+    statusEl.className = `day-status status-${comp.status}`;
+    statusEl.innerHTML = _dayStatusInnerHtml(comp);
+    const ariaLbl = comp.status === 'done' ? 'Klar'
+                  : comp.status === 'partial' ? 'Delvis'
+                  : '';
+    if (ariaLbl) statusEl.setAttribute('aria-label', ariaLbl);
+    else         statusEl.removeAttribute('aria-label');
+
+    const moveBtn = row.querySelector('.day-move-btn');
+    if (moveBtn) moveBtn.style.display = _canMoveDayForward(i) ? '' : 'none';
+  });
+}
+
+// Swap this day's meal with the earliest prior day that has a strictly lower
+// completion score. No-op if no such day exists (mirrors the visibility gate
+// of the Flytt frem pill, so clicking a stale button is still safe).
+function moveDayForward(i) {
+  const comp = _getDayCompletion(i);
+  if (!comp.hasMeal || i <= 0) return;
+  const here = _dayScoreFromCompletion(comp);
+  let target = -1;
+  for (let j = 0; j < i; j++) {
+    if (_dayScoreFromCompletion(_getDayCompletion(j)) < here) { target = j; break; }
+  }
+  if (target < 0) return;
+  const plan = _ensureCurrentWeekPlan();
+  const a = plan[`day${target}`] || '';
+  const b = plan[`day${i}`]      || '';
+  if (b) plan[`day${target}`] = b; else delete plan[`day${target}`];
+  if (a) plan[`day${i}`]      = a; else delete plan[`day${i}`];
+  saveWeekPlans();
+  buildGrid();
+  showSyncToast(`${DAYS[i]} byttet med ${DAYS[target]}`);
 }
 // Kept for backwards compatibility — any code that used to update the old
 // `<select>` options now just rebuilds the whole day list.
@@ -4019,13 +4596,32 @@ function generateList() {
       if (!norm) return;
       const name = norm.name;
       if (isStaple(name)) { skipped[name] = true; return; }
-      const unit = norm.unit || 'stk';
+      // Use ?? so "Ingen enhet" (empty string) isn't coerced to 'stk';
+      // missing/undefined units still default for backwards compatibility.
+      const unit = norm.unit ?? 'stk';
       const cat  = norm.cat  || 'annet';
       const qty  = Number(norm.qty) || 1;
-      const k = `${name}||${unit}||${cat}`;
       const scaled = qty * scaleFactor;
-      if (totals[k]) totals[k].qty += scaled;
-      else totals[k] = { name, qty: scaled, unit, cat };
+      // Hidden-unit ingredients (dl/ml/ts/ss/klype/...) collapse across
+      // recipes into a single no-amount entry — the qty wouldn't be shown
+      // anyway, and showing "Melk" twice is noise. Shown-unit ingredients
+      // keep the existing name+unit+cat aggregation so 400g + 400g → 800g.
+      // Name is lowercased in the key so "Melk" + "melk" merge; the first-
+      // seen casing wins for display.
+      const hidden = !_unitShowsQty(unit);
+      const nameKey = name.toLowerCase();
+      const k = hidden
+        ? `${nameKey}||__hidden__||${cat}`
+        : `${nameKey}||${unit}||${cat}`;
+      if (totals[k]) {
+        if (!hidden) totals[k].qty += scaled;
+        totals[k].sources.add(mealLabel); // Used by the long-press tooltip
+        // else for qty: dedupe — nothing to add
+      } else {
+        totals[k] = hidden
+          ? { name, qty: 0,      unit: '', cat, hidden: true,  sources: new Set([mealLabel]) }
+          : { name, qty: scaled, unit,     cat, hidden: false, sources: new Set([mealLabel]) };
+      }
     });
   });
 
@@ -4073,14 +4669,18 @@ function generateList() {
       block.innerHTML = `
         <div class="cat-title">${CAT_LABELS[cat]}</div>
         <ul class="item-list">
-          ${items.map(item => `
-            <li onclick="toggleItem(this)" data-ingredient="${escHtml(item.name)}">
+          ${items.map(item => {
+            const qtyDisplay = _formatShoppingQty(item);
+            const sourcesJson = escHtml(JSON.stringify([...(item.sources || [])]));
+            return `
+            <li onclick="toggleItem(this)" data-ingredient="${escHtml(item.name)}" data-sources="${sourcesJson}">
               <input type="checkbox">
               <span class="item-cb"></span>
               <span class="item-name">${item.name}</span>
-              <span class="item-qty">${formatQty(item.qty)} ${item.unit}</span>
+              <span class="item-qty">${qtyDisplay}</span>
               <button class="oda-btn" onclick="event.stopPropagation();odaSearch('${escHtml(item.name)}',this)" title="Søk på Oda.com">Finn på Oda</button>
-            </li>`).join('')}
+            </li>`;
+          }).join('')}
         </ul>`;
       content.appendChild(block);
     });
@@ -4106,6 +4706,8 @@ function generateList() {
   document.getElementById('nav-dot-handleliste').classList.add('on');
   updateProgress();
   saveHistory(summary, itemCount, dayAssignments);
+  // Regenerating resets all checks, so day indicators reset to 'none'.
+  refreshDayIndicators();
   showPage('handleliste');
 }
 
@@ -4593,11 +5195,23 @@ function saveRecipes() {
 }
 
 // ── Recipe form ───────────────────────────────────────────────────────────────
+// Edit state: id of the recipe currently being edited, or null for add-new mode.
+// saveRecipe branches on this; cancelRecipeForm / openAddRecipeForm clear it.
+let _editingRecipeId = null;
+
+function _setRecipeFormEditingUI(editing) {
+  const summary = document.querySelector('#acc-add-recipe > summary');
+  const saveBtn = document.getElementById('recipe-save-btn');
+  if (summary) summary.textContent = editing ? '✏️ Rediger oppskrift' : '➕ Legg til oppskrift';
+  if (saveBtn) saveBtn.textContent = editing ? '💾 Lagre endringer' : '💾 Lagre oppskrift';
+}
+
 function openAddRecipeForm() {
   const acc = document.getElementById('acc-add-recipe');
   if (acc) { acc.open = true; acc.scrollIntoView({ behavior:'smooth', block:'start' }); }
-  // Make sure the form starts on the Manuelt tab with a blank ingredient row
-  // and a rendered tags grid.
+  // This entry point is "add new" — drop any prior edit state and reset labels.
+  _editingRecipeId = null;
+  _setRecipeFormEditingUI(false);
   if (!document.querySelector('#recipe-ing-rows .ing-row')) addRecipeIngRow();
   renderRecipeTagsForm();
   switchRecipeTab('manuelt');
@@ -4605,6 +5219,8 @@ function openAddRecipeForm() {
 function cancelRecipeForm() {
   const acc = document.getElementById('acc-add-recipe');
   if (acc) acc.open = false;
+  _editingRecipeId = null;
+  _setRecipeFormEditingUI(false);
   resetRecipeForm();
 }
 function resetRecipeForm() {
@@ -4626,6 +5242,9 @@ function resetRecipeForm() {
   _selectedRecipeTags = new Set();
   _autoSuggestedTags  = new Set();
   renderRecipeTagsForm();
+  // Clear title-keyword chips (empty title → empty list)
+  const titleSug = document.getElementById('recipe-title-suggestions');
+  if (titleSug) { titleSug.innerHTML = ''; titleSug.style.display = 'none'; }
   // Back to Manuelt tab as default
   switchRecipeTab('manuelt');
   // Start with one empty ingredient row so users have something to fill in
@@ -4930,14 +5549,22 @@ function addRecipeIngRow(prefill) {
   const row = document.createElement('div');
   row.className = 'ing-row';
   row.id = `ring-${id}`;
-  const unitOpts = UNITS.map(u =>
-    `<option value="${u}"${prefill?.unit === u ? ' selected' : ''}>${u}</option>`
-  ).join('');
+  // Grouped unit dropdown: Vekt / Stykk / Volum (hidden on the shopping list) /
+  // Annet / Ingen enhet. Falls back to 'stk' when no prefill so the visible
+  // default matches the previous behaviour, even though 'g' now heads the list.
+  const unitOpts = _renderUnitOptions(prefill?.unit ?? 'stk');
   const catOpts = CAT_ORDER.map(k =>
     `<option value="${k}"${prefill?.cat === k ? ' selected' : ''}>${CAT_LABELS[k]}</option>`
   ).join('');
   row.innerHTML = `
-    <input type="text" class="r-name" placeholder="Ingrediens" id="ring-name-${id}" value="${escHtml(prefill?.name ?? '')}" oninput="refreshRecipeTagSuggestions()">
+    <div class="ing-name-wrap">
+      <input type="text" class="r-name" placeholder="Søk eller skriv ingrediens" id="ring-name-${id}"
+             value="${escHtml(prefill?.name ?? '')}" autocomplete="off"
+             oninput="refreshRecipeTagSuggestions();updateIngSuggestions(${id})"
+             onfocus="updateIngSuggestions(${id})"
+             onblur="setTimeout(()=>hideIngSuggestions(${id}),150)">
+      <div class="ing-suggestions" id="ring-sug-${id}" style="display:none"></div>
+    </div>
     <input type="number" class="r-qty" placeholder="0" min="0" step="0.5" id="ring-qty-${id}" value="${prefill?.qty ?? 1}">
     <select class="r-unit" id="ring-unit-${id}">${unitOpts}</select>
     <select class="r-cat" id="ring-cat-${id}">${catOpts}</select>
@@ -4976,14 +5603,32 @@ function saveRecipe() {
   const auto = new Set(autoDetectRecipeTags(ingredients, name));
   const tags = Array.from(new Set([..._selectedRecipeTags, ...auto]));
 
-  const recipe = { id: Date.now().toString(), name, category, servings, ingredients, tags, createdAt: new Date().toISOString() };
-  console.log('[saveRecipe] Saving recipe with', ingredients.length, 'ingredients:', recipe);
-  recipes.push(recipe);
+  const editingId = _editingRecipeId;
+  if (editingId) {
+    const idx = recipes.findIndex(r => r.id === editingId);
+    if (idx < 0) {
+      // Vanished (concurrent delete / sync removal) — fall through to add-new so
+      // the user doesn't lose their edits.
+      const recipe = { id: Date.now().toString(), name, category, servings, ingredients, tags, createdAt: new Date().toISOString() };
+      recipes.push(recipe);
+    } else {
+      const prev = recipes[idx];
+      recipes[idx] = {
+        ...prev,
+        name, category, servings, ingredients, tags,
+        updatedAt: new Date().toISOString(),
+      };
+    }
+  } else {
+    const recipe = { id: Date.now().toString(), name, category, servings, ingredients, tags, createdAt: new Date().toISOString() };
+    recipes.push(recipe);
+  }
   saveRecipes();
   cancelRecipeForm();
   renderRecipes();
   rebuildSelects();
-  showSyncToast(_fbRef ? '✓ Oppskrift lagret og synkronisert' : '✓ Oppskrift lagret lokalt');
+  const toastVerb = editingId ? 'oppdatert' : 'lagret';
+  showSyncToast(_fbRef ? `✓ Oppskrift ${toastVerb} og synkronisert` : `✓ Oppskrift ${toastVerb} lokalt`);
 }
 
 function deleteRecipe(id) {
@@ -4993,6 +5638,263 @@ function deleteRecipe(id) {
   renderRecipes();
   rebuildSelects();
   showSyncToast(_fbRef ? '🗑️ Oppskrift slettet og synkronisert' : '🗑️ Oppskrift slettet lokalt');
+}
+
+// ── Recipe edit ───────────────────────────────────────────────────────────────
+// Re-uses the add-recipe accordion form. Sets _editingRecipeId so saveRecipe
+// updates in place instead of appending a new entry. Called from the card's
+// "Rediger" button and the detail modal footer.
+function editRecipe(id) {
+  const r = recipes.find(x => x.id === id);
+  if (!r) return;
+
+  _editingRecipeId = id;
+  _setRecipeFormEditingUI(true);
+
+  const acc = document.getElementById('acc-add-recipe');
+  if (acc) { acc.open = true; acc.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  switchRecipeTab('manuelt');
+
+  document.getElementById('recipe-name-input').value = r.name || '';
+  document.getElementById('recipe-servings').value   = r.servings || 4;
+
+  // Category chip + radio
+  const cat = r.category || 'middag';
+  document.querySelectorAll('.recipe-cat-chip').forEach(c => c.classList.remove('active'));
+  const chipRadio = document.querySelector(`input[name="recipe-cat"][value="${cat}"]`);
+  if (chipRadio) {
+    chipRadio.checked = true;
+    chipRadio.closest('.recipe-cat-chip')?.classList.add('active');
+  }
+
+  // Rebuild ingredient rows from the stored list (tuple OR object form).
+  document.getElementById('recipe-ing-rows').innerHTML = '';
+  recipeIngCount = 0;
+  const ings = (Array.isArray(r.ingredients) ? r.ingredients : [])
+    .map(normalizeIngredient)
+    .filter(Boolean);
+  if (ings.length) ings.forEach(ing => addRecipeIngRow(ing));
+  else             addRecipeIngRow();
+
+  // Restore tag selections. _autoSuggestedTags stays empty here so the user
+  // sees their saved tags as manually-selected — editing doesn't re-guess.
+  _selectedRecipeTags = new Set(r.tags || []);
+  _autoSuggestedTags  = new Set();
+  renderRecipeTagsForm();
+  refreshRecipeTagSuggestions();
+  updateRecipeTitleSuggestions();
+}
+
+// ── Smart ingredient suggestions ──────────────────────────────────────────────
+// Builds a frequency index over every ingredient name across all saved recipes.
+// Shown as a popover under each name input; clicking a match fills name + unit
+// (and cat) so reused ingredients stay consistent across recipes.
+const _ingSugCache = {}; // rowId -> array of latest matches (for click handlers)
+
+function _getIngredientIndex() {
+  const index = new Map();
+  // Seed from the built-in Norwegian DB with uses=0 so they rank below
+  // anything the user has actually used. Units/cats/qtys from recipes
+  // override these on overlay.
+  for (const it of NORWEGIAN_INGREDIENTS) {
+    index.set(it.name.toLowerCase(), {
+      name: it.name, unit: it.unit, cat: it.cat, qty: it.qty, uses: 0,
+    });
+  }
+  for (const r of recipes) {
+    const list = Array.isArray(r.ingredients) ? r.ingredients : [];
+    for (const raw of list) {
+      const ing = normalizeIngredient(raw);
+      if (!ing || !ing.name) continue;
+      const trimmed = String(ing.name).trim();
+      if (!trimmed) continue;
+      const key = trimmed.toLowerCase();
+      const prev = index.get(key);
+      const qtyNum = Number(ing.qty);
+      if (prev) {
+        prev.uses++;
+        // Keep most recent non-empty unit/cat/qty so suggestions reflect latest usage.
+        if (ing.unit) prev.unit = ing.unit;
+        if (ing.cat)  prev.cat  = ing.cat;
+        if (Number.isFinite(qtyNum) && qtyNum > 0) prev.qty = qtyNum;
+      } else {
+        index.set(key, {
+          name: trimmed,
+          unit: ing.unit || 'stk',
+          cat:  ing.cat  || 'annet',
+          qty:  Number.isFinite(qtyNum) && qtyNum > 0 ? qtyNum : 1,
+          uses: 1,
+        });
+      }
+    }
+  }
+  return index;
+}
+
+function _suggestIngredients(query) {
+  const items = Array.from(_getIngredientIndex().values());
+  const q = String(query || '').trim().toLowerCase();
+  if (!q) {
+    return items.sort((a, b) => b.uses - a.uses).slice(0, 6);
+  }
+  const starts = [], contains = [];
+  for (const it of items) {
+    const lc = it.name.toLowerCase();
+    if (lc === q) continue; // already typed in full — nothing to suggest
+    if (lc.startsWith(q))  starts.push(it);
+    else if (lc.includes(q)) contains.push(it);
+  }
+  starts.sort((a, b)   => b.uses - a.uses);
+  contains.sort((a, b) => b.uses - a.uses);
+  return starts.concat(contains).slice(0, 6);
+}
+
+function updateIngSuggestions(id) {
+  const nameEl = document.getElementById(`ring-name-${id}`);
+  const box    = document.getElementById(`ring-sug-${id}`);
+  if (!nameEl || !box) return;
+  const matches = _suggestIngredients(nameEl.value);
+  _ingSugCache[id] = matches;
+  if (!matches.length) {
+    box.style.display = 'none';
+    box.innerHTML = '';
+    return;
+  }
+  box.innerHTML = matches.map((it, i) => `
+    <button type="button" class="ing-sug-item"
+            onmousedown="event.preventDefault()"
+            onclick="pickIngSuggestion(${id}, ${i})">
+      <span class="ing-sug-name">${escHtml(it.name)}</span>
+      <span class="ing-sug-meta">· ${escHtml(it.unit)}</span>
+    </button>
+  `).join('');
+  box.style.display = '';
+}
+
+function pickIngSuggestion(rowId, matchIdx) {
+  const it = (_ingSugCache[rowId] || [])[matchIdx];
+  if (!it) return;
+  const nameEl = document.getElementById(`ring-name-${rowId}`);
+  const unitEl = document.getElementById(`ring-unit-${rowId}`);
+  const catEl  = document.getElementById(`ring-cat-${rowId}`);
+  const qtyEl  = document.getElementById(`ring-qty-${rowId}`);
+  if (nameEl) nameEl.value = it.name;
+  // Guard against stale units/cats not present in the current option list.
+  if (unitEl && Array.from(unitEl.options).some(o => o.value === it.unit)) unitEl.value = it.unit;
+  if (catEl  && Array.from(catEl.options ).some(o => o.value === it.cat))  catEl.value  = it.cat;
+  // Default qty kicks in for built-ins and for latest-use recipe entries;
+  // the user can still tweak it after, so we overwrite whatever was there.
+  if (qtyEl && Number.isFinite(Number(it.qty)) && Number(it.qty) > 0) qtyEl.value = it.qty;
+  hideIngSuggestions(rowId);
+  refreshRecipeTagSuggestions();
+  // Jump to qty so the user can tweak amount right away.
+  if (qtyEl) { qtyEl.focus(); qtyEl.select(); }
+  // An added name might unlock additional title-keyword chips or flip one to "added".
+  updateRecipeTitleSuggestions();
+}
+
+function hideIngSuggestions(id) {
+  const box = document.getElementById(`ring-sug-${id}`);
+  if (box) box.style.display = 'none';
+}
+
+// ── Title-keyword ingredient chips ────────────────────────────────────────────
+// Reads the recipe title, matches TITLE_KEYWORD_RULES, and renders a compact
+// chip list below the name input. Clicking a chip adds or fills an ingredient
+// row with the default qty/unit/cat. Rerendered whenever the title or the
+// ingredient rows change so "added" state stays accurate.
+let _titleSugCache = [];
+
+function _catForIngredientName(name) {
+  const lc = String(name || '').toLowerCase();
+  const builtin = NORWEGIAN_INGREDIENTS.find(x => x.name.toLowerCase() === lc);
+  if (builtin) return builtin.cat;
+  const hit = _getIngredientIndex().get(lc);
+  if (hit) return hit.cat;
+  return 'annet';
+}
+
+function _getKeywordIngredients(title) {
+  const t = String(title || '').toLowerCase();
+  if (!t.trim()) return [];
+  const byName = new Map(); // name-lowercase → { name, qty, unit, cat }
+  for (const rule of TITLE_KEYWORD_RULES) {
+    if (!rule.kw.some(kw => t.includes(kw))) continue;
+    for (const [name, qty, unit] of rule.ings) {
+      const key = name.toLowerCase();
+      if (byName.has(key)) continue; // first rule wins — avoids "kyllingsuppe" doubling løk
+      byName.set(key, { name, qty, unit, cat: _catForIngredientName(name) });
+    }
+  }
+  return Array.from(byName.values());
+}
+
+function _currentIngredientNamesLC() {
+  return new Set(
+    Array.from(document.querySelectorAll('#recipe-ing-rows .r-name'))
+      .map(el => (el.value || '').trim().toLowerCase())
+      .filter(Boolean)
+  );
+}
+
+function updateRecipeTitleSuggestions() {
+  const titleEl = document.getElementById('recipe-name-input');
+  const wrap    = document.getElementById('recipe-title-suggestions');
+  if (!wrap) return;
+  const ings = _getKeywordIngredients(titleEl ? titleEl.value : '');
+  _titleSugCache = ings;
+  if (!ings.length) {
+    wrap.innerHTML = '';
+    wrap.style.display = 'none';
+    return;
+  }
+  const present = _currentIngredientNamesLC();
+  wrap.innerHTML = `
+    <div class="recipe-title-sug-hdr">💡 Foreslåtte ingredienser</div>
+    <div class="recipe-title-sug-chips">
+      ${ings.map((it, i) => {
+        const added = present.has(it.name.toLowerCase());
+        return `<button type="button" class="title-sug-chip${added ? ' added' : ''}"
+                        ${added ? 'disabled aria-label="Allerede lagt til"' : `onclick="addTitleSugIngredient(${i})"`}>
+                  <span class="title-sug-plus">${added ? '✓' : '+'}</span>
+                  <span>${escHtml(it.name)}</span>
+                  <span class="title-sug-qty">${formatQty(it.qty)} ${escHtml(it.unit)}</span>
+                </button>`;
+      }).join('')}
+    </div>`;
+  wrap.style.display = '';
+}
+
+function addTitleSugIngredient(i) {
+  const it = _titleSugCache[i];
+  if (!it) return;
+  // Skip if already present — the chip should already be disabled, but guard
+  // the click path in case the DOM hasn't re-rendered yet.
+  if (_currentIngredientNamesLC().has(it.name.toLowerCase())) {
+    updateRecipeTitleSuggestions();
+    return;
+  }
+  // If there's a single blank ingredient row, fill it in place rather than
+  // appending — avoids the "one empty row + one filled row" clutter.
+  const rows = document.querySelectorAll('#recipe-ing-rows .ing-row');
+  let filledInPlace = false;
+  if (rows.length === 1) {
+    const nameEl = rows[0].querySelector('.r-name');
+    if (nameEl && !nameEl.value.trim()) {
+      const rowId = rows[0].id.replace('ring-', '');
+      nameEl.value = it.name;
+      const qtyEl  = document.getElementById(`ring-qty-${rowId}`);
+      const unitEl = document.getElementById(`ring-unit-${rowId}`);
+      const catEl  = document.getElementById(`ring-cat-${rowId}`);
+      if (qtyEl)  qtyEl.value  = it.qty;
+      if (unitEl && Array.from(unitEl.options).some(o => o.value === it.unit)) unitEl.value = it.unit;
+      if (catEl  && Array.from(catEl.options ).some(o => o.value === it.cat))  catEl.value  = it.cat;
+      filledInPlace = true;
+    }
+  }
+  if (!filledInPlace) addRecipeIngRow(it);
+  refreshRecipeTagSuggestions();
+  updateRecipeTitleSuggestions();
 }
 
 // ── Recipe library render ─────────────────────────────────────────────────────
@@ -5176,6 +6078,7 @@ function buildRecipeCard(r) {
     ${ingInfo}
     ${tagPills}
     <div class="recipe-card-actions" onclick="event.stopPropagation()">
+      <button class="btn btn-blue btn-sm" onclick="editRecipe('${r.id}')">Rediger</button>
       <button class="btn btn-red btn-sm" onclick="deleteRecipe('${r.id}')">Slett</button>
     </div>
   </div>`;
@@ -5277,7 +6180,8 @@ function openRecipeModal(id) {
     ${tagPills}
     ${ingsHtml}
     ${actionHtml}
-    <div style="margin-top:16px">
+    <div style="margin-top:16px;display:flex;gap:8px">
+      <button class="btn btn-blue btn-sm" style="flex:1" onclick="closeRecipeModal();editRecipe('${r.id}')">✏️ Rediger</button>
       <button class="btn btn-gray btn-sm" onclick="closeRecipeModal()">Lukk</button>
     </div>
   `;
@@ -5408,6 +6312,7 @@ function toggleManualItem(idx) {
   manualItems[idx].checked = !manualItems[idx].checked;
   saveManualItems();
   renderManualItems();
+  refreshDayIndicators();
 }
 
 function renderManualItems() {
@@ -5463,6 +6368,7 @@ function odaSearch(name, btn) {
       saveManualItems();
     }
     updateProgress();
+    refreshDayIndicators();
   }
 }
 
