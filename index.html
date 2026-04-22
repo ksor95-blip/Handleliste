@@ -2430,6 +2430,24 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
   font-family:'Inter',sans-serif;font-weight:500;
   letter-spacing:0;line-height:1.4;word-break:break-all;
 }
+/* Per-code note input — blends into the row via a subtle dashed underline,
+   becomes the accent green on focus. Read-only for deactivated codes. */
+.admin-code-note{
+  width:100%;
+  margin-top:6px;
+  background:transparent;
+  border:none;
+  border-bottom:1px dashed var(--bd);
+  padding:4px 0;
+  font-family:inherit;
+  font-size:.78rem;
+  color:var(--t1);
+  outline:none;
+  transition:border-color .15s;
+}
+.admin-code-note:focus{border-bottom-color:var(--g);border-bottom-style:solid}
+.admin-code-note::placeholder{color:var(--t4);font-style:italic}
+.admin-code-note:disabled{cursor:default}
 .admin-code-main{flex:1;min-width:0}
 .admin-code-btns{display:flex;gap:6px;flex-shrink:0}
 .admin-code-btns button{
@@ -7492,6 +7510,11 @@ function _generateInviteCode() {
 async function adminGenerateCode() {
   const db = _ensureFbDb();
   if (!db) { alert('Ingen nettverkstilgang'); return; }
+  // Optional note prompt. Cancel aborts the whole flow; an empty string is
+  // a legitimate "no note" and lets generation proceed.
+  const rawNote = prompt('Notat til denne koden (valgfritt):', '');
+  if (rawNote === null) return;
+  const note = rawNote.trim().slice(0, 80);
   let code = '';
   for (let i = 0; i < 10; i++) {
     code = _generateInviteCode();
@@ -7504,6 +7527,7 @@ async function adminGenerateCode() {
     usedBy: null,
     usedAt: null,
     active: true,
+    note: note || null,
   });
   showSyncToast('✓ Ny kode: ' + code);
   renderAdminCodes();
@@ -7526,6 +7550,22 @@ async function adminCopyCode(code) {
   }
 }
 
+// Persist the per-code note. Trim + cap at 80 chars; empty strings clear the
+// field (stored as null so Firebase drops the key instead of keeping "").
+async function adminSetNote(code, rawNote) {
+  const db = _ensureFbDb();
+  if (!db) return;
+  const note = (rawNote || '').trim().slice(0, 80);
+  try {
+    await db.ref('inviteCodes/' + code + '/note').set(note || null);
+    // Silent save — the input itself is the confirmation. A toast on every
+    // blur would be noisy; errors still surface via the catch below.
+  } catch (e) {
+    console.warn('[Admin] Could not save note for', code, e);
+    showSyncToast('Klarte ikke å lagre notat');
+  }
+}
+
 function _adminCodeRowHtml(code, data, state) {
   const safeCode = _escHtml(code);
   let meta = '';
@@ -7544,11 +7584,22 @@ function _adminCodeRowHtml(code, data, state) {
   const deactBtn = state === 'inactive'
     ? ''
     : `<button class="btn-deact" onclick='adminDeactivate(${_escHtml(callArg)})' aria-label="Deaktiver">✕</button>`;
+  // Note field — editable for unused/used, disabled for inactive (kept visible
+  // so admins can still see what the code was originally for). onchange fires
+  // on blur-with-change; Enter blurs so users aren't stuck in the field.
+  const noteVal = _escHtml(data.note || '');
+  const noteDisabled = state === 'inactive' ? ' disabled' : '';
+  const noteInput = `<input type="text" class="admin-code-note"
+                            placeholder="Hvem er denne til? (valgfritt)"
+                            value="${noteVal}" maxlength="80"${noteDisabled}
+                            onchange="adminSetNote(${_escHtml(callArg)}, this.value)"
+                            onkeydown="if(event.key==='Enter')this.blur()">`;
   return `
     <div class="admin-code-row ${state}">
       <div class="admin-code-main">
         <div class="admin-code-val">${safeCode}</div>
         ${meta ? `<div class="admin-code-meta">${meta}</div>` : ''}
+        ${noteInput}
       </div>
       <div class="admin-code-btns">
         <button onclick='adminCopyCode(${_escHtml(callArg)})' aria-label="Kopier">📋</button>
