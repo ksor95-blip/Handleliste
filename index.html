@@ -831,156 +831,6 @@ details[open].acc>summary::after{transform:rotate(180deg)}
 .item-list li.have .item-name{color:var(--g)}
 .item-list li.have .item-qty{background:var(--g100);color:#2a5c37}
 
-/* ═══════════════════════════════════════════════
-   HAR HJEMME — manual list & barcode
-═══════════════════════════════════════════════ */
-.home-item{
-  display:flex;align-items:center;gap:10px;
-  padding:11px 12px;background:var(--o50);
-  border-radius:var(--rxs);margin-bottom:6px;
-  border:1px solid var(--o100);min-height:48px;
-}
-.home-item-name{flex:1;font-size:.93rem;color:var(--t2);font-weight:600}
-.home-item-del{
-  background:none;border:none;color:var(--t4);
-  font-size:1rem;cursor:pointer;padding:4px 6px;
-  line-height:1;border-radius:var(--rxs);touch-action:manipulation;
-  min-height:36px;min-width:36px;display:flex;align-items:center;justify-content:center;
-  transition:background .2s,color .2s;
-}
-.home-item-del:active{background:#fee2e2;color:#dc2626}
-.home-items-count{
-  font-size:.76rem;font-weight:600;color:var(--g);
-  margin-bottom:8px;display:block;
-}
-.barcode-wrap{
-  position:relative;border-radius:var(--rsm);
-  overflow:hidden;background:black;
-  max-height:240px;margin-bottom:10px;
-}
-#barcode-video{
-  width:100%;display:block;
-  max-height:240px;object-fit:cover;
-}
-.barcode-line{
-  position:absolute;
-  left:8%;right:8%;
-  height:2.5px;
-  background:linear-gradient(90deg,transparent,#f4845f,#fbbf24,#f4845f,transparent);
-  box-shadow:0 0 10px rgba(74,156,93,.9);
-  border-radius:2px;
-  animation:bscan 1.8s ease-in-out infinite;
-  top:30%;
-}
-@keyframes bscan{
-  0%{top:20%;opacity:1}
-  50%{top:75%;opacity:.8}
-  100%{top:20%;opacity:1}
-}
-.barcode-corners{
-  position:absolute;inset:0;pointer-events:none;
-}
-.barcode-corners::before,.barcode-corners::after{
-  content:'';position:absolute;
-  width:28px;height:28px;
-  border-color:#4a9c5d;border-style:solid;
-  border-radius:3px;opacity:.9;
-}
-.barcode-corners::before{top:10%;left:8%;border-width:3px 0 0 3px}
-.barcode-corners::after{bottom:10%;right:8%;border-width:0 3px 3px 0}
-.barcode-msg{
-  padding:11px 14px;border-radius:var(--rxs);
-  font-size:.88rem;font-weight:600;margin-top:10px;
-}
-.barcode-success{background:var(--g50);color:#2a5c37;border:1px solid var(--g200)}
-.barcode-error{background:#fff5f5;color:#b91c1c;border:1px solid #fecaca}
-
-/* ═══════════════════════════════════════════════
-   VOICE INPUT
-═══════════════════════════════════════════════ */
-.voice-btn{
-  width:100%;
-  min-height:56px;
-  border:2px solid #e11d48;
-  border-radius:var(--rsm);
-  background:white;
-  color:#e11d48;
-  font-size:.95rem;
-  font-weight:700;
-  font-family:inherit;
-  cursor:pointer;
-  touch-action:manipulation;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
-  transition:all .2s;
-}
-.voice-btn.listening{
-  background:#e11d48;
-  color:white;
-  border-color:#be123c;
-  animation:voice-pulse 1.4s ease-in-out infinite;
-}
-.voice-btn.listening .voice-mic{
-  animation:voice-mic-pulse 1.1s ease-in-out infinite;
-  transform-origin:center;
-}
-.voice-btn:active{transform:scale(.97)}
-@keyframes voice-pulse{
-  0%,100%{box-shadow:0 0 0 0 rgba(225,29,72,.55)}
-  50%    {box-shadow:0 0 0 14px rgba(225,29,72,0)}
-}
-@keyframes voice-mic-pulse{
-  0%,100%{transform:scale(1)}
-  50%    {transform:scale(1.22)}
-}
-.voice-mic{font-size:1.4rem;line-height:1;flex-shrink:0}
-.voice-transcript{
-  min-height:44px;
-  padding:10px 14px;
-  background:#faf5ee;
-  border:1.5px solid var(--bd);
-  border-radius:var(--rxs);
-  font-size:.9rem;
-  color:var(--t2);
-  line-height:1.5;
-  margin-top:10px;
-  font-style:italic;
-}
-.voice-transcript.has-text{
-  font-style:normal;
-  color:var(--t1);
-  border-color:var(--g-lt);
-  background:white;
-}
-.voice-status{
-  font-size:.78rem;
-  font-weight:600;
-  color:var(--t3);
-  margin-top:6px;
-  display:flex;
-  align-items:center;
-  gap:6px;
-  min-height:22px;
-}
-.voice-dot{
-  width:8px;height:8px;border-radius:50%;
-  background:#e11d48;flex-shrink:0;
-  animation:vdot .7s ease-in-out infinite alternate;
-}
-@keyframes vdot{from{opacity:.3;transform:scale(.8)}to{opacity:1;transform:scale(1.2)}}
-.voice-added{
-  background:var(--g50);
-  border:1px solid var(--g200);
-  border-radius:var(--rxs);
-  padding:10px 14px;
-  margin-top:10px;
-  font-size:.88rem;
-  color:#2a5c37;
-  font-weight:600;
-}
-
 /* Oda */
 .oda-btn{
   background:none;
@@ -1051,57 +901,6 @@ details.skipped-sec[open]>summary::before{transform:rotate(90deg)}
   background:white;border:1px solid #fde68a;color:#78350f;
   border-radius:14px;padding:4px 12px;font-size:.8rem;
 }
-
-/* ═══════════════════════════════════════════════
-   KJØLESKAP — voice + barcode cards
-═══════════════════════════════════════════════ */
-.scan-card{
-  background:var(--card);border-radius:var(--r);
-  padding:16px;border:1.5px solid var(--bd);
-  box-shadow:var(--sh);margin-bottom:14px;
-}
-.scan-loading{display:flex;align-items:center;gap:12px;padding:14px 0;color:var(--g);font-size:.92rem}
-.spinner{
-  width:22px;height:22px;
-  border:3px solid var(--g100);border-top-color:var(--g);
-  border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* Shortcut link to basisvarer in settings (Kjøleskap page) */
-.staples-shortcut-btn{
-  display:flex;align-items:center;gap:12px;
-  width:100%;
-  background:var(--card);
-  border:1.5px solid var(--bd);
-  border-left:4px solid var(--y);
-  border-radius:var(--rsm);
-  padding:14px 14px;
-  font-family:inherit;cursor:pointer;
-  box-shadow:var(--sh);text-align:left;
-  touch-action:manipulation;
-  -webkit-user-select:none;user-select:none;
-  transition:background .15s,transform .1s;
-  color:var(--t1);
-}
-.staples-shortcut-btn:active{
-  background:#fef9c3;transform:scale(.98);transition-duration:.06s;
-}
-.staples-shortcut-icon{
-  font-size:1.5rem;line-height:1;flex-shrink:0;
-  width:40px;height:40px;
-  background:#fef9c3;border-radius:var(--rxs);
-  display:flex;align-items:center;justify-content:center;
-}
-.staples-shortcut-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.staples-shortcut-title{font-size:.92rem;font-weight:800;color:var(--t1);letter-spacing:-.1px}
-.staples-shortcut-desc{font-size:.76rem;color:var(--t3);line-height:1.4}
-.staples-shortcut-arrow{
-  font-size:1.4rem;color:var(--t4);font-weight:600;
-  flex-shrink:0;line-height:1;
-}
-html[data-theme="dark"] .staples-shortcut-icon{background:#2a2110}
-html[data-theme="dark"] .staples-shortcut-btn:active{background:#2a2110}
 
 /* ═══════════════════════════════════════════════
    HISTORY PAGE
@@ -1981,62 +1780,6 @@ html[data-theme="dark"] .recipe-search-clear{background:#26221d}
   display:flex;gap:7px;flex-wrap:wrap;margin:0;
 }
 
-/* Permission rows (Tillatelser card) */
-.permission-row{
-  display:flex;align-items:center;gap:12px;
-  width:100%;
-  background:var(--bg);
-  border:1.5px solid var(--bd);
-  border-radius:var(--rsm);
-  padding:12px 14px;
-  margin-bottom:8px;
-  font-family:inherit;cursor:pointer;text-align:left;
-  touch-action:manipulation;
-  -webkit-user-select:none;user-select:none;
-  transition:background .15s,transform .1s;
-  color:var(--t1);
-}
-.permission-row:last-child{margin-bottom:0}
-.permission-row:active{transform:scale(.98);transition-duration:.06s}
-.permission-row.granted{
-  background:var(--g50);border-color:var(--g200);
-}
-.permission-row.denied{
-  background:#fef2f2;border-color:#fecaca;
-}
-.permission-icon{
-  font-size:1.4rem;line-height:1;flex-shrink:0;
-  width:40px;height:40px;
-  background:var(--card);border:1.5px solid var(--bd);
-  border-radius:var(--rxs);
-  display:flex;align-items:center;justify-content:center;
-}
-.permission-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.permission-title{font-size:.92rem;font-weight:800;color:var(--t1);letter-spacing:-.1px}
-.permission-status{font-size:.78rem;color:var(--t3);line-height:1.4}
-.permission-row.granted .permission-status{color:#2a5c37;font-weight:600}
-.permission-row.denied  .permission-status{color:#b91c1c;font-weight:600}
-.permission-hint{
-  font-size:.72rem;color:var(--t3);line-height:1.5;
-  margin-top:6px;padding:8px 10px;
-  background:var(--card);border:1px dashed var(--bd);
-  border-radius:var(--rxs);
-}
-.permission-badge{
-  flex-shrink:0;font-size:1.1rem;line-height:1;
-  min-width:24px;text-align:center;
-}
-html[data-theme="dark"] .permission-row.granted{
-  background:#14241a;border-color:#1d3828;
-}
-html[data-theme="dark"] .permission-row.denied{
-  background:#2a1313;border-color:#5c1f1f;
-}
-html[data-theme="dark"] .permission-row.granted .permission-status{color:#7dcb91}
-html[data-theme="dark"] .permission-row.denied  .permission-status{color:#f87171}
-html[data-theme="dark"] .permission-icon{background:#26221d}
-html[data-theme="dark"] .permission-hint{background:#26221d}
-
 /* Per-day size row + day-size picker bottom sheet removed — per-day
    household overrides were dropped in the Planlegg redesign. */
 
@@ -2407,80 +2150,6 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
     </div>
   </section>
 
-  <!-- PAGE: HAR JEG ──────────────────────────────────────── -->
-  <section class="page" id="page-harjeg">
-    <div class="pg">
-
-      <!-- ── Har hjemme ─────────────────────────────────── -->
-      <div class="sec-lbl">🏠 Hva har du hjemme?</div>
-
-      <!-- Manual input -->
-      <div class="scan-card" style="margin-bottom:12px">
-        <div class="fld-lbl" style="margin-bottom:8px">Legg til ingrediens manuelt</div>
-        <div style="display:flex;gap:8px;margin-bottom:4px">
-          <input type="text" id="home-item-input"
-                 placeholder="F.eks. melk, egg, smør…"
-                 onkeydown="if(event.key==='Enter')addHomeItem()">
-          <button class="btn btn-green btn-sm" onclick="addHomeItem()" style="white-space:nowrap">+ Legg til</button>
-        </div>
-        <div id="home-items-list"></div>
-      </div>
-
-      <!-- Voice input -->
-      <div class="scan-card" id="voice-card" style="margin-bottom:12px">
-        <div class="fld-lbl" style="margin-bottom:8px">Taleregistrering</div>
-        <button class="voice-btn" id="voice-btn" onclick="toggleVoice()">
-          <span class="voice-mic" id="voice-mic">🎤</span>
-          <span id="voice-btn-lbl">Trykk og snakk</span>
-        </button>
-        <div class="voice-transcript" id="voice-transcript">
-          Si f.eks. «jeg har melk, egg og smør hjemme» …
-        </div>
-        <div class="voice-status" id="voice-status"></div>
-        <div id="voice-added"></div>
-      </div>
-
-      <!-- Barcode scanner -->
-      <div class="scan-card" style="margin-bottom:20px">
-        <div class="fld-lbl" style="margin-bottom:8px">Skann strekkode</div>
-        <button class="btn btn-blue" id="barcode-start-btn" onclick="startBarcodeScanner()" style="width:100%">
-          📷 Start strekkodeskanner
-        </button>
-        <div id="barcode-scanner-wrap" style="display:none;margin-top:10px">
-          <div class="barcode-wrap">
-            <video id="barcode-video" autoplay playsinline muted></video>
-            <div class="barcode-line"></div>
-            <div class="barcode-corners"></div>
-          </div>
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <button class="btn btn-gray btn-sm" onclick="stopBarcodeScanner()" style="flex:1">⏹ Stopp skanning</button>
-            <button class="btn btn-gray btn-sm" id="barcode-switch-btn" onclick="switchBarcodeCamera()" style="display:none">🔄 Bytt kamera</button>
-          </div>
-          <p style="font-size:.78rem;color:var(--t3);margin-top:6px;line-height:1.5">
-            Hold strekkoden rolig innenfor rammen. Scanneren leser EAN-13, EAN-8, UPC, Code 128 m.fl.
-          </p>
-        </div>
-        <div id="barcode-loading" style="display:none" class="scan-loading">
-          <div class="spinner"></div>
-          <span>Slår opp produkt i Open Food Facts…</span>
-        </div>
-        <div id="barcode-result"></div>
-      </div>
-
-      <!-- Shortcut to basisvarer in Innstillinger -->
-      <button class="staples-shortcut-btn" onclick="openBasisvarerFromFridge()">
-        <span class="staples-shortcut-icon">🧂</span>
-        <span class="staples-shortcut-body">
-          <span class="staples-shortcut-title">Rediger basisvarer</span>
-          <span class="staples-shortcut-desc">Endre hvilke varer som alltid er hjemme</span>
-        </span>
-        <span class="staples-shortcut-arrow">›</span>
-      </button>
-
-    </div>
-  </section>
-
-  <!-- PAGE: HISTORIKK ────────────────────────────────────── -->
   <!-- PAGE: OPPSKRIFTER ───────────────────────────────────── -->
   <section class="page" id="page-oppskrifter">
     <div class="pg">
@@ -2694,36 +2363,6 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
         </div>
       </div>
 
-      <!-- Tillatelser -->
-      <div class="settings-card">
-        <div class="settings-card-hdr">
-          <div class="settings-card-title">Tillatelser</div>
-          <div class="settings-card-desc">Styr hva appen har tilgang til på enheten din. Brukes av taleregistrering og strekkodeskanner på Kjøleskap-siden.</div>
-        </div>
-
-        <!-- Mikrofon -->
-        <button type="button" class="permission-row" onclick="requestPermission('microphone')">
-          <span class="permission-icon">🎤</span>
-          <span class="permission-body">
-            <span class="permission-title">Mikrofon</span>
-            <span class="permission-status" id="perm-status-microphone">Sjekker…</span>
-            <span class="permission-hint" id="perm-hint-microphone" style="display:none"></span>
-          </span>
-          <span class="permission-badge" id="perm-badge-microphone"></span>
-        </button>
-
-        <!-- Kamera -->
-        <button type="button" class="permission-row" onclick="requestPermission('camera')">
-          <span class="permission-icon">📷</span>
-          <span class="permission-body">
-            <span class="permission-title">Kamera</span>
-            <span class="permission-status" id="perm-status-camera">Sjekker…</span>
-            <span class="permission-hint" id="perm-hint-camera" style="display:none"></span>
-          </span>
-          <span class="permission-badge" id="perm-badge-camera"></span>
-        </button>
-      </div>
-
       <!-- Nullstill data -->
       <div class="settings-card danger">
         <div class="settings-card-hdr">
@@ -2769,17 +2408,6 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
     </span>
     <span class="nav-lbl">Handle</span>
     <span class="nav-dot" id="nav-dot-handleliste"></span>
-  </button>
-  <button class="nav-btn" onclick="showPage('harjeg')" id="nav-harjeg" aria-label="Kjøleskap">
-    <span class="nav-icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="5" y="2" width="14" height="20" rx="2"/>
-        <line x1="5" y1="10" x2="19" y2="10"/>
-        <line x1="9" y1="6" x2="9" y2="7.5"/>
-        <line x1="9" y1="14" x2="9" y2="16"/>
-      </svg>
-    </span>
-    <span class="nav-lbl">Kjøleskap</span>
   </button>
   <button class="nav-btn" onclick="showPage('oppskrifter')" id="nav-oppskrifter" aria-label="Oppskrifter">
     <span class="nav-icon" aria-hidden="true">
@@ -2940,7 +2568,7 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
   if (targetPage) {
     // Navigate to shortcut page after init (deferred so app initialises first)
     window.addEventListener('DOMContentLoaded', () => {
-      if (['meny','handleliste','harjeg','oppskrifter','innstillinger'].includes(targetPage)) {
+      if (['meny','handleliste','oppskrifter','innstillinger'].includes(targetPage)) {
         showPage(targetPage);
       }
     });
@@ -3023,14 +2651,12 @@ function showPage(name) {
     renderStats();
     syncNotificationsToggle();
     syncThemeToggle();
-    syncPermissions();
   }
 }
 
 const PAGE_META = {
   meny:          { emoji:'📅', lbl:'Planlegg' },
   handleliste:   { emoji:'🛍️', lbl:'Handle' },
-  harjeg:        { emoji:'🧊', lbl:'Kjøleskap' },
   oppskrifter:   { emoji:'📖', lbl:'Oppskrifter' },
   innstillinger: { emoji:'⚙️', lbl:'Innstillinger' },
 };
@@ -3304,21 +2930,6 @@ function renderStats() {
 }
 
 // ── Settings page ─────────────────────────────────────────────────────────────
-// Shortcut from Kjøleskap → opens Innstillinger and scrolls to the
-// Basisvarer accordion with it already expanded.
-function openBasisvarerFromFridge() {
-  showPage('innstillinger');
-  // Defer until after showPage has activated the section so scrollIntoView
-  // can measure the correct layout.
-  setTimeout(() => {
-    const acc = document.getElementById('staples-section');
-    if (acc) {
-      acc.open = true;
-      acc.scrollIntoView({ behavior:'smooth', block:'start' });
-    }
-  }, 60);
-}
-
 function renderSettingsHHCode() {
   const body = document.getElementById('settings-hh-body');
   if (!body) return;
@@ -3360,116 +2971,6 @@ function toggleNotifications() {
   } else {
     localStorage.removeItem('notifications_enabled');
     showSyncToast('🔕 Varslinger slått av');
-  }
-}
-
-// ── Tillatelser (Permissions) ────────────────────────────────────────────────
-// Shows mic + camera permission state and lets the user trigger a
-// permission request. Browsers can't *grant* permissions without a
-// getUserMedia() call, so clicking a row attempts to open the media
-// stream which triggers the native prompt.
-
-// Norwegian instructions for re-enabling a denied permission (varies slightly
-// per browser, but this covers the common flow users recognise).
-const _PERM_HINTS = {
-  microphone: 'For å gi tilgang på nytt: åpne nettleser-innstillingene (trykk på 🔒 i adressefeltet) → Tillatelser → Mikrofon → Tillat. Last deretter siden på nytt.',
-  camera:     'For å gi tilgang på nytt: åpne nettleser-innstillingene (trykk på 🔒 i adressefeltet) → Tillatelser → Kamera → Tillat. Last deretter siden på nytt.',
-};
-
-// Read the current permission state via the Permissions API (best-effort —
-// some browsers don't implement it for microphone/camera, in which case we
-// fall back to the neutral "ikke spurt ennå" state).
-async function _getPermissionState(name) {
-  if (!navigator.permissions?.query) return 'unknown';
-  try {
-    const status = await navigator.permissions.query({ name });
-    return status.state; // 'granted' | 'denied' | 'prompt'
-  } catch {
-    return 'unknown';
-  }
-}
-
-function _renderPermissionRow(kind, state) {
-  const row    = document.querySelector(`.permission-row[onclick*="${kind}"]`);
-  const status = document.getElementById('perm-status-' + kind);
-  const badge  = document.getElementById('perm-badge-'  + kind);
-  const hint   = document.getElementById('perm-hint-'   + kind);
-  if (!row || !status || !badge || !hint) return;
-
-  row.classList.remove('granted', 'denied');
-  hint.style.display = 'none';
-
-  if (state === 'granted') {
-    row.classList.add('granted');
-    status.textContent = 'Tilgang gitt ✅';
-    badge.textContent = '✓';
-  } else if (state === 'denied') {
-    row.classList.add('denied');
-    status.textContent = 'Tilgang nektet ❌';
-    badge.textContent = '!';
-    hint.textContent = _PERM_HINTS[kind] || '';
-    hint.style.display = '';
-  } else if (state === 'prompt') {
-    status.textContent = 'Ikke spurt ennå — trykk for å gi tilgang';
-    badge.textContent = '›';
-  } else {
-    // Permissions API unavailable — show a neutral prompt
-    status.textContent = 'Ikke spurt ennå — trykk for å gi tilgang';
-    badge.textContent = '›';
-  }
-}
-
-async function syncPermissions() {
-  // Guard: only run if the settings page is in the DOM
-  if (!document.getElementById('perm-status-microphone')) return;
-  const [mic, cam] = await Promise.all([
-    _getPermissionState('microphone'),
-    _getPermissionState('camera'),
-  ]);
-  _renderPermissionRow('microphone', mic);
-  _renderPermissionRow('camera',     cam);
-}
-
-async function requestPermission(kind) {
-  if (!navigator.mediaDevices?.getUserMedia) {
-    _renderPermissionRow(kind, 'denied');
-    showSyncToast('Nettleseren din støtter ikke denne tillatelsen.');
-    return;
-  }
-  // If already denied, clicking the row shows the instructions (already
-  // shown via the denied state) and prompts the user to fix it manually.
-  const current = await _getPermissionState(kind);
-  if (current === 'denied') {
-    _renderPermissionRow(kind, 'denied');
-    showSyncToast('Tilgang er nektet — se instruksjoner under ' + (kind === 'microphone' ? 'Mikrofon' : 'Kamera'));
-    return;
-  }
-  // Attempt the native prompt by opening a short-lived stream and
-  // immediately stopping it — we don't actually need the data, just the
-  // permission flip.
-  const constraints = kind === 'microphone'
-    ? { audio: true, video: false }
-    : { audio: false, video: { facingMode: { ideal: 'environment' } } };
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia(constraints);
-    stream.getTracks().forEach(t => t.stop());
-    _renderPermissionRow(kind, 'granted');
-    showSyncToast((kind === 'microphone' ? '🎤' : '📷') + ' Tilgang gitt');
-  } catch (err) {
-    const name = err?.name || '';
-    if (name === 'NotAllowedError' || name === 'SecurityError') {
-      _renderPermissionRow(kind, 'denied');
-      showSyncToast('Tilgang nektet');
-    } else if (name === 'NotFoundError' || name === 'OverconstrainedError') {
-      _renderPermissionRow(kind, 'denied');
-      const hint = document.getElementById('perm-hint-' + kind);
-      const status = document.getElementById('perm-status-' + kind);
-      if (status) status.textContent = (kind === 'microphone' ? 'Fant ingen mikrofon på enheten' : 'Fant ingen kamera på enheten');
-      if (hint) hint.style.display = 'none';
-    } else {
-      _renderPermissionRow(kind, 'unknown');
-      showSyncToast('Kunne ikke åpne ' + (kind === 'microphone' ? 'mikrofonen' : 'kameraet') + ': ' + (err?.message || name));
-    }
   }
 }
 
@@ -5583,79 +5084,6 @@ function addRecipeIngredientsToShoppingList(recipeId) {
   showSyncToast(parts.join(' · '));
 }
 
-// ── Har hjemme — manual list ─────────────────────────────────────────────────
-let homeItems = [];
-
-function loadHomeItems() {
-  try { homeItems = JSON.parse(localStorage.getItem('home_items') || '[]'); } catch { homeItems = []; }
-}
-function saveHomeItems() {
-  const s = JSON.stringify(homeItems);
-  localStorage.setItem('home_items', s);
-  fbSet('homeItems', s);
-}
-
-function addHomeItem(nameArg) {
-  let name = nameArg;
-  if (!name) {
-    const input = document.getElementById('home-item-input');
-    name = input.value.trim();
-    if (!name) { input.focus(); return; }
-    input.value = '';
-    input.focus();
-  }
-  // Avoid exact duplicates (case-insensitive)
-  if (!homeItems.some(i => i.toLowerCase() === name.toLowerCase())) {
-    homeItems.push(name);
-    saveHomeItems();
-  }
-  checkOffFromShoppingList([name]);
-  renderHomeItems();
-}
-
-function removeHomeItem(idx) {
-  homeItems.splice(idx, 1);
-  saveHomeItems();
-  renderHomeItems();
-}
-
-function renderHomeItems() {
-  const el = document.getElementById('home-items-list');
-  if (!el) return;
-  if (!homeItems.length) { el.innerHTML = ''; return; }
-  el.innerHTML =
-    `<span class="home-items-count">${homeItems.length} vare${homeItems.length !== 1 ? 'r' : ''} registrert hjemme</span>` +
-    homeItems.map((item, i) => `
-      <div class="home-item">
-        <span class="home-item-name">✓ ${escHtml(item)}</span>
-        <button class="home-item-del" onclick="removeHomeItem(${i})" aria-label="Fjern ${escHtml(item)}">✕</button>
-      </div>`).join('');
-}
-
-function checkOffFromShoppingList(names) {
-  let manualChanged = false;
-  document.querySelectorAll('#list-content .item-list li, #manual-items-block .item-list li').forEach(li => {
-    const nameEl = li.querySelector('.item-name');
-    if (!nameEl) return;
-    if (ingredientMatchesList(nameEl.textContent, names)) {
-      const cb = li.querySelector('input[type=checkbox]');
-      if (cb && !cb.checked) {
-        cb.checked = true;
-        li.classList.add('checked');
-      }
-      li.classList.add('have');
-      // Persist checked state for manually added items
-      const manualIdx = li.dataset.manualIdx;
-      if (manualIdx != null && manualItems[manualIdx] && !manualItems[manualIdx].checked) {
-        manualItems[manualIdx].checked = true;
-        manualChanged = true;
-      }
-    }
-  });
-  if (manualChanged) saveManualItems();
-  updateProgress();
-}
-
 // ── Manual shopping list items ────────────────────────────────────────────────
 let manualItems = [];
 
@@ -5745,375 +5173,6 @@ function updateHandlelisteVisibility() {
   const shoppingEl = document.getElementById('shopping-list');
   if (emptyEl) emptyEl.style.display = hasAny ? 'none' : '';
   if (shoppingEl) shoppingEl.style.display = hasAny ? 'block' : 'none';
-}
-
-// ── Voice input ───────────────────────────────────────────────────────────────
-// Uses the Web Speech API. A fresh SpeechRecognition instance is created on
-// each start — some Safari/iOS versions can't reuse a stopped instance, and
-// re-creating it also recovers cleanly after errors.
-const _VOICE_SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let _voiceRec       = null;
-let _voiceListening = false;
-
-function _voiceSetError(msg) {
-  const el = document.getElementById('voice-status');
-  if (el) el.innerHTML = `<span style="color:#b91c1c">⚠️ ${escHtml(msg)}</span>`;
-}
-function _voiceSetBtnIdle() {
-  const btn = document.getElementById('voice-btn');
-  if (btn) btn.classList.remove('listening');
-  const lbl = document.getElementById('voice-btn-lbl');
-  if (lbl) lbl.textContent = 'Trykk og snakk';
-}
-function _voiceDisableCard(reason) {
-  const btn = document.getElementById('voice-btn');
-  if (btn) {
-    btn.disabled = true;
-    btn.style.opacity = '.55';
-    btn.style.cursor = 'not-allowed';
-  }
-  _voiceSetError(reason);
-}
-
-// Norwegian filler words/phrases that should be stripped from transcripts
-const _VOICE_FILLERS = [
-  'jeg har','vi har','har jeg','har vi',
-  'jeg har også','vi har også',
-  'hjemme','også','og','litt','noen',
-  '\\ben\\b','\\bet\\b','\\bei\\b',
-];
-const _VOICE_FILLER_RE = new RegExp('(' + _VOICE_FILLERS.join('|') + ')', 'gi');
-
-function _voiceParseIngredients(transcript) {
-  let text = transcript.toLowerCase();
-  text = text.replace(_VOICE_FILLER_RE, ' ');
-  text = text.replace(/[.,!?;:]+/g, ',');
-  return text.split(/[,\s]+/).map(s => s.trim()).filter(s => s.length > 1);
-}
-
-function _voiceApplyIngredients(ingredients) {
-  const statusEl = document.getElementById('voice-status');
-  if (!ingredients.length) {
-    if (statusEl) statusEl.innerHTML = '<span style="color:var(--t3)">Ingen ingredienser gjenkjent — prøv igjen.</span>';
-    return;
-  }
-  ingredients.forEach(name => {
-    const cap = name.charAt(0).toUpperCase() + name.slice(1);
-    addHomeItem(cap);
-  });
-  const added = document.getElementById('voice-added');
-  if (added) {
-    added.innerHTML = `<div class="voice-added">✓ Lagt til: ${ingredients.map(i =>
-      escHtml(i.charAt(0).toUpperCase() + i.slice(1))).join(', ')}</div>`;
-  }
-  if (statusEl) statusEl.innerHTML = '';
-}
-
-function _voiceCreateInstance() {
-  const rec = new _VOICE_SR();
-  rec.lang            = 'nb-NO';
-  rec.continuous      = false;
-  rec.interimResults  = true;
-  rec.maxAlternatives = 1;
-
-  rec.addEventListener('start', () => {
-    _voiceListening = true;
-    const btn = document.getElementById('voice-btn');
-    if (btn) btn.classList.add('listening');
-    const lbl = document.getElementById('voice-btn-lbl');
-    if (lbl) lbl.textContent = 'Lytter…';
-    const status = document.getElementById('voice-status');
-    if (status) status.innerHTML = '<span class="voice-dot"></span> Hører på deg — si ingrediensene dine';
-    const added = document.getElementById('voice-added');
-    if (added) added.innerHTML = '';
-    const tEl = document.getElementById('voice-transcript');
-    if (tEl) { tEl.textContent = ''; tEl.classList.remove('has-text'); }
-  });
-
-  rec.addEventListener('result', e => {
-    const transcript = [...e.results].map(r => r[0].transcript).join(' ');
-    const isFinal    = e.results[e.results.length - 1].isFinal;
-    const tEl = document.getElementById('voice-transcript');
-    if (tEl) { tEl.textContent = transcript; tEl.classList.add('has-text'); }
-    if (isFinal) {
-      _voiceApplyIngredients(_voiceParseIngredients(transcript));
-    }
-  });
-
-  rec.addEventListener('end', () => {
-    _voiceListening = false;
-    _voiceRec = null;
-    _voiceSetBtnIdle();
-    // Clear the live status unless an error message was set
-    const status = document.getElementById('voice-status');
-    if (status && !status.querySelector('[style*="#b91c1c"]')) status.innerHTML = '';
-  });
-
-  rec.addEventListener('error', e => {
-    _voiceListening = false;
-    _voiceSetBtnIdle();
-    const msgs = {
-      'not-allowed':    'Mikrofontilgang nektet. Åpne nettleserinnstillingene og gi tillatelse.',
-      'service-not-allowed': 'Taletjenesten er blokkert i nettleseren.',
-      'no-speech':      'Ingen tale oppdaget — prøv igjen og snakk tydelig.',
-      'aborted':        '',  // user cancelled — silent
-      'network':        'Nettverksfeil ved talegjenkjenning. Sjekk internettforbindelsen.',
-      'audio-capture':  'Ingen mikrofon funnet på enheten.',
-      'bad-grammar':    'Ugyldig grammatikk i talegjenkjenningen.',
-      'language-not-supported': 'Norsk bokmål støttes ikke i denne nettleseren.',
-    };
-    const msg = msgs[e.error] ?? ('Feil: ' + e.error);
-    if (msg) _voiceSetError(msg);
-  });
-
-  return rec;
-}
-
-window.toggleVoice = async function () {
-  // Early-exit guards with clear Norwegian error messages
-  if (!_VOICE_SR) {
-    _voiceSetError('Nettleseren din støtter ikke talegjenkjenning. Prøv Chrome, Edge eller Safari.');
-    return;
-  }
-  if (!window.isSecureContext) {
-    _voiceSetError('Talegjenkjenning krever HTTPS.');
-    return;
-  }
-  // Stop an in-progress session
-  if (_voiceListening && _voiceRec) {
-    try { _voiceRec.stop(); } catch {}
-    return;
-  }
-  // Proactively probe mic permission on browsers that support the Permissions API,
-  // so the error message is clear even before SpeechRecognition starts.
-  if (navigator.permissions?.query) {
-    try {
-      const status = await navigator.permissions.query({ name: 'microphone' });
-      if (status.state === 'denied') {
-        _voiceSetError('Mikrofontilgang er nektet. Endre tillatelsen i nettleserinnstillingene og last siden på nytt.');
-        return;
-      }
-    } catch { /* permissions.query may reject for unknown names — ignore */ }
-  }
-  // Fresh instance each time for Safari reliability
-  try {
-    _voiceRec = _voiceCreateInstance();
-    _voiceRec.start();
-  } catch (err) {
-    _voiceListening = false;
-    _voiceRec = null;
-    _voiceSetBtnIdle();
-    _voiceSetError('Kunne ikke starte mikrofon: ' + (err?.message || err));
-  }
-};
-
-// On page load, show an inline notice if the API is unavailable (instead of
-// the old behaviour of hiding the whole card).
-document.addEventListener('DOMContentLoaded', () => {
-  if (!_VOICE_SR) {
-    _voiceDisableCard('Nettleseren din støtter ikke talegjenkjenning. Prøv Chrome, Edge eller Safari.');
-  } else if (!window.isSecureContext) {
-    _voiceDisableCard('Talegjenkjenning krever HTTPS.');
-  }
-});
-
-// ── Barcode scanner ───────────────────────────────────────────────────────────
-// Uses ZXing for decoding (loaded lazily on first use) and the MediaDevices
-// API for the camera stream. On mobile we prefer the rear camera via
-// `facingMode: { ideal: 'environment' }`.
-let _barcodeReader  = null;
-let _barcodeDevices = [];
-let _barcodeDevIdx  = 0;
-
-function _loadScript(src) {
-  return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
-    const s = document.createElement('script');
-    s.src = src;
-    s.onload  = () => resolve();
-    s.onerror = () => reject(new Error('Kunne ikke laste skanner-bibliotek'));
-    document.head.appendChild(s);
-  });
-}
-
-function _barcodeSetButtons(scanning) {
-  const startBtn = document.getElementById('barcode-start-btn');
-  const wrap     = document.getElementById('barcode-scanner-wrap');
-  if (startBtn) startBtn.style.display = scanning ? 'none' : '';
-  if (wrap)     wrap.style.display     = scanning ? 'block' : 'none';
-}
-
-function showBarcodeMsg(text, success) {
-  const el = document.getElementById('barcode-result');
-  if (!el) return;
-  el.innerHTML = `<div class="barcode-msg ${success ? 'barcode-success' : 'barcode-error'}">${escHtml(text)}</div>`;
-}
-
-function _barcodeCameraError(err) {
-  // Map DOMException names to friendly Norwegian messages.
-  const name = err?.name || '';
-  if (name === 'NotAllowedError' || name === 'SecurityError')
-    return 'Kameratilgang nektet. Gi tillatelse i nettleserinnstillingene og last siden på nytt.';
-  if (name === 'NotFoundError' || name === 'OverconstrainedError')
-    return 'Fant ikke noe kamera på enheten.';
-  if (name === 'NotReadableError' || name === 'TrackStartError')
-    return 'Kameraet er opptatt av en annen app. Lukk andre apper som bruker kameraet og prøv igjen.';
-  if (name === 'AbortError')
-    return 'Kamerastart ble avbrutt. Prøv igjen.';
-  return 'Kunne ikke starte kameraet: ' + (err?.message || name || 'ukjent feil');
-}
-
-async function startBarcodeScanner() {
-  showBarcodeMsg('', true);
-  document.getElementById('barcode-result').innerHTML = '';
-
-  // Preflight checks
-  if (!window.isSecureContext) {
-    showBarcodeMsg('Strekkodeskanneren krever HTTPS for å bruke kameraet.', false);
-    return;
-  }
-  if (!navigator.mediaDevices?.getUserMedia) {
-    showBarcodeMsg('Nettleseren din støtter ikke kameratilgang.', false);
-    return;
-  }
-
-  // Load ZXing lazily
-  if (!window.ZXing) {
-    try {
-      await _loadScript('https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js');
-    } catch {
-      showBarcodeMsg('Kunne ikke laste skanner-biblioteket. Sjekk internettforbindelsen.', false);
-      return;
-    }
-  }
-
-  _barcodeSetButtons(true);
-
-  // Request the rear camera directly via getUserMedia so the permission
-  // prompt appears before ZXing tries anything, and we get a clear error
-  // if the user denies. Then hand the stream to ZXing via decodeFromConstraints.
-  try {
-    _barcodeReader = new ZXing.BrowserMultiFormatReader();
-
-    // Enumerate video inputs so we can expose a "Bytt kamera" button later.
-    try {
-      const devs = await navigator.mediaDevices.enumerateDevices();
-      _barcodeDevices = devs.filter(d => d.kind === 'videoinput');
-      const switchBtn = document.getElementById('barcode-switch-btn');
-      if (switchBtn) switchBtn.style.display = _barcodeDevices.length > 1 ? '' : 'none';
-    } catch { /* ignore — labels need permission first */ }
-
-    const constraints = {
-      video: { facingMode: { ideal: 'environment' } },
-      audio: false,
-    };
-    await _barcodeReader.decodeFromConstraints(constraints, 'barcode-video', (result, err) => {
-      if (result) {
-        const code = result.getText();
-        stopBarcodeScanner();
-        lookupBarcode(code);
-      }
-      // Ignore per-frame NotFoundException — that's normal while scanning.
-    });
-  } catch (err) {
-    stopBarcodeScanner();
-    showBarcodeMsg(_barcodeCameraError(err), false);
-  }
-}
-
-function stopBarcodeScanner() {
-  try {
-    if (_barcodeReader) {
-      _barcodeReader.reset();
-      _barcodeReader = null;
-    }
-  } catch {}
-  // Make sure the <video> element fully releases its stream.
-  const video = document.getElementById('barcode-video');
-  if (video) {
-    const stream = video.srcObject;
-    if (stream && stream.getTracks) {
-      try { stream.getTracks().forEach(t => t.stop()); } catch {}
-    }
-    video.srcObject = null;
-  }
-  _barcodeSetButtons(false);
-  const loading = document.getElementById('barcode-loading');
-  if (loading) loading.style.display = 'none';
-}
-
-// Rotate through available cameras — useful on devices with both selfie and
-// rear cameras when `facingMode` picks the wrong one.
-async function switchBarcodeCamera() {
-  if (!_barcodeDevices.length) return;
-  _barcodeDevIdx = (_barcodeDevIdx + 1) % _barcodeDevices.length;
-  const deviceId = _barcodeDevices[_barcodeDevIdx].deviceId;
-  try {
-    if (_barcodeReader) { _barcodeReader.reset(); }
-    _barcodeReader = new ZXing.BrowserMultiFormatReader();
-    await _barcodeReader.decodeFromVideoDevice(deviceId, 'barcode-video', (result) => {
-      if (result) {
-        const code = result.getText();
-        stopBarcodeScanner();
-        lookupBarcode(code);
-      }
-    });
-  } catch (err) {
-    stopBarcodeScanner();
-    showBarcodeMsg(_barcodeCameraError(err), false);
-  }
-}
-
-async function lookupBarcode(code) {
-  const loading = document.getElementById('barcode-loading');
-  if (loading) loading.style.display = 'flex';
-  showBarcodeMsg(`🔍 Slår opp strekkode ${code}…`, true);
-  try {
-    // Open Food Facts global endpoint — covers most Norwegian groceries
-    // (many Norwegian products are also mirrored at no.openfoodfacts.org).
-    const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json`
-              + '?fields=product_name,product_name_no,product_name_nb,product_name_en,brands,generic_name_no,generic_name';
-    // AbortSignal.timeout is widely supported but fall back if missing.
-    const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), 9000);
-    let resp;
-    try {
-      resp = await fetch(url, { signal: controller.signal });
-    } finally {
-      clearTimeout(t);
-    }
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
-
-    if (data.status !== 1 || !data.product) {
-      showBarcodeMsg(`Produkt ikke funnet i Open Food Facts (strekkode: ${code})`, false);
-      return;
-    }
-
-    const p = data.product;
-    // Prefer Norwegian names, then generic, then English
-    let name = (p.product_name_no || p.product_name_nb || p.generic_name_no
-              || p.product_name   || p.generic_name    || p.product_name_en || '').trim();
-    // Include brand if the name is very generic
-    if (name && p.brands && name.length < 30 && !name.toLowerCase().includes((p.brands || '').split(',')[0].toLowerCase())) {
-      name = `${name} (${p.brands.split(',')[0].trim()})`;
-    }
-
-    if (!name) {
-      showBarcodeMsg(`Produktet mangler navn i databasen (strekkode: ${code})`, false);
-      return;
-    }
-
-    addHomeItem(name);
-    showBarcodeMsg(`✓ Lagt til: ${name}`, true);
-  } catch (err) {
-    const msg = err?.name === 'AbortError' || err?.name === 'TimeoutError'
-      ? 'Tidsavbrudd — sjekk internettforbindelsen og prøv igjen.'
-      : 'Kunne ikke slå opp strekkode. Sjekk internettforbindelsen.';
-    showBarcodeMsg(msg, false);
-  } finally {
-    if (loading) loading.style.display = 'none';
-  }
 }
 
 // ── Oda integration ───────────────────────────────────────────────────────────
@@ -6226,7 +5285,6 @@ function fbPushAll() {
     household:   { v: JSON.stringify({ global: getGlobalHH() }), by: _deviceId },
     recipes:     { v: localStorage.getItem('recipes') || '[]', by: _deviceId },
     customMeals: { v: localStorage.getItem('custom_meals') || '{}', by: _deviceId },
-    homeItems:   { v: localStorage.getItem('home_items') || '[]', by: _deviceId },
     staplesState:{ v: localStorage.getItem('staples_state') || '{}', by: _deviceId },
     manualItems: { v: localStorage.getItem('manual_items') || '[]', by: _deviceId },
   });
@@ -6281,9 +5339,6 @@ function fbApply(data, silent) {
   if (data.customMeals?.v) {
     try { customMeals = JSON.parse(data.customMeals.v); localStorage.setItem('custom_meals', data.customMeals.v); } catch {}
   }
-  if (data.homeItems?.v) {
-    try { homeItems = JSON.parse(data.homeItems.v); localStorage.setItem('home_items', data.homeItems.v); } catch {}
-  }
   if (data.staplesState?.v) {
     try {
       const s = JSON.parse(data.staplesState.v);
@@ -6300,7 +5355,6 @@ function fbApply(data, silent) {
   renderRecipes();
   rebuildSelects();
   renderCustomList();
-  renderHomeItems();
   renderStaplesSettings();
   renderManualItems();
   if (!silent) showSyncToast();
@@ -6358,17 +5412,6 @@ function fbStartListeners() {
       localStorage.setItem('custom_meals', d.v);
       renderCustomList();
       rebuildSelects();
-    } catch {}
-    showSyncToast();
-  });
-
-  _fbRef.child('homeItems').on('value', snap => {
-    const d = snap.val();
-    if (!d || d.by === _deviceId) return;
-    try {
-      homeItems = JSON.parse(d.v);
-      localStorage.setItem('home_items', d.v);
-      renderHomeItems();
     } catch {}
     showSyncToast();
   });
@@ -6582,7 +5625,7 @@ function connectHouseholdData(hhId) {
   fbStartListeners();
   _fbRef.once('value').then(snap => {
     const data = snap.val() || {};
-    const hasData = data.recipes || data.weekPlans || data.menu || data.homeItems ||
+    const hasData = data.recipes || data.weekPlans || data.menu ||
                     data.customMeals || data.household || data.staplesState || data.manualItems;
     if (hasData) fbApply(data, true);
     if (!data.recipes && !recipes.length) _seedDefaultRecipesIfEmpty();
@@ -6628,7 +5671,6 @@ async function initFirebaseSync() {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 loadRecipes();
-loadHomeItems();
 loadManualItems();
 loadWeekPlans();
 renderStaplesSettings();
@@ -6638,12 +5680,10 @@ buildGrid();
 renderStats();
 renderRecipes();
 renderRecipeTagsForm();
-renderHomeItems();
 renderManualItems();
 renderSettingsHHCode();
 syncNotificationsToggle();
 syncThemeToggle();
-syncPermissions();
 initFirebaseSync();
 </script>
 </body>
