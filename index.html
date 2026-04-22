@@ -972,6 +972,36 @@ html[data-theme="dark"] .ing-tip{
 html[data-theme="dark"] .ing-tip-title{color:var(--t1)}
 html[data-theme="dark"] .ing-tip-body{color:var(--t2)}
 
+/* Contextual discovery hints — subtle one-liners shown contextually. Shape
+   is the same everywhere via showHint(); see the JS helpers. */
+.hint{
+  display:flex;align-items:flex-start;gap:8px;
+  background:var(--g50);
+  border:1px solid var(--g100);
+  border-radius:var(--rxs);
+  padding:8px 12px;
+  margin:8px 0;
+  font-size:.8rem;
+  color:var(--t2);
+  line-height:1.45;
+  animation:hint-fade .28s ease;
+}
+@keyframes hint-fade{
+  from{opacity:0;transform:translateY(-3px)}
+  to{opacity:1;transform:none}
+}
+.hint-icon{font-size:.95rem;line-height:1.2;flex-shrink:0}
+.hint-text{flex:1;min-width:0}
+.hint-close{
+  background:none;border:none;
+  font-size:.95rem;line-height:1;
+  color:var(--t4);cursor:pointer;
+  padding:2px 6px;border-radius:var(--rxs);
+  font-family:inherit;flex-shrink:0;
+}
+.hint-close:active{background:var(--bd);color:var(--t1)}
+html[data-theme="dark"] .hint{background:var(--g50);border-color:var(--g100);color:var(--t2)}
+
 /* Oda */
 .oda-btn{
   background:none;
@@ -2781,6 +2811,20 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
         </div>
       </div>
 
+      <!-- Tips og hint -->
+      <div class="settings-card">
+        <div class="settings-row">
+          <div class="settings-row-body">
+            <div class="settings-card-title">Vis tips og hint</div>
+            <div class="settings-card-desc">Små forslag som hjelper deg å oppdage skjulte funksjoner. Slå av for å skjule dem permanent.</div>
+          </div>
+          <label class="settings-toggle">
+            <input type="checkbox" id="hints-toggle" onchange="toggleHints()">
+            <span class="settings-toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
       <!-- Nullstill data -->
       <div class="settings-card danger">
         <div class="settings-card-hdr">
@@ -3143,6 +3187,7 @@ function showPage(name) {
     renderStats();
     syncNotificationsToggle();
     syncThemeToggle();
+    syncHintsToggle();
   }
 }
 
@@ -3268,6 +3313,7 @@ function _ensureIngTooltipEl() {
 }
 function _showIngredientTooltip(li) {
   if (!li) return;
+  dismissHint('longpress_handle'); // user discovered the gesture — retire the hint
   const name = li.getAttribute('data-ingredient') || 'Ingrediens';
   // Manual items live in the #manual-items-block block and carry data-manual-idx.
   const isManual = li.hasAttribute('data-manual-idx')
@@ -3377,6 +3423,74 @@ function _hideIngredientTooltip() {
     if (tip && tip.classList.contains('show')) _hideIngredientTooltip();
   }, true);
 })();
+
+// ── Contextual hints ─────────────────────────────────────────────────────────
+// Tiny one-line "did you know" prompts for non-obvious features (long-press
+// on shopping items, Flytt frem, Analyser tekst, Finn på Oda). Each hint is
+// keyed by a stable id; dismissal is persistent via localStorage so it never
+// comes back once the user has either performed the action or tapped ✕.
+//
+// The settings-toggle ("Vis tips og hint") flips a master switch that also
+// force-dismisses every hint id so re-enabling restores fresh discoverability.
+const HINT_IDS = ['longpress_handle', 'flytt_frem', 'analyser_tekst', 'oda_search'];
+
+function isHintDismissed(id) {
+  if (localStorage.getItem('hints_enabled') === '0') return true;
+  return localStorage.getItem(`hint_dismissed_${id}`) === '1';
+}
+
+function dismissHint(id) {
+  localStorage.setItem(`hint_dismissed_${id}`, '1');
+  document.querySelectorAll(`.hint[data-hint-id="${id}"]`).forEach(el => el.remove());
+}
+
+// Show a hint near `target`. Positions: 'before' / 'after' (sibling) or
+// 'prepend' / 'append' (child). No-op if dismissed, target missing, or an
+// instance is already on-screen for this id.
+function showHint(id, target, message, opts = {}) {
+  if (!target) return;
+  if (isHintDismissed(id)) return;
+  if (document.querySelector(`.hint[data-hint-id="${id}"]`)) return;
+  const position = opts.position || 'after';
+  const el = document.createElement('div');
+  el.className = 'hint';
+  el.setAttribute('data-hint-id', id);
+  el.innerHTML = `
+    <span class="hint-icon" aria-hidden="true">💡</span>
+    <span class="hint-text">${escHtml(message)}</span>
+    <button type="button" class="hint-close" aria-label="Lukk tips"
+            onclick="dismissHint('${id}')">✕</button>
+  `;
+  if (position === 'before')  target.parentElement.insertBefore(el, target);
+  else if (position === 'prepend') target.insertBefore(el, target.firstChild);
+  else if (position === 'append')  target.appendChild(el);
+  else /* after */                 target.parentElement.insertBefore(el, target.nextSibling);
+}
+
+function syncHintsToggle() {
+  const el = document.getElementById('hints-toggle');
+  if (!el) return;
+  el.checked = localStorage.getItem('hints_enabled') !== '0';
+}
+
+function toggleHints() {
+  const el = document.getElementById('hints-toggle');
+  if (!el) return;
+  if (el.checked) {
+    // On → clear per-hint flags so hints can re-appear from scratch.
+    localStorage.setItem('hints_enabled', '1');
+    HINT_IDS.forEach(id => localStorage.removeItem(`hint_dismissed_${id}`));
+    showSyncToast('💡 Tips og hint slått på');
+  } else {
+    // Off → mark all as dismissed and tear down any currently visible ones.
+    localStorage.setItem('hints_enabled', '0');
+    HINT_IDS.forEach(id => {
+      localStorage.setItem(`hint_dismissed_${id}`, '1');
+      document.querySelectorAll(`.hint[data-hint-id="${id}"]`).forEach(x => x.remove());
+    });
+    showSyncToast('Tips og hint slått av');
+  }
+}
 
 // ── History ───────────────────────────────────────────────────────────────────
 const MAX_HIST = 15;
@@ -4275,6 +4389,7 @@ function buildGrid() {
 // on each existing day row. Called from check-off handlers on the Handle page
 // so indicators stay live without rebuilding DOM that doesn't need rebuilding.
 function refreshDayIndicators() {
+  let anyActionable = false;
   DAYS.forEach((_, i) => {
     const row = document.getElementById(`day-row-${i}`);
     if (!row) return;
@@ -4289,9 +4404,20 @@ function refreshDayIndicators() {
     if (ariaLbl) statusEl.setAttribute('aria-label', ariaLbl);
     else         statusEl.removeAttribute('aria-label');
 
+    const canMove = _canMoveDayForward(i);
     const moveBtn = row.querySelector('.day-move-btn');
-    if (moveBtn) moveBtn.style.display = _canMoveDayForward(i) ? '' : 'none';
+    if (moveBtn) moveBtn.style.display = canMove ? '' : 'none';
+    if (canMove) anyActionable = true;
   });
+  // Flytt frem hint — surfaces only when there's actually a button to press.
+  // Inserted after the day-list so the day rows above stay visually intact.
+  if (anyActionable) {
+    const dayList = document.getElementById('day-list');
+    if (dayList) {
+      showHint('flytt_frem', dayList,
+        'Flytt frem lar deg prioritere retter du allerede har ingredienser til');
+    }
+  }
 }
 
 // Swap this day's meal with the earliest prior day that has a strictly lower
@@ -4306,6 +4432,7 @@ function moveDayForward(i) {
     if (_dayScoreFromCompletion(_getDayCompletion(j)) < here) { target = j; break; }
   }
   if (target < 0) return;
+  dismissHint('flytt_frem'); // feature used — retire the hint
   const plan = _ensureCurrentWeekPlan();
   const a = plan[`day${target}`] || '';
   const b = plan[`day${i}`]      || '';
@@ -4890,6 +5017,23 @@ function _renderShoppingList({ preserveChecks = false } = {}) {
 
   if (checkedSnap) _restoreCheckedKeys(checkedSnap);
   updateProgress();
+
+  // Contextual hints — tied to the shopping list being freshly rendered.
+  // oda_search always applies when a list exists; longpress_handle only if
+  // there are enough unchecked items that the feature feels useful.
+  const listContentEl = document.getElementById('list-content');
+  const uncheckedCount = listContentEl
+    ? listContentEl.querySelectorAll('.item-list li:not(.checked)').length : 0;
+  if (uncheckedCount >= 3) {
+    showHint('longpress_handle', listContentEl,
+      'Hold inne en vare for å se hvilke retter som trenger den',
+      { position: 'prepend' });
+  }
+  if (itemCount > 0) {
+    showHint('oda_search', listContentEl,
+      'Trykk Finn på Oda for å søke opp varen direkte',
+      { position: 'prepend' });
+  }
 
   return { summary, itemCount, dayAssignments };
 }
@@ -5567,6 +5711,9 @@ function openAddRecipeForm() {
   if (!document.querySelector('#recipe-ing-rows .ing-row')) addRecipeIngRow();
   renderRecipeTagsForm();
   switchRecipeTab('manuelt');
+  const tabs = document.querySelector('#acc-add-recipe .recipe-form-tabs');
+  if (tabs) showHint('analyser_tekst', tabs,
+    'Tips: Lim inn en hel oppskrift under «Analyser tekst» for automatisk import');
 }
 function cancelRecipeForm() {
   const acc = document.getElementById('acc-add-recipe');
@@ -5607,6 +5754,7 @@ function resetRecipeForm() {
 function switchRecipeTab(name) {
   const valid = ['manuelt','analyser'];
   if (!valid.includes(name)) name = 'manuelt';
+  if (name === 'analyser') dismissHint('analyser_tekst'); // feature discovered
   valid.forEach(t => {
     const panel = document.getElementById('recipe-tab-' + t);
     const tab   = document.getElementById('rft-' + t);
@@ -6006,6 +6154,9 @@ function editRecipe(id) {
   const acc = document.getElementById('acc-add-recipe');
   if (acc) { acc.open = true; acc.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   switchRecipeTab('manuelt');
+  const tabs = document.querySelector('#acc-add-recipe .recipe-form-tabs');
+  if (tabs) showHint('analyser_tekst', tabs,
+    'Tips: Lim inn en hel oppskrift under «Analyser tekst» for automatisk import');
 
   document.getElementById('recipe-name-input').value = r.name || '';
   document.getElementById('recipe-servings').value   = r.servings || 4;
@@ -6707,6 +6858,7 @@ function updateHandlelisteVisibility() {
 
 // ── Oda integration ───────────────────────────────────────────────────────────
 function odaSearch(name, btn) {
+  dismissHint('oda_search'); // feature discovered — retire the hint
   window.open('https://oda.com/no/search/?q=' + encodeURIComponent(name), '_blank', 'noopener');
   const li = btn?.closest('li');
   if (li && !li.classList.contains('checked')) {
@@ -7683,6 +7835,7 @@ renderManualItems();
 renderSettingsHHCode();
 syncNotificationsToggle();
 syncThemeToggle();
+syncHintsToggle();
 
 // Seed the predefined invite codes eagerly so they're available to the gate's
 // first validation attempt. submitInviteCode awaits the same promise, so if
