@@ -2402,6 +2402,14 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
   min-height:20px;color:#dc2626;font-size:.85rem;font-weight:600;
 }
 .inv-cta{width:100%;max-width:360px}
+.inv-recover-link{
+  background:none;border:none;
+  color:var(--g);font-family:inherit;font-size:.9rem;font-weight:600;
+  padding:8px 12px;margin-top:4px;cursor:pointer;
+  text-decoration:underline;text-underline-offset:3px;
+}
+.inv-recover-link:active{color:var(--g-dk)}
+.inv-inner.hidden{display:none}
 
 /* ═══════════════════════════════════════════════
    ADMIN PANEL — invite code management
@@ -2450,6 +2458,15 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
 }
 .admin-code-row.used{opacity:.72}
 .admin-code-row.inactive{opacity:.5;border-style:dashed}
+.admin-code-row.stale{opacity:.6;border-color:#dc2626;border-style:dashed}
+.admin-stale-flag{
+  display:inline-block;margin-left:6px;
+  padding:2px 8px;border-radius:999px;
+  background:rgba(220,38,38,.12);color:#dc2626;
+  font-size:.68rem;font-weight:700;letter-spacing:.3px;
+  font-family:'Inter',sans-serif;
+  vertical-align:middle;
+}
 .admin-code-val{
   font-family:'Courier New',monospace;font-weight:800;
   font-size:1rem;color:var(--t1);letter-spacing:1px;
@@ -3016,7 +3033,8 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
 
 <!-- ══ INVITE GATE ═══════════════════════════════════════════ -->
 <div id="invite-gate" class="invite-gate hidden" role="dialog" aria-modal="true" aria-labelledby="inv-title">
-  <div class="inv-inner">
+  <!-- Default view: enter a fresh invite code -->
+  <div class="inv-inner" id="inv-view-code">
     <div class="inv-icon" aria-hidden="true">🔑</div>
     <h2 id="inv-title" class="inv-title">Skriv inn invitasjonskode</h2>
     <p class="inv-desc">Matplanlegger er kun tilgjengelig med en gyldig invitasjonskode. Skriv inn navnet ditt og koden du har fått.</p>
@@ -3028,6 +3046,23 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
            onkeydown="if(event.key==='Enter')submitInviteCode()">
     <div id="inv-error" class="inv-error" aria-live="polite"></div>
     <button type="button" class="btn btn-gen inv-cta" id="inv-submit" onclick="submitInviteCode()">Aktiver</button>
+    <button type="button" class="inv-recover-link" onclick="showRecoveryView()">Gjenopprette tilgang</button>
+  </div>
+
+  <!-- Recovery view: returning user enters their household code directly -->
+  <div class="inv-inner hidden" id="inv-view-recover">
+    <div class="inv-icon" aria-hidden="true">🔄</div>
+    <h2 class="inv-title">Gjenopprette tilgang</h2>
+    <p class="inv-desc">Har du brukt Matplanlegger før? Skriv inn husstandskoden din (6 tegn) for å koble til igjen — du trenger ikke en ny invitasjonskode.</p>
+    <input type="text" id="rec-name" placeholder="Ditt navn" autocomplete="name" maxlength="40"
+           oninput="document.getElementById('rec-error').textContent=''">
+    <input type="text" id="rec-code" class="inv-code-input" placeholder="6G7E7X" maxlength="6"
+           autocomplete="off" autocapitalize="characters" spellcheck="false"
+           oninput="this.value=this.value.toUpperCase();document.getElementById('rec-error').textContent=''"
+           onkeydown="if(event.key==='Enter')submitRecovery()">
+    <div id="rec-error" class="inv-error" aria-live="polite"></div>
+    <button type="button" class="btn btn-gen inv-cta" id="rec-submit" onclick="submitRecovery()">Gjenopprett</button>
+    <button type="button" class="inv-recover-link" onclick="showCodeView()">Tilbake</button>
   </div>
 </div>
 
@@ -3045,6 +3080,8 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
     <div id="admin-used-list"></div>
     <div class="admin-section-title">Deaktiverte koder</div>
     <div id="admin-inactive-list"></div>
+    <div class="admin-section-title">Enheter</div>
+    <div id="admin-devices-list"></div>
   </div>
 </div>
 
@@ -3773,6 +3810,9 @@ function resetAllData() {
       try { _fbRef.off(); } catch {}
     }
     localStorage.clear();
+    // Also clear identity cookies — otherwise the boot restore chain would
+    // silently put the user right back into their old household after reload.
+    IDENTITY_KEYS.forEach(k => _delCookie(k));
   } catch (e) {
     alert('Kunne ikke slette data: ' + (e?.message || e));
     return;
@@ -6910,12 +6950,64 @@ const FB_CONFIG = {
 let _fbDb  = null;
 let _fbRef = null;  // ref to households/{hhId}
 
-// Stable device ID so we can ignore our own writes coming back from Firebase
-let _deviceId = localStorage.getItem('_fb_device');
+// ── Cookie-backed identity persistence ────────────────────────────────────────
+// Safari evicts localStorage after ~7 days of inactivity (ITP). To survive that,
+// we mirror the four keys that identify a returning user — device id, household
+// id, invite-activation sentinel, user name — into long-lived cookies as well.
+// On boot we hydrate localStorage from cookies before any other code reads it.
+const IDENTITY_KEYS = ['_fb_device', 'firebase_hh_id', 'invite_activated_v2', '_user_name'];
+const IDENTITY_COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
+
+function _getCookie(name) {
+  const m = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '=([^;]*)'));
+  return m ? decodeURIComponent(m[1]) : null;
+}
+function _setCookie(name, value) {
+  // SameSite=Lax so it travels on top-level navigations; Secure when served over https.
+  const secure = location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = name + '=' + encodeURIComponent(value) +
+    '; max-age=' + IDENTITY_COOKIE_MAX_AGE + '; path=/; SameSite=Lax' + secure;
+}
+function _delCookie(name) {
+  document.cookie = name + '=; max-age=0; path=/; SameSite=Lax';
+}
+
+// Persist an identity key to both localStorage and its mirror cookie.
+function setIdentity(key, value) {
+  if (value == null) {
+    localStorage.removeItem(key);
+    _delCookie(key);
+  } else {
+    localStorage.setItem(key, value);
+    _setCookie(key, value);
+  }
+}
+// Read from localStorage; if absent, fall back to the cookie and re-seed
+// localStorage so callers downstream don't need to repeat the lookup.
+function getIdentity(key) {
+  let v = localStorage.getItem(key);
+  if (v != null) return v;
+  v = _getCookie(key);
+  if (v != null) localStorage.setItem(key, v);
+  return v;
+}
+
+// On every load: backfill localStorage from cookies if Safari just nuked it.
+IDENTITY_KEYS.forEach(k => {
+  if (localStorage.getItem(k) == null) {
+    const c = _getCookie(k);
+    if (c != null) localStorage.setItem(k, c);
+  }
+});
+
+// Stable device ID so we can ignore our own writes coming back from Firebase.
+// Generated once and mirrored into a cookie so it survives ITP eviction.
+let _deviceId = getIdentity('_fb_device');
 if (!_deviceId) {
   _deviceId = Math.random().toString(36).slice(2, 12);
-  localStorage.setItem('_fb_device', _deviceId);
 }
+// Always (re)write so the cookie is refreshed on each launch.
+setIdentity('_fb_device', _deviceId);
 
 // ── Low-level write ────────────────────────────────────────────────────────────
 function fbSet(section, value) {
@@ -7175,7 +7267,10 @@ function copyHHCode() {
 function leaveHousehold() {
   if (!confirm('Forlate husstanden og koble fra synkroniseringen?')) return;
   if (_fbRef) { _fbRef.off(); _fbRef = null; }
-  ['firebase_hh_id','_user_name'].forEach(k => localStorage.removeItem(k));
+  ['firebase_hh_id','_user_name'].forEach(k => setIdentity(k, null));
+  // Detach the householdId from the device record so a future recovery
+  // doesn't silently put the user back into the household they just left.
+  touchDeviceRecord({ householdId: null });
   const pop = document.getElementById('hh-info-popover');
   if (pop) pop.classList.add('hidden');
   updateHHIndicator(null);
@@ -7235,8 +7330,9 @@ async function hhConfirmCreate() {
         joinedAt: firebase.database.ServerValue.TIMESTAMP,
       },
     });
-    localStorage.setItem('firebase_hh_id', hhId);
-    localStorage.setItem('_user_name',      name);
+    setIdentity('firebase_hh_id', hhId);
+    setIdentity('_user_name',     name);
+    touchDeviceRecord({ householdId: hhId, name });
     _fbRef = _fbDb.ref('households/' + hhId);
     fbStartListeners();
     fbPushAll();
@@ -7278,8 +7374,9 @@ async function hhDoJoin() {
       name,
       joinedAt: firebase.database.ServerValue.TIMESTAMP,
     });
-    localStorage.setItem('firebase_hh_id', code);
-    localStorage.setItem('_user_name',     name);
+    setIdentity('firebase_hh_id', code);
+    setIdentity('_user_name',     name);
+    touchDeviceRecord({ householdId: code, name });
     document.getElementById('hh-modal').classList.add('hidden');
     connectHouseholdData(code);
     updateHHIndicator(code);
@@ -7292,7 +7389,7 @@ async function hhDoJoin() {
 }
 
 function hhSkip() {
-  localStorage.setItem('firebase_hh_id', '__local__');
+  setIdentity('firebase_hh_id', '__local__');
   document.getElementById('hh-modal').classList.add('hidden');
   _seedDefaultRecipesIfEmpty();
 }
@@ -7331,6 +7428,45 @@ function _ensureFbDb() {
   return _fbDb;
 }
 
+// ── Persistent device fingerprint in Firebase ─────────────────────────────────
+// /devices/{deviceId} = { householdId, name, activatedAt, lastSeen }. Lets us
+// recover a returning user when both localStorage and the cookie are gone — as
+// long as the same browser profile is still around, the deviceId we generate
+// here re-matches the existing Firebase record. Also surfaces in the admin
+// panel so the operator can see who's still active.
+async function touchDeviceRecord(patch) {
+  const db = _ensureFbDb();
+  if (!db || !_deviceId) return;
+  try {
+    const ref = db.ref('devices/' + _deviceId);
+    const snap = await ref.once('value');
+    const exists = snap.exists();
+    const update = Object.assign({}, patch || {}, {
+      lastSeen: firebase.database.ServerValue.TIMESTAMP,
+    });
+    if (!exists && update.activatedAt === undefined) {
+      update.activatedAt = firebase.database.ServerValue.TIMESTAMP;
+    }
+    await ref.update(update);
+  } catch (e) {
+    console.warn('[Devices] touchDeviceRecord failed:', e && e.message);
+  }
+}
+
+async function lookupDeviceHousehold() {
+  const db = _ensureFbDb();
+  if (!db || !_deviceId) return null;
+  try {
+    const snap = await db.ref('devices/' + _deviceId).once('value');
+    const data = snap.val();
+    if (!data || !data.householdId) return null;
+    return { householdId: data.householdId, name: data.name || null };
+  } catch (e) {
+    console.warn('[Devices] lookupDeviceHousehold failed:', e && e.message);
+    return null;
+  }
+}
+
 // ── Bootstrap Firebase ─────────────────────────────────────────────────────────
 async function initFirebaseSync() {
   const db = _ensureFbDb();
@@ -7340,7 +7476,29 @@ async function initFirebaseSync() {
     return;
   }
 
-  const savedId = localStorage.getItem('firebase_hh_id');
+  // Restore chain: localStorage → cookie (already hydrated above) → Firebase
+  // /devices/{deviceId}. Only fall through to the HH modal if nothing matches.
+  let savedId = getIdentity('firebase_hh_id');
+
+  if (!savedId) {
+    // Last resort: a returning device whose localStorage AND cookies both got
+    // wiped, but the deviceId we just regenerated happens to still match a
+    // /devices/{deviceId} record from an earlier visit. (This works mostly
+    // when the cookie survived even though localStorage was cleared.)
+    const recovered = await lookupDeviceHousehold();
+    if (recovered) {
+      savedId = recovered.householdId;
+      setIdentity('firebase_hh_id', savedId);
+      setIdentity('invite_activated_v2', '1');
+      if (recovered.name && !getIdentity('_user_name')) {
+        setIdentity('_user_name', recovered.name);
+      }
+    }
+  }
+
+  // Heartbeat: bump lastSeen on every boot, regardless of which path we took.
+  touchDeviceRecord(savedId && savedId !== '__local__' ? { householdId: savedId } : {});
+
   if (!savedId) {
     _seedDefaultRecipesIfEmpty();
     showHHModal();
@@ -7558,6 +7716,12 @@ function showInviteGate() {
   if (app)  app.setAttribute('aria-hidden', 'true');
   if (gate) {
     gate.classList.remove('hidden');
+    // Always open on the default "enter code" view; reset in case the user
+    // previously toggled to recovery.
+    const codeView = document.getElementById('inv-view-code');
+    const recView  = document.getElementById('inv-view-recover');
+    if (codeView) codeView.classList.remove('hidden');
+    if (recView)  recView.classList.add('hidden');
     setTimeout(() => { const n = document.getElementById('inv-name'); if (n) n.focus(); }, 150);
   }
 }
@@ -7620,11 +7784,93 @@ async function submitInviteCode() {
     return;
   }
 
-  localStorage.setItem('invite_activated_v2', '1');
-  localStorage.setItem('_user_name', name);
+  setIdentity('invite_activated_v2', '1');
+  setIdentity('_user_name', name);
+  // Record the activation up-front; householdId will be added when the user
+  // picks "create" or "join" in the HH modal that initFirebaseSync surfaces.
+  touchDeviceRecord({ name });
   hideInviteGate();
   maybeShowOnboarding();
   initFirebaseSync();
+}
+
+// ── Recovery: skip the invite code if the user already knows their HH code ────
+// Toggling between the two inner panels of the invite-gate dialog. The gate
+// itself stays mounted; only the inner view swaps.
+function showRecoveryView() {
+  document.getElementById('inv-view-code').classList.add('hidden');
+  document.getElementById('inv-view-recover').classList.remove('hidden');
+  // Carry the typed name across so the user doesn't retype it.
+  const nm = document.getElementById('inv-name').value.trim();
+  if (nm) document.getElementById('rec-name').value = nm;
+  setTimeout(() => {
+    const target = document.getElementById('rec-name').value
+      ? document.getElementById('rec-code')
+      : document.getElementById('rec-name');
+    target.focus();
+  }, 50);
+}
+function showCodeView() {
+  document.getElementById('inv-view-recover').classList.add('hidden');
+  document.getElementById('inv-view-code').classList.remove('hidden');
+}
+
+async function submitRecovery() {
+  const nameEl = document.getElementById('rec-name');
+  const codeEl = document.getElementById('rec-code');
+  const errEl  = document.getElementById('rec-error');
+  const btn    = document.getElementById('rec-submit');
+  const name   = (nameEl.value || '').trim();
+  const code   = (codeEl.value || '').trim().toUpperCase();
+
+  errEl.textContent = '';
+  if (!name) { errEl.textContent = 'Skriv inn navnet ditt'; nameEl.focus(); return; }
+  if (code.length !== 6) { errEl.textContent = 'Husstandskoden skal være 6 tegn'; codeEl.focus(); return; }
+
+  const db = _ensureFbDb();
+  if (!db) { errEl.textContent = 'Ingen nettverkstilgang, prøv igjen'; return; }
+
+  btn.disabled = true;
+  const origLabel = btn.textContent;
+  btn.textContent = 'Gjenoppretter…';
+
+  try {
+    // Only a real household — one whose /meta block exists — counts. This
+    // prevents a typo from quietly creating an empty /households/{code} node
+    // when we register membership a few lines down.
+    const metaSnap = await db.ref('households/' + code + '/meta').once('value');
+    if (!metaSnap.exists()) {
+      errEl.textContent = 'Husstandskoden ble ikke funnet. Sjekk at du skrev riktig.';
+      btn.disabled = false;
+      btn.textContent = origLabel;
+      return;
+    }
+
+    // Re-register this device as a member (idempotent — overwriting an
+    // existing entry just refreshes the name).
+    await db.ref(`households/${code}/members/${_deviceId}`).set({
+      name,
+      joinedAt: firebase.database.ServerValue.TIMESTAMP,
+    });
+
+    // Persist all four identity keys (localStorage + cookies) and the device
+    // fingerprint so the next eviction recovers automatically.
+    setIdentity('invite_activated_v2', '1');
+    setIdentity('firebase_hh_id', code);
+    setIdentity('_user_name', name);
+    await touchDeviceRecord({ householdId: code, name });
+
+    hideInviteGate();
+    // No onboarding for returning users — they've seen the app before.
+    connectHouseholdData(code);
+    updateHHIndicator(code);
+    showSyncToast('✓ Tilgang gjenopprettet');
+  } catch (e) {
+    console.error('[Recovery] failed:', e);
+    errEl.textContent = 'Kunne ikke koble til. Sjekk internettforbindelsen.';
+    btn.disabled = false;
+    btn.textContent = origLabel;
+  }
 }
 
 // ── Admin panel ──────────────────────────────────────────────────────────────
@@ -7797,6 +8043,53 @@ async function renderAdminCodes() {
   inactiveEl.innerHTML = inactive.length
     ? inactive.map(([c, v]) => _adminCodeRowHtml(c, v, 'inactive')).join('')
     : '<div class="admin-empty">Ingen deaktiverte koder</div>';
+
+  renderAdminDevices();
+}
+
+const DEVICE_STALE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+async function renderAdminDevices() {
+  const el = document.getElementById('admin-devices-list');
+  if (!el) return;
+  el.innerHTML = '<div class="admin-empty">Laster…</div>';
+
+  const db = _ensureFbDb();
+  if (!db) { el.innerHTML = '<div class="admin-empty">Ingen nettverkstilgang</div>'; return; }
+
+  let entries = [];
+  try {
+    const snap = await db.ref('devices').once('value');
+    entries = Object.entries(snap.val() || {});
+  } catch (e) {
+    el.innerHTML = '<div class="admin-empty">Klarte ikke å hente enheter</div>';
+    return;
+  }
+
+  // Most-recently-seen first.
+  entries.sort((a, b) => (b[1].lastSeen || 0) - (a[1].lastSeen || 0));
+
+  if (!entries.length) {
+    el.innerHTML = '<div class="admin-empty">Ingen registrerte enheter</div>';
+    return;
+  }
+
+  const now = Date.now();
+  el.innerHTML = entries.map(([id, d]) => {
+    const stale = d.lastSeen && (now - d.lastSeen) > DEVICE_STALE_MS;
+    const hh    = d.householdId ? '🏠 ' + _escHtml(d.householdId) : '— ingen husstand';
+    const name  = d.name ? _escHtml(d.name) : '(uten navn)';
+    const seen  = d.lastSeen ? 'Sist sett ' + _escHtml(_fmtAdminDate(d.lastSeen)) : 'Aldri sett';
+    const flag  = stale ? '<span class="admin-stale-flag">⚠ Inaktiv 30+ dager</span>' : '';
+    return `
+      <div class="admin-code-row${stale ? ' stale' : ''}">
+        <div class="admin-code-main">
+          <div class="admin-code-val">${name} ${flag}</div>
+          <div class="admin-code-meta">${hh} · ${seen}</div>
+          <div class="admin-code-meta" style="opacity:.7">ID: ${_escHtml(id)}</div>
+        </div>
+      </div>`;
+  }).join('');
 }
 
 // 5-tap gesture on the header title opens the admin prompt.
@@ -7842,13 +8135,29 @@ syncHintsToggle();
 // this is still running when the user taps Aktiver the click just waits.
 _startSeedInviteCodes();
 
-if (!isInviteActivated()) {
+(async function _bootGate() {
+  if (isInviteActivated()) {
+    maybeShowOnboarding();
+    initFirebaseSync();
+    return;
+  }
+  // The invite-activation sentinel is missing — usually a first-ever launch,
+  // but it can also happen when Safari has cleared both localStorage and the
+  // cookie. Before showing the gate, ask Firebase whether this deviceId is
+  // already tied to a household; if so, auto-restore (no invite code needed).
+  try {
+    const recovered = await lookupDeviceHousehold();
+    if (recovered && recovered.householdId) {
+      setIdentity('invite_activated_v2', '1');
+      setIdentity('firebase_hh_id', recovered.householdId);
+      if (recovered.name) setIdentity('_user_name', recovered.name);
+      initFirebaseSync();
+      return;
+    }
+  } catch (e) { /* fall through to the gate */ }
   // Block onboarding + household sync until a valid invite code unlocks them.
   showInviteGate();
-} else {
-  maybeShowOnboarding();
-  initFirebaseSync();
-}
+})();
 </script>
 </body>
 </html>
