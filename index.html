@@ -1737,6 +1737,41 @@ html[data-theme="dark"] .recipe-search-clear{background:#26221d}
   line-height:1.5;
 }
 
+/* URL import (Fra nettside) */
+.url-import-input{
+  width:100%;
+  padding:12px 14px;
+  border:1.5px solid var(--bd);
+  border-radius:var(--rsm);
+  font-size:16px; /* ≥16 to prevent iOS zoom-on-focus */
+  font-family:inherit;
+  color:var(--t1);
+  background:#faf5ee;
+  -webkit-appearance:none;appearance:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+.url-import-input:focus{
+  outline:none;border-color:var(--o);
+  box-shadow:0 0 0 3px rgba(244,132,95,.15);background:white;
+}
+.url-import-actions{display:flex;gap:8px}
+.url-import-spinner{
+  width:15px;height:15px;flex-shrink:0;
+  border:2px solid rgba(255,255,255,.45);
+  border-top-color:#fff;border-radius:50%;
+  display:inline-block;
+  animation:url-spin .7s linear infinite;
+}
+@keyframes url-spin{to{transform:rotate(360deg)}}
+.url-import-status{
+  margin-top:10px;font-size:.83rem;line-height:1.5;
+  padding:9px 12px;border-radius:var(--rsm);
+}
+.url-import-status.success{background:var(--g50);color:var(--g);border:1px solid var(--g100)}
+.url-import-status.error{background:#fff5f5;color:#dc2626;border:1px solid #fecaca}
+html[data-theme="dark"] .url-import-input{background:var(--bg)}
+html[data-theme="dark"] .url-import-status.error{background:#2a1414;border-color:#4a2020}
+
 /* ═══════════════════════════════════════════════
    SHARE TOAST
 ═══════════════════════════════════════════════ */
@@ -2631,6 +2666,8 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
                       onclick="switchRecipeTab('manuelt')" role="tab">✏️ Manuelt</button>
               <button type="button" class="recipe-form-tab" id="rft-analyser"
                       onclick="switchRecipeTab('analyser')" role="tab">✨ Analyser tekst</button>
+              <button type="button" class="recipe-form-tab" id="rft-nettside"
+                      onclick="switchRecipeTab('nettside')" role="tab">🔗 Fra nettside</button>
             </div>
 
             <!-- Analyser tekst panel -->
@@ -2644,6 +2681,25 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
                 <button class="btn btn-gen btn-sm" style="flex:1" onclick="analyzeRecipeText()">✨ Analyser tekst</button>
               </div>
               <div id="ing-skipped-notice" class="ing-skipped-notice" style="display:none;margin-top:10px"></div>
+            </div>
+
+            <!-- Importer fra nettside panel -->
+            <div id="recipe-tab-nettside" class="recipe-tab-panel" style="display:none">
+              <p class="recipe-tab-hint">
+                Lim inn lenken til en oppskrift fra matprat.no — navn, ingredienser og porsjoner hentes automatisk.
+                Du kan se over og redigere alt før du lagrer.
+              </p>
+              <input type="url" id="recipe-url-input" class="url-import-input" inputmode="url"
+                     autocomplete="off" placeholder="https://www.matprat.no/oppskrifter/…"
+                     onkeydown="if(event.key==='Enter'){event.preventDefault();importRecipeFromUrl()}">
+              <div class="url-import-actions" style="margin-top:10px">
+                <button class="btn btn-gen btn-sm" id="recipe-url-fetch-btn" style="flex:1"
+                        onclick="importRecipeFromUrl()">
+                  <span class="url-import-spinner" id="recipe-url-spinner" style="display:none" aria-hidden="true"></span>
+                  <span id="recipe-url-btn-label">🔗 Hent oppskrift</span>
+                </button>
+              </div>
+              <div id="recipe-url-status" class="url-import-status" style="display:none" role="status"></div>
             </div>
 
             <!-- Manuelt panel (also used as the shared editing surface after
@@ -3115,12 +3171,33 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
     });
   }
 
+  // ── Handle shortcuts from manifest ───────────────────────────────────────
+  // Wired up before any early-returns below so deep-links still work in iOS /
+  // installed environments where we skip the install-banner wiring.
+  const params = new URLSearchParams(location.search);
+  const targetPage = params.get('page');
+  if (targetPage) {
+    window.addEventListener('DOMContentLoaded', () => {
+      if (['meny','handleliste','oppskrifter','innstillinger'].includes(targetPage)) {
+        showPage(targetPage);
+      }
+    });
+  }
+
+  // ── Banner gating ────────────────────────────────────────────────────────
+  // Only Chrome on Android fires `beforeinstallprompt`. On iOS Safari the
+  // banner is dead weight (no programmatic install API), and once installed
+  // there's nothing to advertise — so we don't even wire the listeners in
+  // those environments. The banner element stays in the DOM but never gets
+  // the `.show` class.
+  if (isInstalled() || isIOSDevice()) return;
+
   // ── Install prompt (Android/Chrome) ─────────────────────────────────────
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     deferredPrompt = e;
     if (!isInstalled() && !wasDismissed()) {
-      setTimeout(() => showInstallBanner('android'), 3000);
+      setTimeout(showInstallBanner, 3000);
     }
   });
 
@@ -3130,23 +3207,6 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
     deferredPrompt = null;
   });
 
-  // ── iOS Safari — show manual instructions ────────────────────────────────
-  if (isIOS() && !isInstalled() && !wasDismissed()) {
-    setTimeout(() => showInstallBanner('ios'), 4000);
-  }
-
-  // ── Handle shortcuts from manifest ───────────────────────────────────────
-  const params = new URLSearchParams(location.search);
-  const targetPage = params.get('page');
-  if (targetPage) {
-    // Navigate to shortcut page after init (deferred so app initialises first)
-    window.addEventListener('DOMContentLoaded', () => {
-      if (['meny','handleliste','oppskrifter','innstillinger'].includes(targetPage)) {
-        showPage(targetPage);
-      }
-    });
-  }
-
   // ── Helpers ──────────────────────────────────────────────────────────────
   function isInstalled() {
     return window.matchMedia('(display-mode: standalone)').matches
@@ -3154,10 +3214,11 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
         || localStorage.getItem('pwa_installed') === '1';
   }
 
-  function isIOS() {
-    return /iphone|ipad|ipod/i.test(navigator.userAgent)
-        && !/chrome|crios|fxios/i.test(navigator.userAgent)
-        && !window.navigator.standalone;
+  function isIOSDevice() {
+    // iPadOS 13+ reports a desktop Safari UA ("Macintosh"), so the UA test
+    // alone misses modern iPads — detect those via touch-capable MacIntel.
+    return /iPad|iPhone|iPod/.test(navigator.userAgent)
+        || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   }
 
   function wasDismissed() {
@@ -3166,18 +3227,10 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
     return ts && (Date.now() - ts < 30 * 24 * 60 * 60 * 1000);
   }
 
-  function showInstallBanner(platform) {
+  function showInstallBanner() {
     if (isInstalled()) return;
     const banner = document.getElementById('install-banner');
-    const sub    = document.getElementById('install-banner-sub');
-    const btn    = document.getElementById('install-btn');
-    if (!banner) return;
-
-    if (platform === 'ios') {
-      sub.textContent = 'Trykk 📤 nederst i Safari, velg «Legg til på Hjem-skjerm»';
-      btn.style.display = 'none';
-    }
-    banner.classList.add('show');
+    if (banner) banner.classList.add('show');
   }
 
   window.triggerInstall = function() {
@@ -4526,7 +4579,7 @@ function openMealPicker(i) {
   if (listEl) {
     const current = getDayMeal(i);
     const sorted = recipes
-      .filter(r => r && r.id && (r.name || r.label))
+      .filter(r => r && r.id && (r.name || r.label) && r.category === 'middag')
       .slice()
       .sort((a, b) => (a.name || a.label || '').localeCompare(b.name || b.label || '', 'no'));
 
@@ -5770,6 +5823,10 @@ function resetRecipeForm() {
   if (ta) ta.value = '';
   const notice = document.getElementById('ing-skipped-notice');
   if (notice) { notice.textContent = ''; notice.style.display = 'none'; }
+  const urlIn = document.getElementById('recipe-url-input');
+  if (urlIn) urlIn.value = '';
+  const urlStatus = document.getElementById('recipe-url-status');
+  if (urlStatus) { urlStatus.textContent = ''; urlStatus.style.display = 'none'; }
   recipeIngCount = 0;
   // Reset category to middag
   document.querySelectorAll('.recipe-cat-chip').forEach(c => c.classList.remove('active'));
@@ -5792,7 +5849,7 @@ function resetRecipeForm() {
 
 // ── Recipe form tabs ──────────────────────────────────────────────────────────
 function switchRecipeTab(name) {
-  const valid = ['manuelt','analyser'];
+  const valid = ['manuelt','analyser','nettside'];
   if (!valid.includes(name)) name = 'manuelt';
   if (name === 'analyser') dismissHint('analyser_tekst'); // feature discovered
   valid.forEach(t => {
@@ -6081,6 +6138,133 @@ function analyzeRecipeText() {
     notice.style.display = '';
   }
   showSyncToast(msg);
+}
+
+// ── Importer fra nettside (matprat.no) ────────────────────────────────────────
+// Fetches a recipe page through the allorigins CORS proxy, parses matprat's
+// markup for name/ingredients/servings, and pre-fills the manual form so the
+// user can review and edit before saving. Always degrades to manual entry.
+async function importRecipeFromUrl() {
+  const input   = document.getElementById('recipe-url-input');
+  const btn      = document.getElementById('recipe-url-fetch-btn');
+  const spinner  = document.getElementById('recipe-url-spinner');
+  const label    = document.getElementById('recipe-url-btn-label');
+  const statusEl = document.getElementById('recipe-url-status');
+  const url = (input?.value || '').trim();
+
+  const setStatus = (msg, kind) => {
+    if (!statusEl) return;
+    statusEl.textContent = msg;
+    statusEl.className = 'url-import-status' + (kind ? ' ' + kind : '');
+    statusEl.style.display = msg ? '' : 'none';
+  };
+  const setLoading = on => {
+    if (btn) btn.disabled = on;
+    if (spinner) spinner.style.display = on ? '' : 'none';
+    if (label) label.textContent = on ? 'Henter…' : '🔗 Hent oppskrift';
+  };
+
+  if (!url) { setStatus('Lim inn en nettadresse først.', 'error'); return; }
+  if (!/^https?:\/\//i.test(url)) {
+    setStatus('Ugyldig nettadresse. Lenken må starte med http:// eller https://', 'error');
+    return;
+  }
+
+  setLoading(true);
+  setStatus('', '');
+  try {
+    const api = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+    const res = await fetch(api);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const html = data && data.contents;
+    if (!html) throw new Error('Tomt svar fra proxy');
+
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const parsed = _parseMatpratRecipe(doc);
+
+    // Need at least a name or some ingredients to call it a success
+    if (!parsed.name && !parsed.ingredients.length) throw new Error('Fant ingen oppskriftsdata');
+
+    _applyImportedRecipe(parsed);
+    switchRecipeTab('manuelt');
+    setStatus('Hentet fra matprat.no ✓', 'success');
+    showSyncToast('Hentet fra matprat.no ✓');
+  } catch (err) {
+    console.warn('[importRecipeFromUrl] failed:', err);
+    setStatus('Kunne ikke hente oppskriften automatisk. Fyll inn manuelt.', 'error');
+  } finally {
+    setLoading(false);
+  }
+}
+
+// Parse a matprat.no recipe document into { name, servings, ingredients[] }.
+function _parseMatpratRecipe(doc) {
+  const txt = el => (el && el.textContent ? el.textContent.replace(/\s+/g, ' ').trim() : '');
+
+  // ── Name: specific matprat classes → generic h1 → og:title fallback ────────
+  let name = txt(doc.querySelector('.recipe-intro__title'))
+          || txt(doc.querySelector('.article-title'))
+          || txt(doc.querySelector('h1'));
+  if (!name) {
+    const og = doc.querySelector('meta[property="og:title"], meta[name="og:title"]');
+    name = og ? (og.getAttribute('content') || '').replace(/\s+/g, ' ').trim() : '';
+  }
+  // Strip a "| MatPrat" / "- MatPrat" site suffix that og:title often carries
+  name = name.replace(/\s*[|–—-]\s*matprat.*$/i, '').trim();
+
+  // ── Servings: .recipe-servings text or #servings input value ──────────────
+  let servings = null;
+  const servText = txt(doc.querySelector('.recipe-servings'));
+  let sm = /(\d+)/.exec(servText);
+  if (!sm) {
+    const servInput = doc.querySelector('#servings');
+    if (servInput) sm = /(\d+)/.exec(servInput.getAttribute('value') || servInput.value || '');
+  }
+  if (sm) servings = Math.max(1, parseInt(sm[1], 10));
+
+  // ── Ingredients: .ingredient / .recipe-ingredient, amount + name ──────────
+  const ingredients = [];
+  const seen = new Set();
+  doc.querySelectorAll('.ingredient, .recipe-ingredient').forEach(el => {
+    const amountEl = el.querySelector('[class*="amount"], [class*="quantity"], [class*="unit"]');
+    const nameEl   = el.querySelector('[class*="name"], [class*="title"], [class*="ingredient-text"]');
+    let full;
+    if (amountEl || nameEl) {
+      full = ((txt(amountEl)) + ' ' + (txt(nameEl))).replace(/\s+/g, ' ').trim();
+    } else {
+      full = txt(el);
+    }
+    if (!full || full.length < 2) return;
+    const key = full.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    // Reuse the text-import line parser; fall back to keeping the raw line so
+    // nothing silently disappears (the user can edit/delete it afterwards).
+    const p = parseIngredientLine(full)
+      || { name: full.charAt(0).toUpperCase() + full.slice(1), qty: 1, unit: 'stk', cat: autoCategorizeing(full) };
+    ingredients.push(p);
+  });
+
+  return { name, servings, ingredients };
+}
+
+// Pre-fill the manual recipe form from a parsed import.
+function _applyImportedRecipe(parsed) {
+  const nameEl = document.getElementById('recipe-name-input');
+  if (nameEl && parsed.name) nameEl.value = parsed.name;
+  const servEl = document.getElementById('recipe-servings');
+  if (servEl && parsed.servings) servEl.value = String(parsed.servings);
+
+  const rowsWrap = document.getElementById('recipe-ing-rows');
+  if (rowsWrap) rowsWrap.innerHTML = '';
+  recipeIngCount = 0;
+  if (parsed.ingredients.length) {
+    parsed.ingredients.forEach(p => addRecipeIngRow(p));
+  } else {
+    addRecipeIngRow(); // leave one empty row to fill manually
+  }
+  refreshRecipeTagSuggestions();
 }
 
 // ── Recipe ingredient rows ─────────────────────────────────────────────────────
@@ -6620,6 +6804,10 @@ function buildRecipeCard(r) {
     ${r.servings ? `<div class="recipe-meta">👥 ${r.servings} porsjoner</div>` : ''}
     ${ingInfo}
     ${tagPills}
+    ${(r.category === 'frokost' || r.category === 'lunsj') ? `
+    <div class="recipe-card-actions" onclick="event.stopPropagation()">
+      <button class="btn btn-green btn-sm" style="width:100%" onclick="addRecipeIngredientsToShoppingList('${r.id}', {navigate:false, closeModal:false, toast:'Ingredienser lagt til handlelisten'})">🛍️ Legg til handlelisten</button>
+    </div>` : ''}
     <div class="recipe-card-actions" onclick="event.stopPropagation()">
       <button class="btn btn-blue btn-sm" onclick="editRecipe('${r.id}')">Rediger</button>
       <button class="btn btn-red btn-sm" onclick="deleteRecipe('${r.id}')">Slett</button>
@@ -6773,7 +6961,10 @@ function addRecipeToDay(dayIdx, recipeId) {
 }
 
 // ── Frokost/lunsj: add ingredients straight to shopping list ──────────────────
-function addRecipeIngredientsToShoppingList(recipeId) {
+function addRecipeIngredientsToShoppingList(recipeId, opts = {}) {
+  // `navigate`/`closeModal` default to the modal flow; the recipe-card button
+  // passes them false (no modal open, stay on Oppskrifter) plus a custom toast.
+  const { navigate = true, closeModal = true, toast = null } = opts;
   const r = recipes.find(x => x.id === recipeId);
   if (!r) { showSyncToast('Fant ikke oppskriften.'); return; }
   // Normalize to handle both array tuple and {name,qty,unit,cat} storage formats
@@ -6797,11 +6988,15 @@ function addRecipeIngredientsToShoppingList(recipeId) {
   });
   saveManualItems();
   renderManualItems();
-  closeRecipeModal();
-  showPage('handleliste');
-  const parts = [`✓ ${added} ingrediens${added !== 1 ? 'er' : ''} lagt til handlelisten`];
-  if (skippedStaples > 0) parts.push(`${skippedStaples} basisvarer hoppet over`);
-  showSyncToast(parts.join(' · '));
+  if (closeModal) closeRecipeModal();
+  if (navigate) showPage('handleliste');
+  if (toast) {
+    showSyncToast(toast);
+  } else {
+    const parts = [`✓ ${added} ingrediens${added !== 1 ? 'er' : ''} lagt til handlelisten`];
+    if (skippedStaples > 0) parts.push(`${skippedStaples} basisvarer hoppet over`);
+    showSyncToast(parts.join(' · '));
+  }
 }
 
 // ── Manual shopping list items ────────────────────────────────────────────────
