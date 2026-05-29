@@ -807,13 +807,6 @@ html[data-theme="dark"] .item-week-tag{background:#1a1d33;color:#a5b4fc}
 .manual-item-input:focus{border-color:var(--g)}
 .manual-add-form .btn{flex-shrink:0;white-space:nowrap}
 .manual-cat .cat-title{background:#eef2ff;color:#3730a3}
-.manual-item-tag{
-  background:#eef2ff;color:#4338ca;
-  font-size:.62rem;font-weight:700;
-  padding:2px 7px;border-radius:10px;
-  margin-left:6px;white-space:nowrap;
-  letter-spacing:.2px;
-}
 .manual-item-del{
   background:#fef2f2;border:1px solid #fecaca;
   color:#dc2626;border-radius:8px;
@@ -1343,16 +1336,17 @@ html[data-theme="dark"] .title-sug-chip.added{background:#26221d;border-color:va
   margin-top:6px;flex-wrap:wrap;
 }
 
-/* Category radio chips */
-.recipe-cat-chips{display:flex;gap:8px;flex-wrap:wrap}
+/* Category radio chips — flex:1 keeps all three on one line at 375px */
+.recipe-cat-chips{display:flex;gap:6px;flex-wrap:wrap}
 .recipe-cat-chip{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:10px 16px;border-radius:20px;
+  flex:1 1 0;min-width:0;
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  padding:10px 8px;border-radius:20px;
   border:1.5px solid var(--bd);background:#f8f3ec;
   color:var(--t2);font-size:.88rem;cursor:pointer;
   -webkit-user-select:none;user-select:none;
   transition:all .2s;font-family:inherit;font-weight:500;
-  min-height:44px;touch-action:manipulation;
+  min-height:44px;touch-action:manipulation;white-space:nowrap;
 }
 .recipe-cat-chip input[type=radio]{display:none}
 .recipe-cat-chip.active{border-color:var(--g);background:var(--g50);color:var(--g);font-weight:700}
@@ -1633,15 +1627,16 @@ html[data-theme="dark"] .recipe-search-clear{background:#26221d}
 }
 .recipe-form-tab{
   flex:1;min-width:0;
-  padding:10px 12px;
+  padding:9px 6px;
   border:none;background:transparent;
   border-radius:var(--rxs);
-  font-family:inherit;font-size:.85rem;font-weight:700;
+  font-family:inherit;font-size:.82rem;font-weight:700;
   color:var(--t3);cursor:pointer;
   transition:background .15s,color .15s,box-shadow .15s;
   touch-action:manipulation;
   -webkit-user-select:none;user-select:none;
-  white-space:nowrap;
+  /* Wrap rather than clip if a label is too long for the narrow 1/3 width */
+  white-space:normal;line-height:1.2;text-align:center;
 }
 .recipe-form-tab.active{
   background:var(--card);color:var(--g);
@@ -2231,7 +2226,6 @@ html[data-theme="dark"] .cat-badge-lunsj{background:#0f1d33;border-color:#1a3154
 html[data-theme="dark"] .cat-badge-middag{background:#14241a;border-color:#1d3828;color:#7dcb91}
 html[data-theme="dark"] .cat-title{background:#221d18}
 html[data-theme="dark"] .manual-cat .cat-title{background:#1a1d33;color:#a5b4fc}
-html[data-theme="dark"] .manual-item-tag{background:#1a1d33;color:#a5b4fc}
 html[data-theme="dark"] .settings-hh-code-row{background:#26221d}
 html[data-theme="dark"] .settings-card.danger{background:#241515;border-color:#4a1f1f}
 html[data-theme="dark"] .btn-danger-lg{background:#2a1313;color:#f87171;border-color:#5c1f1f}
@@ -2621,9 +2615,9 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
               <button type="button" class="recipe-form-tab active" id="rft-manuelt"
                       onclick="switchRecipeTab('manuelt')" role="tab">✏️ Manuelt</button>
               <button type="button" class="recipe-form-tab" id="rft-analyser"
-                      onclick="switchRecipeTab('analyser')" role="tab">✨ Analyser tekst</button>
+                      onclick="switchRecipeTab('analyser')" role="tab">✨ Analyser</button>
               <button type="button" class="recipe-form-tab" id="rft-nettside"
-                      onclick="switchRecipeTab('nettside')" role="tab">🔗 Fra nettside</button>
+                      onclick="switchRecipeTab('nettside')" role="tab">🔗 Nettside</button>
             </div>
 
             <!-- Analyser tekst panel -->
@@ -6726,7 +6720,7 @@ function buildRecipeCard(r) {
     ${tagPills}
     ${(r.category === 'frokost' || r.category === 'lunsj') ? `
     <div class="recipe-card-actions" onclick="event.stopPropagation()">
-      <button class="btn btn-green btn-sm" style="width:100%" onclick="addRecipeIngredientsToShoppingList('${r.id}', {navigate:false, closeModal:false, toast:'Ingredienser lagt til handlelisten'})">🛍️ Legg til handlelisten</button>
+      <button class="btn btn-green btn-sm" style="width:100%;white-space:normal;line-height:1.2" onclick="addRecipeIngredientsToShoppingList('${r.id}', {navigate:false, closeModal:false, toast:'Ingredienser lagt til handlelisten'})">🛍️ Legg til handlelisten</button>
     </div>` : ''}
     <div class="recipe-card-actions" onclick="event.stopPropagation()">
       <button class="btn btn-blue btn-sm" onclick="editRecipe('${r.id}')">Rediger</button>
@@ -6991,7 +6985,6 @@ function renderManualItems() {
             <input type="checkbox" ${item.checked ? 'checked' : ''}>
             <span class="item-cb"></span>
             <span class="item-name">${escHtml(item.name)}</span>
-            <span class="manual-item-tag">manuelt lagt til</span>
             <button class="oda-btn" onclick="event.stopPropagation();odaSearch('${escHtml(item.name)}',this)" title="Søk på Oda.com">Finn på Oda</button>
             <button class="manual-item-del" onclick="event.stopPropagation();removeManualItem(${i})" aria-label="Slett ${escHtml(item.name)}">✕</button>
           </li>`).join('')}
