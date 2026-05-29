@@ -146,7 +146,10 @@ body{
   font-weight:800;
   letter-spacing:-.4px;
 }
-.hdr-emoji{font-size:1.5rem;line-height:1}
+.hdr-emoji{font-size:1.5rem;line-height:1;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px}
+.hdr-emoji svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block}
+.list-title svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.sec-lbl svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .hdr-actions{display:flex;gap:8px;align-items:center}
 .hdr-btn{
   background:rgba(255,255,255,.18);
@@ -2509,7 +2512,7 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
 <header id="app-header">
   <div class="hdr-inner">
     <div class="hdr-title">
-      <span class="hdr-emoji" id="hdr-emoji">📅</span>
+      <span class="hdr-emoji" id="hdr-emoji" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
       <span id="hdr-lbl">Planlegg</span>
     </div>
     <div style="display:flex;align-items:center;gap:6px">
@@ -2579,7 +2582,7 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
       <div id="shopping-list" style="display:none">
         <div class="list-hero">
           <div class="list-hdr">
-            <div class="list-title">🛍️ Handle</div>
+            <div class="list-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2 L3 6 v14 a2 2 0 0 0 2 2 h14 a2 2 0 0 0 2 -2 V6 L18 2 Z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10 a4 4 0 0 1 -8 0"/></svg>Handle</div>
             <div style="display:flex;gap:7px;align-items:center">
               <button class="btn-oda-all" onclick="odaOpenAll()" title="Åpne topp 10 varer i Oda">
                 🛒 Oda
@@ -2607,7 +2610,7 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
   <!-- PAGE: OPPSKRIFTER ───────────────────────────────────── -->
   <section class="page" id="page-oppskrifter">
     <div class="pg">
-      <div class="sec-lbl">📖 Oppskriftsbibliotek</div>
+      <div class="sec-lbl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5 A2.5 2.5 0 0 1 6.5 17 H20"/><path d="M6.5 2 H20 v20 H6.5 A2.5 2.5 0 0 1 4 19.5 v-15 A2.5 2.5 0 0 1 6.5 2 z"/></svg>Oppskriftsbibliotek</div>
 
       <!-- Legg til oppskrift -->
       <details class="acc" id="acc-add-recipe">
@@ -2752,7 +2755,7 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
   <!-- PAGE: INNSTILLINGER ─────────────────────────────────── -->
   <section class="page" id="page-innstillinger">
     <div class="pg">
-      <div class="sec-lbl">⚙️ Innstillinger</div>
+      <div class="sec-lbl"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15 a1.65 1.65 0 0 0 .33 1.82 l.06 .06 a2 2 0 0 1 -2.83 2.83 l-.06 -.06 a1.65 1.65 0 0 0 -1.82 -.33 a1.65 1.65 0 0 0 -1 1.51 V21 a2 2 0 0 1 -4 0 v-.09 A1.65 1.65 0 0 0 9 19.4 a1.65 1.65 0 0 0 -1.82 .33 l-.06 .06 a2 2 0 0 1 -2.83 -2.83 l.06 -.06 a1.65 1.65 0 0 0 .33 -1.82 a1.65 1.65 0 0 0 -1.51 -1 H3 a2 2 0 0 1 0 -4 h.09 A1.65 1.65 0 0 0 4.6 9 a1.65 1.65 0 0 0 -.33 -1.82 l-.06 -.06 a2 2 0 0 1 2.83 -2.83 l.06 .06 a1.65 1.65 0 0 0 1.82 .33 H9 a1.65 1.65 0 0 0 1 -1.51 V3 a2 2 0 0 1 4 0 v.09 a1.65 1.65 0 0 0 1 1.51 a1.65 1.65 0 0 0 1.82 -.33 l.06 -.06 a2 2 0 0 1 2.83 2.83 l-.06 .06 a1.65 1.65 0 0 0 -.33 1.82 V9 a1.65 1.65 0 0 0 1.51 1 H21 a2 2 0 0 1 0 4 h-.09 a1.65 1.65 0 0 0 -1.51 1 z"/></svg>Innstillinger</div>
 
       <!-- Husstandskode -->
       <div class="settings-card">
@@ -3146,19 +3149,26 @@ function showPage(name) {
   }
 }
 
+const ICON_SVG = {
+  calendar: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  bag:      '<svg viewBox="0 0 24 24"><path d="M6 2 L3 6 v14 a2 2 0 0 0 2 2 h14 a2 2 0 0 0 2 -2 V6 L18 2 Z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10 a4 4 0 0 1 -8 0"/></svg>',
+  book:     '<svg viewBox="0 0 24 24"><path d="M4 19.5 A2.5 2.5 0 0 1 6.5 17 H20"/><path d="M6.5 2 H20 v20 H6.5 A2.5 2.5 0 0 1 4 19.5 v-15 A2.5 2.5 0 0 1 6.5 2 z"/></svg>',
+  gear:     '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15 a1.65 1.65 0 0 0 .33 1.82 l.06 .06 a2 2 0 0 1 -2.83 2.83 l-.06 -.06 a1.65 1.65 0 0 0 -1.82 -.33 a1.65 1.65 0 0 0 -1 1.51 V21 a2 2 0 0 1 -4 0 v-.09 A1.65 1.65 0 0 0 9 19.4 a1.65 1.65 0 0 0 -1.82 .33 l-.06 .06 a2 2 0 0 1 -2.83 -2.83 l.06 -.06 a1.65 1.65 0 0 0 .33 -1.82 a1.65 1.65 0 0 0 -1.51 -1 H3 a2 2 0 0 1 0 -4 h.09 A1.65 1.65 0 0 0 4.6 9 a1.65 1.65 0 0 0 -.33 -1.82 l-.06 -.06 a2 2 0 0 1 2.83 -2.83 l.06 .06 a1.65 1.65 0 0 0 1.82 .33 H9 a1.65 1.65 0 0 0 1 -1.51 V3 a2 2 0 0 1 4 0 v.09 a1.65 1.65 0 0 0 1 1.51 a1.65 1.65 0 0 0 1.82 -.33 l.06 -.06 a2 2 0 0 1 2.83 2.83 l-.06 .06 a1.65 1.65 0 0 0 -.33 1.82 V9 a1.65 1.65 0 0 0 1.51 1 H21 a2 2 0 0 1 0 4 h-.09 a1.65 1.65 0 0 0 -1.51 1 z"/></svg>',
+};
+
 const PAGE_META = {
-  meny:          { emoji:'📅', lbl:'Planlegg' },
-  handleliste:   { emoji:'🛍️', lbl:'Handle' },
-  oppskrifter:   { emoji:'📖', lbl:'Oppskrifter' },
-  innstillinger: { emoji:'⚙️', lbl:'Innstillinger' },
+  meny:          { icon:'calendar', lbl:'Planlegg' },
+  handleliste:   { icon:'bag',      lbl:'Handle' },
+  oppskrifter:   { icon:'book',     lbl:'Oppskrifter' },
+  innstillinger: { icon:'gear',     lbl:'Innstillinger' },
 };
 
 function updateHeaderActions(page) {
-  const meta = PAGE_META[page] || { emoji:'🥗', lbl:'Matplanlegger' };
+  const meta = PAGE_META[page] || { icon:'calendar', lbl:'Matplanlegger' };
   const emojiEl = document.getElementById('hdr-emoji');
   const lblEl   = document.getElementById('hdr-lbl');
-  if (emojiEl) emojiEl.textContent = meta.emoji;
-  if (lblEl)   lblEl.textContent   = meta.lbl;
+  if (emojiEl) emojiEl.innerHTML = ICON_SVG[meta.icon] || '';
+  if (lblEl)   lblEl.textContent = meta.lbl;
 
   const el = document.getElementById('hdr-actions');
   if (page === 'handleliste') {
