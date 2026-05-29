@@ -1621,50 +1621,6 @@ html[data-theme="dark"] .recipe-search-clear{background:#26221d}
 .recipe-fetch-hint{font-size:.74rem;color:var(--t3);margin-top:4px}
 
 /* ═══════════════════════════════════════════════
-   INSTALL BANNER
-═══════════════════════════════════════════════ */
-#install-banner{
-  position:fixed;
-  bottom:calc(var(--nav) + env(safe-area-inset-bottom) + 10px);
-  left:12px;right:12px;
-  background:var(--card);
-  border-radius:var(--r);
-  padding:14px 14px 14px 16px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  box-shadow:0 8px 32px rgba(0,0,0,.18),0 2px 8px rgba(0,0,0,.09);
-  border:1.5px solid var(--g100);
-  z-index:500;
-  transform:translateY(calc(100% + 80px));
-  transition:transform .4s cubic-bezier(.34,1.36,.64,1);
-  max-width:500px;
-  margin:0 auto;
-}
-#install-banner.show{transform:translateY(0)}
-.install-banner-icon{font-size:1.8rem;flex-shrink:0;line-height:1}
-.install-banner-text{flex:1;min-width:0}
-.install-banner-title{font-size:.9rem;font-weight:700;color:var(--t1);margin-bottom:2px}
-.install-banner-sub{font-size:.78rem;color:var(--t3);line-height:1.4}
-.install-banner-actions{display:flex;gap:7px;align-items:center;flex-shrink:0}
-#install-btn{
-  background:linear-gradient(135deg,#3a7e4a,#4a9c5d);
-  color:white;border:none;border-radius:var(--rsm);
-  padding:9px 14px;font-size:.84rem;font-weight:700;
-  cursor:pointer;font-family:inherit;touch-action:manipulation;
-  white-space:nowrap;min-height:40px;transition:opacity .2s;
-}
-#install-btn:active{opacity:.85}
-.install-close{
-  background:none;border:none;color:var(--t4);
-  font-size:1.1rem;cursor:pointer;padding:6px;
-  line-height:1;touch-action:manipulation;min-height:40px;min-width:40px;
-  display:flex;align-items:center;justify-content:center;
-  border-radius:var(--rxs);
-}
-.install-close:active{background:#ede5db}
-
-/* ═══════════════════════════════════════════════
    RECIPE FORM TABS
 ═══════════════════════════════════════════════ */
 .recipe-form-tabs{
@@ -3141,39 +3097,19 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
   </div>
 </div>
 
-<!-- ══ INSTALL BANNER ════════════════════════════════════════ -->
-<div id="install-banner" role="complementary" aria-label="Installer app">
-  <span class="install-banner-icon">📲</span>
-  <div class="install-banner-text">
-    <div class="install-banner-title" id="install-banner-title">Installer Matplanlegger</div>
-    <div class="install-banner-sub" id="install-banner-sub">Legg til på hjemskjermen for rask tilgang</div>
-  </div>
-  <div class="install-banner-actions">
-    <button id="install-btn" onclick="triggerInstall()">Installer</button>
-    <button class="install-close" onclick="dismissInstallBanner()" aria-label="Lukk">✕</button>
-  </div>
-</div>
-
 
 <script>
-// ── PWA: Service Worker & Install ────────────────────────────────────────────
+// ── PWA: Service Worker ──────────────────────────────────────────────────────
 (function initPWA() {
-  let deferredPrompt = null;
-  let swRegistration  = null;
-
   // ── Service Worker registration ──────────────────────────────────────────
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').then(reg => {
-        swRegistration = reg;
-
-      }).catch(() => {/* SW registration failed — offline unavailable, silent */});
+      navigator.serviceWorker.register('./sw.js')
+        .catch(() => {/* SW registration failed — offline unavailable, silent */});
     });
   }
 
   // ── Handle shortcuts from manifest ───────────────────────────────────────
-  // Wired up before any early-returns below so deep-links still work in iOS /
-  // installed environments where we skip the install-banner wiring.
   const params = new URLSearchParams(location.search);
   const targetPage = params.get('page');
   if (targetPage) {
@@ -3183,76 +3119,6 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
       }
     });
   }
-
-  // ── Banner gating ────────────────────────────────────────────────────────
-  // Only Chrome on Android fires `beforeinstallprompt`. On iOS Safari the
-  // banner is dead weight (no programmatic install API), and once installed
-  // there's nothing to advertise — so we don't even wire the listeners in
-  // those environments. The banner element stays in the DOM but never gets
-  // the `.show` class.
-  if (isInstalled() || isIOSDevice()) return;
-
-  // ── Install prompt (Android/Chrome) ─────────────────────────────────────
-  window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault();
-    deferredPrompt = e;
-    if (!isInstalled() && !wasDismissed()) {
-      setTimeout(showInstallBanner, 3000);
-    }
-  });
-
-  window.addEventListener('appinstalled', () => {
-    localStorage.setItem('pwa_installed', '1');
-    hideInstallBanner();
-    deferredPrompt = null;
-  });
-
-  // ── Helpers ──────────────────────────────────────────────────────────────
-  function isInstalled() {
-    return window.matchMedia('(display-mode: standalone)').matches
-        || window.navigator.standalone === true
-        || localStorage.getItem('pwa_installed') === '1';
-  }
-
-  function isIOSDevice() {
-    // iPadOS 13+ reports a desktop Safari UA ("Macintosh"), so the UA test
-    // alone misses modern iPads — detect those via touch-capable MacIntel.
-    return /iPad|iPhone|iPod/.test(navigator.userAgent)
-        || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  }
-
-  function wasDismissed() {
-    const ts = parseInt(localStorage.getItem('pwa_dismissed_ts') || '0');
-    // Re-show after 30 days
-    return ts && (Date.now() - ts < 30 * 24 * 60 * 60 * 1000);
-  }
-
-  function showInstallBanner() {
-    if (isInstalled()) return;
-    const banner = document.getElementById('install-banner');
-    if (banner) banner.classList.add('show');
-  }
-
-  window.triggerInstall = function() {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(() => {
-        deferredPrompt = null;
-        hideInstallBanner();
-      });
-    }
-  };
-
-  window.dismissInstallBanner = function() {
-    hideInstallBanner();
-    localStorage.setItem('pwa_dismissed_ts', Date.now().toString());
-  };
-
-  function hideInstallBanner() {
-    const banner = document.getElementById('install-banner');
-    if (banner) banner.classList.remove('show');
-  }
-
 })();
 
 // ── Navigation ────────────────────────────────────────────────────────────────
@@ -6199,42 +6065,95 @@ async function importRecipeFromUrl() {
 }
 
 // Parse a matprat.no recipe document into { name, servings, ingredients[] }.
+// matprat ships CSS-modules markup (hashed classes like "RecipeIntro_title__a1b2"),
+// so we match on class *substrings* and try several candidates in order. Each
+// step logs which selector matched, to make debugging future markup changes easy.
 function _parseMatpratRecipe(doc) {
   const txt = el => (el && el.textContent ? el.textContent.replace(/\s+/g, ' ').trim() : '');
+  const log = (...a) => console.log('[matprat-import]', ...a);
 
-  // ── Name: specific matprat classes → generic h1 → og:title fallback ────────
-  let name = txt(doc.querySelector('.recipe-intro__title'))
-          || txt(doc.querySelector('.article-title'))
-          || txt(doc.querySelector('h1'));
+  // ── NAME ───────────────────────────────────────────────────────────────────
+  const nameSelectors = [
+    '[class*="RecipeIntro_title"]',
+    '[class*="recipe-intro__title"]',
+    '[class*="article-title"]',
+    'h1',
+  ];
+  let name = '', nameMatched = null;
+  for (const sel of nameSelectors) {
+    const t = txt(doc.querySelector(sel));
+    if (t) { name = t; nameMatched = sel; break; }
+  }
   if (!name) {
     const og = doc.querySelector('meta[property="og:title"], meta[name="og:title"]');
-    name = og ? (og.getAttribute('content') || '').replace(/\s+/g, ' ').trim() : '';
+    if (og) { name = (og.getAttribute('content') || '').replace(/\s+/g, ' ').trim(); nameMatched = 'meta og:title'; }
   }
   // Strip a "| MatPrat" / "- MatPrat" site suffix that og:title often carries
   name = name.replace(/\s*[|–—-]\s*matprat.*$/i, '').trim();
+  log('name selector:', nameMatched || '(none)', '→', JSON.stringify(name));
 
-  // ── Servings: .recipe-servings text or #servings input value ──────────────
-  let servings = null;
-  const servText = txt(doc.querySelector('.recipe-servings'));
-  let sm = /(\d+)/.exec(servText);
-  if (!sm) {
-    const servInput = doc.querySelector('#servings');
-    if (servInput) sm = /(\d+)/.exec(servInput.getAttribute('value') || servInput.value || '');
+  // ── SERVINGS ─────────────────────────────────────────────────────────────────
+  let servings = null, servMatched = null;
+  const servEl = doc.querySelector('[class*="RecipeAdjust"], [class*="serving"]');
+  if (servEl) {
+    const m = /(\d+)/.exec(txt(servEl));
+    if (m) { servings = parseInt(m[1], 10); servMatched = 'class RecipeAdjust/serving'; }
   }
-  if (sm) servings = Math.max(1, parseInt(sm[1], 10));
+  if (servings == null) {
+    const servInput = doc.querySelector('input[name="servings"], #servings');
+    if (servInput) {
+      const m = /(\d+)/.exec(servInput.getAttribute('value') || servInput.value || '');
+      if (m) { servings = parseInt(m[1], 10); servMatched = 'input[name=servings]/#servings'; }
+    }
+  }
+  if (servings == null) {
+    // Any text like "4 porsjoner" / "porsjoner: 4" anywhere in the document
+    const body = txt(doc.body);
+    const m = /(\d+)\s*porsjon/i.exec(body) || /porsjon\w*[^0-9]{0,12}(\d+)/i.exec(body);
+    if (m) { servings = parseInt(m[1], 10); servMatched = 'text "porsjoner"'; }
+  }
+  if (servings != null) servings = Math.max(1, servings);
+  log('servings selector:', servMatched || '(none)', '→', servings);
 
-  // ── Ingredients: .ingredient / .recipe-ingredient, amount + name ──────────
+  // ── INGREDIENTS ──────────────────────────────────────────────────────────────
+  const ingSelectors = [
+    '[class*="IngredientList"] li',
+    '[class*="ingredient-list"] li',
+    '[class*="Ingredient_"]',
+    '.ingredient-group li',
+    'li[class*="ingredient"]',
+  ];
+  let ingEls = [], ingMatched = null;
+  for (const sel of ingSelectors) {
+    const found = doc.querySelectorAll(sel);
+    if (found.length) { ingEls = Array.from(found); ingMatched = sel; break; }
+  }
+  // Last resort: <li> inside a section/div whose heading mentions "ingrediens".
+  if (!ingEls.length) {
+    const headings = Array.from(doc.querySelectorAll('h1,h2,h3,h4,h5,h6,[class*="eading"],[class*="itle"]'));
+    for (const h of headings) {
+      if (!/ingrediens/i.test(txt(h))) continue;
+      const container = h.closest('section, div');
+      let lis = container ? Array.from(container.querySelectorAll('li')) : [];
+      if (!lis.length) {
+        // No list in the container — scan following siblings for the first list
+        let sib = h.nextElementSibling;
+        while (sib && !lis.length) {
+          if (sib.matches && (sib.matches('ul, ol') || sib.querySelector('li'))) {
+            lis = Array.from(sib.querySelectorAll('li'));
+          }
+          sib = sib.nextElementSibling;
+        }
+      }
+      if (lis.length) { ingEls = lis; ingMatched = `heading "${txt(h)}" → li`; break; }
+    }
+  }
+  log('ingredient selector:', ingMatched || '(none)', '→', ingEls.length, 'element(s)');
+
   const ingredients = [];
   const seen = new Set();
-  doc.querySelectorAll('.ingredient, .recipe-ingredient').forEach(el => {
-    const amountEl = el.querySelector('[class*="amount"], [class*="quantity"], [class*="unit"]');
-    const nameEl   = el.querySelector('[class*="name"], [class*="title"], [class*="ingredient-text"]');
-    let full;
-    if (amountEl || nameEl) {
-      full = ((txt(amountEl)) + ' ' + (txt(nameEl))).replace(/\s+/g, ' ').trim();
-    } else {
-      full = txt(el);
-    }
+  ingEls.forEach(el => {
+    const full = txt(el);
     if (!full || full.length < 2) return;
     const key = full.toLowerCase();
     if (seen.has(key)) return;
@@ -6245,6 +6164,7 @@ function _parseMatpratRecipe(doc) {
       || { name: full.charAt(0).toUpperCase() + full.slice(1), qty: 1, unit: 'stk', cat: autoCategorizeing(full) };
     ingredients.push(p);
   });
+  log('parsed', ingredients.length, 'ingredient(s) from', ingEls.length, 'element(s)');
 
   return { name, servings, ingredients };
 }
