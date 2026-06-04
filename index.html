@@ -6074,9 +6074,51 @@ function analyzeRecipeText() {
 }
 
 // ── Importer fra nettside (matprat.no) ────────────────────────────────────────
-// Fetches a recipe page through the allorigins CORS proxy, parses matprat's
-// markup for name/ingredients/servings, and pre-fills the manual form so the
-// user can review and edit before saving. Always degrades to manual entry.
+// Fetches a recipe page through a CORS proxy, parses matprat's data for
+// name/ingredients/servings, and pre-fills the manual form so the user can
+// review and edit before saving. Always degrades to manual entry.
+
+// CORS proxies are flaky, so we try several in order until one returns usable
+// HTML. Each entry knows how to turn its proxy's response into raw HTML
+// (allorigins wraps it in JSON; the others return the page body directly).
+const CORS_PROXIES = [
+  {
+    name: 'allorigins',
+    build: u => 'https://api.allorigins.win/get?url=' + encodeURIComponent(u),
+    extract: async res => { const d = await res.json(); return d && d.contents; },
+  },
+  {
+    name: 'corsproxy.io',
+    build: u => 'https://corsproxy.io/?url=' + encodeURIComponent(u),
+    extract: async res => res.text(),
+  },
+  {
+    name: 'codetabs',
+    build: u => 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(u),
+    extract: async res => res.text(),
+  },
+];
+
+// Fetch `url` through each proxy until one yields HTML. Returns { html, proxy }
+// on success; throws if every proxy fails. Logs which proxy won.
+async function _fetchViaProxies(url) {
+  let lastErr = null;
+  for (const proxy of CORS_PROXIES) {
+    try {
+      const res = await fetch(proxy.build(url));
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const html = await proxy.extract(res);
+      if (!html || html.length < 200) throw new Error('Tomt/for kort svar');
+      console.log('[matprat-import] proxy OK:', proxy.name, '(' + html.length + ' tegn)');
+      return { html, proxy: proxy.name };
+    } catch (e) {
+      console.warn('[matprat-import] proxy failed:', proxy.name, '→', e.message);
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error('Alle proxyer feilet');
+}
+
 async function importRecipeFromUrl() {
   const input   = document.getElementById('recipe-url-input');
   const btn      = document.getElementById('recipe-url-fetch-btn');
@@ -6107,27 +6149,52 @@ async function importRecipeFromUrl() {
 
   setLoading(true);
   setStatus('', '');
+
+  // ── Step 1: fetch the page through a working proxy ──────────────────────────
+  let html, proxy;
   try {
-    const api = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
-    const res = await fetch(api);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    const html = data && data.contents;
-    if (!html) throw new Error('Tomt svar fra proxy');
+    ({ html, proxy } = await _fetchViaProxies(url));
+  } catch (err) {
+    console.warn('[importRecipeFromUrl] all proxies failed:', err);
+    setStatus('Kunne ikke koble til (proxy nede). Prøv igjen eller fyll inn manuelt.', 'error');
+    setLoading(false);
+    return;
+  }
+
+  // ── Step 2: parse + pre-fill ────────────────────────────────────────────────
+  try {
+    // TEMP DEBUG: confirm the proxy returned real matprat content.
+    console.log('[matprat-import] HTML (first 500 chars):', html.slice(0, 500));
+    console.log('[matprat-import] __NEXT_DATA__ present in HTML:', html.includes('__NEXT_DATA__'));
 
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const parsed = _parseMatpratRecipe(doc);
 
-    // Need at least a name or some ingredients to call it a success
-    if (!parsed.name && !parsed.ingredients.length) throw new Error('Fant ingen oppskriftsdata');
+    // _parseMatpratRecipe can return null if it found nothing at all.
+    if (!parsed) throw new Error('Fant ingen oppskriftsdata');
+
+    console.log('[matprat-import] result via proxy', proxy + ':',
+      'name=' + JSON.stringify(parsed.name),
+      '| servings=' + parsed.servings,
+      '| ingredients=' + parsed.ingredients.length);
+
+    // Page loaded and parsed, but no usable ingredients were found.
+    if (!parsed.ingredients.length) {
+      // If we got at least a name, still pre-fill it so the user has a head start.
+      if (parsed.name) _applyImportedRecipe(parsed);
+      throw new Error('Fant oppskriften, men ingen ingredienser');
+    }
 
     _applyImportedRecipe(parsed);
     switchRecipeTab('manuelt');
     setStatus('Hentet fra matprat.no ✓', 'success');
     showSyncToast('Hentet fra matprat.no ✓');
   } catch (err) {
-    console.warn('[importRecipeFromUrl] failed:', err);
-    setStatus('Kunne ikke hente oppskriften automatisk. Fyll inn manuelt.', 'error');
+    console.warn('[importRecipeFromUrl] parse failed:', err);
+    const msg = /ingen ingredienser/.test(err.message)
+      ? 'Fant oppskriften, men ingen ingredienser. Fyll inn resten manuelt.'
+      : 'Kunne ikke lese oppskriften. Fyll inn manuelt.';
+    setStatus(msg, 'error');
   } finally {
     setLoading(false);
   }
