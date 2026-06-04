@@ -1676,6 +1676,14 @@ html[data-theme="dark"] .recipe-search-clear{background:#1E2E1E}
   font-size:.83rem;color:var(--t3);line-height:1.55;
   margin-bottom:10px;
 }
+.recipe-method-info{
+  font-size:.83rem;color:var(--t3);line-height:1.45;
+  background:var(--bg);
+  border:1px solid var(--bd);
+  border-radius:var(--rxs);
+  padding:9px 12px;
+  margin-bottom:16px;
+}
 
 /* ═══════════════════════════════════════════════
    INGREDIENT IMPORT
@@ -2642,21 +2650,21 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
         <div class="acc-body">
           <div style="margin-top:10px">
 
-            <!-- Two ways to add: manual or analyse pasted text -->
+            <!-- Three ways to add: write manually, paste text, or import from matprat.no -->
             <div class="recipe-form-tabs" role="tablist">
               <button type="button" class="recipe-form-tab active" id="rft-manuelt"
-                      onclick="switchRecipeTab('manuelt')" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Manuelt</button>
+                      onclick="switchRecipeTab('manuelt')" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Skriv selv</button>
               <button type="button" class="recipe-form-tab" id="rft-analyser"
-                      onclick="switchRecipeTab('analyser')" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 l1.5 4.5 L18 9 l-4.5 1.5 L12 15 l-1.5 -4.5 L6 9 l4.5 -1.5 Z"/><path d="M19 14 l.7 2.1 L22 17 l-2.3 .7 L19 20 l-.7 -2.3 L16 17 l2.3 -.9 Z"/></svg>Analyser</button>
+                      onclick="switchRecipeTab('analyser')" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>Lim inn</button>
               <button type="button" class="recipe-form-tab" id="rft-nettside"
-                      onclick="switchRecipeTab('nettside')" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Nettside</button>
+                      onclick="switchRecipeTab('nettside')" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Fra MatPrat</button>
             </div>
+
+            <!-- One-line explanation of the selected method (text updated by switchRecipeTab) -->
+            <div class="recipe-method-info" id="recipe-method-info">Skriv inn navn, porsjoner og ingredienser selv.</div>
 
             <!-- Analyser tekst panel -->
             <div id="recipe-tab-analyser" class="recipe-tab-panel" style="display:none">
-              <p class="recipe-tab-hint">
-                Lim inn hele oppskriften — navn, ingredienser og porsjoner blir hentet ut automatisk.
-              </p>
               <textarea id="ing-paste-area" class="ing-paste-ta"
                 placeholder="Lim inn hele oppskriften her…&#10;&#10;Eks:&#10;Kylling tikka masala&#10;4 porsjoner&#10;&#10;600 g kyllingfilet&#10;2 bokser hermetiske tomater&#10;3 dl fløte&#10;1 løk&#10;3 fedd hvitløk&#10;3 ss tikka masala-krydder"></textarea>
               <div class="ing-import-actions" style="margin-top:10px">
@@ -2667,12 +2675,8 @@ html[data-theme="dark"] .no-stats-hint{background:var(--card);color:var(--t3);bo
 
             <!-- Importer fra nettside panel -->
             <div id="recipe-tab-nettside" class="recipe-tab-panel" style="display:none">
-              <p class="recipe-tab-hint">
-                Lim inn lenken til en oppskrift fra matprat.no — navn, ingredienser og porsjoner hentes automatisk.
-                Du kan se over og redigere alt før du lagrer.
-              </p>
               <input type="url" id="recipe-url-input" class="url-import-input" inputmode="url"
-                     autocomplete="off" placeholder="https://www.matprat.no/oppskrifter/…"
+                     autocomplete="off" placeholder="https://www.matprat.no/oppskrifter/..."
                      onkeydown="if(event.key==='Enter'){event.preventDefault();importRecipeFromUrl()}">
               <div class="url-import-actions" style="margin-top:10px">
                 <button class="btn btn-gen btn-sm" id="recipe-url-fetch-btn" style="flex:1"
@@ -5780,6 +5784,12 @@ function resetRecipeForm() {
 }
 
 // ── Recipe form tabs ──────────────────────────────────────────────────────────
+const RECIPE_METHOD_INFO = {
+  manuelt:  'Skriv inn navn, porsjoner og ingredienser selv.',
+  analyser: 'Kopier en hel oppskrift fra nett, så fyller appen ut automatisk.',
+  nettside: 'Lim inn en lenke fra matprat.no, så henter appen oppskriften for deg.',
+};
+
 function switchRecipeTab(name) {
   const valid = ['manuelt','analyser','nettside'];
   if (!valid.includes(name)) name = 'manuelt';
@@ -5790,6 +5800,8 @@ function switchRecipeTab(name) {
     if (panel) panel.style.display = t === name ? '' : 'none';
     if (tab)   tab.classList.toggle('active', t === name);
   });
+  const info = document.getElementById('recipe-method-info');
+  if (info) info.textContent = RECIPE_METHOD_INFO[name];
 }
 
 function selectRecipeCat(label, value) {
