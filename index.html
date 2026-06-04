@@ -5891,7 +5891,7 @@ const PANTRY_STAPLES = new Set([
 const INSTRUCTION_RE = /\b(bland|kok|stek|tilsett|rør|hell|skjær|varm\s*opp|rist|knus|hakk|finhakk|kutt|skrell|smak\s*til|trekk|server|brun|fres|forvarm|avkjøl|la\s+det|la\s+den|dekk\s+til|sil\s+av|legg\s+i)\b/i;
 
 // Any known unit token (used to decide if a line looks like an ingredient)
-const MEAS_RE = /\b(g|kg|dl|l|ml|ss|ts|stk|stykk|boks|pose|pakke|fedd|neve|bunt|kvist|gram|kilo|liter|teskje|spiseskje)\b/i;
+const MEAS_RE = /\b(g|kg|dl|l|ml|ss|ts|stk|stykk|boks|pose|pakke|pk|beger|glass|fedd|neve|bunt|kvist|gram|kilo|liter|teskje|spiseskje)\b/i;
 
 function hasMeasurement(str) {
   return /\d/.test(str) || MEAS_RE.test(str);
@@ -5914,6 +5914,7 @@ const UNIT_ALIAS = {
   'ts':'ts','teskje':'ts','teskjeer':'ts','tsp':'ts',
   'boks':'boks','bokser':'boks','dåse':'boks',
   'pose':'pose','poser':'pose',
+  'beger':'beger','glass':'glass',
   'pakke':'pakke','pakker':'pakke','pk':'pakke',
   'bunt':'bunt','bunter':'bunt',
   'kvist':'kvist','kvister':'kvist',
@@ -6132,11 +6133,190 @@ async function importRecipeFromUrl() {
   }
 }
 
+const _matpratLog = (...a) => console.log('[matprat-import]', ...a);
+
+// Turn an ingredient line (string, or an object with amount/unit/name fields)
+// into a parsed { name, qty, unit, cat } record. Falls back to keeping the raw
+// text so nothing silently disappears.
+function _matpratIngFromString(full) {
+  full = (full || '').replace(/\s+/g, ' ').trim();
+  if (!full || full.length < 2) return null;
+  return parseIngredientLine(full)
+    || { name: full.charAt(0).toUpperCase() + full.slice(1), qty: 1, unit: 'stk', cat: autoCategorizeing(full) };
+}
+
+// First defined value among several candidate keys on an object (case-insensitive).
+function _pick(obj, keys) {
+  if (!obj || typeof obj !== 'object') return undefined;
+  const lower = {};
+  for (const k of Object.keys(obj)) lower[k.toLowerCase()] = obj[k];
+  for (const k of keys) {
+    const v = lower[k.toLowerCase()];
+    if (v !== undefined && v !== null && v !== '') return v;
+  }
+  return undefined;
+}
+
+// Recursively flatten a recipe's ingredient structure into raw strings.
+// Handles: plain string arrays (JSON-LD recipeIngredient), arrays of line
+// objects ({amount, unit, name}), and grouped structures where each group
+// nests its own ingredient array (ingredientGroups / ingredientLines / items).
+function _matpratFlattenIngredients(node, out, depth) {
+  out = out || [];
+  if (depth == null) depth = 0;
+  if (depth > 6 || node == null) return out;
+
+  if (typeof node === 'string') {
+    if (node.trim()) out.push(node.trim());
+    return out;
+  }
+  if (Array.isArray(node)) {
+    node.forEach(item => _matpratFlattenIngredients(item, out, depth + 1));
+    return out;
+  }
+  if (typeof node === 'object') {
+    // A group/section wrapping nested ingredient lines → recurse into them.
+    const nested = _pick(node, ['ingredients', 'ingredientLines', 'lines', 'items', 'ingredientList']);
+    if (Array.isArray(nested)) {
+      _matpratFlattenIngredients(nested, out, depth + 1);
+      return out;
+    }
+    // A single ingredient line → stitch amount + unit + name together.
+    const amount = _pick(node, ['amount', 'quantity', 'qty', 'mengde']);
+    const unit   = _pick(node, ['unit', 'unitname', 'enhet', 'measure', 'måleenhet']);
+    const name   = _pick(node, ['name', 'title', 'ingredient', 'ingredientname', 'navn', 'text', 'displayname', 'label']);
+    const parts  = [amount, unit, name]
+      .filter(v => v !== undefined && v !== null && String(v).trim() !== '')
+      .map(v => String(v).trim());
+    if (parts.length) out.push(parts.join(' '));
+  }
+  return out;
+}
+
+// Build a { name, servings, ingredients[] } result from a recipe-like object.
+// Returns null if no ingredient lines could be extracted.
+function _matpratFromRecipeObject(recipe, source) {
+  if (!recipe || typeof recipe !== 'object') return null;
+
+  const rawName = _pick(recipe, ['title', 'name', 'heading']) || '';
+  let name = String(rawName).replace(/\s+/g, ' ').trim()
+    .replace(/\s*[|–—-]\s*matprat.*$/i, '').trim();
+
+  let servings = null;
+  const rawServ = _pick(recipe, ['portions', 'servings', 'numberofservings', 'recipeyield', 'yield', 'porsjoner', 'noofpersons']);
+  if (rawServ != null) {
+    const m = /(\d+)/.exec(Array.isArray(rawServ) ? rawServ.join(' ') : String(rawServ));
+    if (m) servings = Math.max(1, parseInt(m[1], 10));
+  }
+
+  const ingredientsNode = _pick(recipe, ['recipeingredient', 'ingredients', 'ingredientgroups', 'ingredientsections']);
+  const rawLines = _matpratFlattenIngredients(ingredientsNode, [], 0);
+  if (!rawLines.length) return null;
+
+  const ingredients = [];
+  const seen = new Set();
+  rawLines.forEach(full => {
+    const key = full.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    const p = _matpratIngFromString(full);
+    if (p) ingredients.push(p);
+  });
+  if (!ingredients.length) return null;
+
+  _matpratLog(source, '→ name:', JSON.stringify(name), '| servings:', servings,
+    '| ' + rawLines.length + ' raw line(s),', ingredients.length, 'parsed ingredient(s)');
+  return { name, servings, ingredients };
+}
+
+// Recursively search a parsed-JSON tree for the recipe object: one that carries
+// an ingredient list ("ingredients"/"recipeIngredient") *and* a "title"/"name".
+function _matpratFindRecipeNode(node, depth) {
+  if (depth == null) depth = 0;
+  if (depth > 12 || node == null || typeof node !== 'object') return null;
+
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      const hit = _matpratFindRecipeNode(item, depth + 1);
+      if (hit) return hit;
+    }
+    return null;
+  }
+
+  const keys = Object.keys(node).map(k => k.toLowerCase());
+  const hasIngredients = ['ingredients', 'recipeingredient', 'ingredientgroups', 'ingredientsections']
+    .some(k => keys.includes(k));
+  const hasName = ['title', 'name', 'heading'].some(k => keys.includes(k));
+  if (hasIngredients && hasName) return node;
+
+  for (const k of Object.keys(node)) {
+    const hit = _matpratFindRecipeNode(node[k], depth + 1);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+// PRIMARY: pull the recipe out of Next.js' <script id="__NEXT_DATA__"> JSON blob.
+function _parseMatpratFromNextData(doc) {
+  const el = doc.querySelector('script#__NEXT_DATA__, script[id="__NEXT_DATA__"]');
+  if (!el || !el.textContent) return null;
+  let data;
+  try { data = JSON.parse(el.textContent); }
+  catch (e) { _matpratLog('__NEXT_DATA__ present but JSON.parse failed:', e.message); return null; }
+  const recipe = _matpratFindRecipeNode(data, 0);
+  if (!recipe) { _matpratLog('__NEXT_DATA__ parsed but no recipe node found'); return null; }
+  return _matpratFromRecipeObject(recipe, '__NEXT_DATA__');
+}
+
+// SECONDARY: pull the recipe from JSON-LD (<script type="application/ld+json">
+// with @type "Recipe"). @graph and arrays of nodes are both handled.
+function _parseMatpratFromJsonLd(doc) {
+  const scripts = Array.from(doc.querySelectorAll('script[type="application/ld+json"]'));
+  const isRecipe = obj => {
+    const t = obj && obj['@type'];
+    return t === 'Recipe' || (Array.isArray(t) && t.includes('Recipe'));
+  };
+  const candidates = [];
+  for (const s of scripts) {
+    if (!s.textContent) continue;
+    let data;
+    try { data = JSON.parse(s.textContent); }
+    catch (e) { continue; }
+    const nodes = Array.isArray(data) ? data
+      : (Array.isArray(data['@graph']) ? data['@graph'] : [data]);
+    nodes.forEach(n => { if (isRecipe(n)) candidates.push(n); });
+  }
+  if (!candidates.length) { _matpratLog('no JSON-LD Recipe node found'); return null; }
+  return _matpratFromRecipeObject(candidates[0], 'JSON-LD');
+}
+
 // Parse a matprat.no recipe document into { name, servings, ingredients[] }.
-// matprat ships CSS-modules markup (hashed classes like "RecipeIntro_title__a1b2"),
-// so we match on class *substrings* and try several candidates in order. Each
-// step logs which selector matched, to make debugging future markup changes easy.
+// Strategy: matprat is a Next.js site, so try its __NEXT_DATA__ JSON first, then
+// JSON-LD, then fall back to scraping the rendered DOM (CSS-modules markup with
+// hashed classes like "RecipeIntro_title__a1b2"). Each path logs what it found.
 function _parseMatpratRecipe(doc) {
+  const fromNext = _parseMatpratFromNextData(doc);
+  if (fromNext && (fromNext.name || fromNext.ingredients.length)) {
+    _matpratLog('SUCCESS via __NEXT_DATA__:', fromNext.ingredients.length, 'ingredient(s)');
+    return fromNext;
+  }
+
+  const fromLd = _parseMatpratFromJsonLd(doc);
+  if (fromLd && (fromLd.name || fromLd.ingredients.length)) {
+    _matpratLog('SUCCESS via JSON-LD:', fromLd.ingredients.length, 'ingredient(s)');
+    return fromLd;
+  }
+
+  _matpratLog('structured data unavailable — falling back to DOM/CSS selectors');
+  const fromDom = _parseMatpratFromDOM(doc);
+  _matpratLog('SUCCESS via DOM/CSS:', fromDom.ingredients.length, 'ingredient(s)');
+  return fromDom;
+}
+
+// FALLBACK: scrape the rendered DOM. matprat ships CSS-modules markup (hashed
+// classes like "RecipeIntro_title__a1b2"), so we match on class *substrings* and
+// try several candidates in order. Each step logs which selector matched.
+function _parseMatpratFromDOM(doc) {
   const txt = el => (el && el.textContent ? el.textContent.replace(/\s+/g, ' ').trim() : '');
   const log = (...a) => console.log('[matprat-import]', ...a);
 
