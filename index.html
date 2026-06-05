@@ -927,7 +927,7 @@ html[data-theme="dark"] .item-week-tag{background:#1A2A1A;color:#7AB87A}
   font-size:1rem;
   transition:color .15s;
   line-height:1.3;
-  /* Single-line with ellipsis so the amount badge + Finn på Oda never wrap
+  /* Single-line with ellipsis so the Finn på Oda button never wraps
      to a second line. Long names truncate visually but the full text stays
      in the DOM (tooltip / share text still reads it in full). */
   overflow:hidden;
@@ -935,23 +935,8 @@ html[data-theme="dark"] .item-week-tag{background:#1A2A1A;color:#7AB87A}
   white-space:nowrap;
 }
 .item-list li.checked .item-name{text-decoration:line-through;color:var(--t4)}
-.item-qty{
-  font-size:.84rem;
-  color:var(--t2);
-  font-weight:600;
-  background:#D8E4D8;
-  padding:5px 11px;
-  border-radius:var(--rxs);
-  white-space:nowrap;
-  flex-shrink:0;
-}
-/* Suppress the pill entirely when the qty is hidden by the display rules —
-   otherwise we'd render an empty pink bubble next to the name. */
-.item-qty:empty{display:none}
-.item-list li.checked .item-qty{opacity:.45}
 .item-list li.have{background:var(--g50)}
 .item-list li.have .item-name{color:var(--g)}
-.item-list li.have .item-qty{background:var(--g100);color:#2D5A2D}
 
 /* Long-press tooltip on shopping-list items. pointer-events:none keeps the
    tooltip click-through so outside-tap dismissal works without special-casing. */
@@ -981,6 +966,7 @@ html[data-theme="dark"] .item-week-tag{background:#1A2A1A;color:#7AB87A}
   color:#e4e4e4;
   font-weight:500;
   word-break:break-word;
+  white-space:pre-line; /* one bullet line per recipe */
 }
 html[data-theme="dark"] .ing-tip{
   background:var(--card);
@@ -3257,8 +3243,7 @@ function buildShareText() {
     lines.push(title);
     unchecked.forEach(li => {
       const name = li.querySelector('.item-name')?.textContent.trim() ?? '';
-      const qty  = li.querySelector('.item-qty')?.textContent.trim() ?? '';
-      lines.push(qty ? `• ${name} – ${qty}` : `• ${name}`);
+      lines.push(`• ${name}`);
     });
     lines.push('');
   });
@@ -3351,12 +3336,18 @@ function _showIngredientTooltip(li) {
   } else {
     let sources = [];
     try { sources = JSON.parse(li.getAttribute('data-sources') || '[]'); } catch {}
+    // One bullet per recipe with the amount that recipe needs, so the user
+    // can judge the total themselves (units differ and can't be summed).
     body = sources.length
-      ? 'Brukes i: ' + sources.join(', ')
+      ? sources.map(s => {
+          const label  = typeof s === 'string' ? s : (s.label || '');
+          const amount = typeof s === 'string' ? '' : (s.amount || '');
+          return `• ${capFirst(label)}${amount ? ' — ' + amount : ''}`;
+        }).join('\n')
       : 'Ingen oppskrifter funnet';
   }
   const tip = _ensureIngTooltipEl();
-  tip.querySelector('.ing-tip-title').textContent = name;
+  tip.querySelector('.ing-tip-title').textContent = capFirst(name);
   tip.querySelector('.ing-tip-body').textContent  = body;
   // Reveal, measure, clamp into viewport, then reposition.
   tip.classList.add('show');
@@ -3831,14 +3822,6 @@ const UNITS = ['stk','stykk','g','kg','ml','dl','l','ss','ts','cl','boks','pose'
 const UNIT_OPTIONS = UNITS.map(u => `<option value="${u}">${u}</option>`).join('');
 
 // ── Unit display classes ──────────────────────────────────────────────────────
-// The shopping list hides amounts that don't help in-store (volumes, pinches,
-// and "no unit"). Weight, count, and package units still render a qty.
-// HIDDEN_UNITS is the authoritative list used both by the shopping-list render
-// path and by the cross-recipe deduplication in generateList.
-const HIDDEN_UNITS = new Set(['dl','ml','l','ts','ss','cl','klype','dæsj','']);
-function _unitShowsQty(unit) {
-  return !HIDDEN_UNITS.has(String(unit || ''));
-}
 // Norwegian plural forms for package units — applied only when qty > 1.
 // Other count-like units (stk, fedd, hode, bunt, kvist, terning) stay invariant.
 const _UNIT_PLURALS = { boks: 'bokser', pose: 'poser', pakke: 'pakker', kartong: 'kartonger' };
@@ -3846,22 +3829,14 @@ function _pluralizeUnit(unit, qty) {
   if (qty > 1 && _UNIT_PLURALS[unit]) return _UNIT_PLURALS[unit];
   return unit;
 }
-// Returns the qty-with-unit string for a shopping-list item, or '' when the
-// unit class says to hide it.
-function _formatShoppingQty(item) {
-  if (!item || item.hidden || !_unitShowsQty(item.unit)) return '';
-  const q = Number(item.qty) || 0;
-  if (q <= 0) return '';
-  const u = _pluralizeUnit(item.unit, q);
-  return `${formatQty(q)} ${u}`;
-}
 // Grouped unit options for the recipe-form ingredient rows. Labels follow the
-// spec; the Volum group explicitly flags that amounts are suppressed on the
-// shopping list. 'Annet' catches count-like legacy units not in the spec.
+// spec. 'Annet' catches count-like legacy units not in the spec. Amounts only
+// surface in the long-press tooltip on the shopping list (per recipe), never
+// as a summed row qty.
 const UNIT_GROUPS = [
   { label: 'Vekt',                          units: [['g','g'], ['kg','kg']] },
   { label: 'Stykk',                         units: [['stk','stk'], ['stykk','stykk'], ['pakke','pakke'], ['boks','boks'], ['pose','pose'], ['kartong','kartong']] },
-  { label: 'Volum (skjules på handleliste)', units: [['dl','dl'], ['ml','ml'], ['l','l'], ['ts','ts'], ['ss','ss'], ['cl','cl'], ['klype','klype'], ['dæsj','dæsj']] },
+  { label: 'Volum',                         units: [['dl','dl'], ['ml','ml'], ['l','l'], ['ts','ts'], ['ss','ss'], ['cl','cl'], ['klype','klype'], ['dæsj','dæsj']] },
   { label: 'Annet',                         units: [['fedd','fedd'], ['hode','hode'], ['bunt','bunt'], ['kvist','kvist'], ['terning','terning'], ['cm','cm']] },
   { label: 'Ingen enhet',                   units: [['','–']] },
 ];
@@ -4808,16 +4783,13 @@ function _weekHasAnyMeal(weekKey) {
   return false;
 }
 
-// Snapshot the name+unit of currently-checked items so we can re-apply the
-// checks after regeneration. Each <li> carries a data-unit attribute
-// (matching the aggregation key's unit slot) so a 400g+400g → 800g merge
-// after folding in another week still re-checks — the unit stayed the same.
+// Snapshot the names of currently-checked items so we can re-apply the
+// checks after regeneration. Items are deduped purely by name, so the name
+// alone identifies a row across renders.
 function _snapshotCheckedKeys() {
   const keys = new Set();
   document.querySelectorAll('#list-content .item-list li.checked').forEach(li => {
-    const name = (li.getAttribute('data-ingredient') || '').toLowerCase();
-    const unit = li.getAttribute('data-unit') || '__hidden__';
-    keys.add(`${name}||${unit}`);
+    keys.add((li.getAttribute('data-ingredient') || '').toLowerCase());
   });
   return keys;
 }
@@ -4825,8 +4797,7 @@ function _restoreCheckedKeys(keys) {
   if (!keys || !keys.size) return;
   document.querySelectorAll('#list-content .item-list li').forEach(li => {
     const name = (li.getAttribute('data-ingredient') || '').toLowerCase();
-    const unit = li.getAttribute('data-unit') || '__hidden__';
-    if (keys.has(`${name}||${unit}`)) {
+    if (keys.has(name)) {
       li.classList.add('checked');
       const cb = li.querySelector('input[type=checkbox]');
       if (cb) cb.checked = true;
@@ -4873,7 +4844,6 @@ function _renderShoppingList({ preserveChecks = false } = {}) {
   const skipped = {};
   const summary = [];
   const dayAssignments = [];
-  const primaryCatByName = {};
 
   const primaryWeek = _shoppingListPrimaryWeek || _shoppingListWeeks[0];
 
@@ -4906,19 +4876,24 @@ function _renderShoppingList({ preserveChecks = false } = {}) {
         const qty  = Number(norm.qty) || 1;
         const scaled = qty * scaleFactor;
 
-        const hidden = !_unitShowsQty(unit);
-        const nameKey = name.toLowerCase();
-        if (primaryCatByName[nameKey] === undefined) primaryCatByName[nameKey] = cat;
-        const k = hidden ? `${nameKey}||__hidden__` : `${nameKey}||${unit}`;
-        if (totals[k]) {
-          if (!hidden) totals[k].qty += scaled;
-          totals[k].sources.add(mealLabel);
-          totals[k].weeks.add(weekKey);
-        } else {
-          totals[k] = hidden
-            ? { name, qty: 0,      unit: '', cat, hidden: true,  sources: new Set([mealLabel]), weeks: new Set([weekKey]) }
-            : { name, qty: scaled, unit,     cat, hidden: false, sources: new Set([mealLabel]), weeks: new Set([weekKey]) };
+        // Dedup purely by ingredient name — units differ across recipes
+        // ("1 pakke" vs "2 stk") and can't be summed, so the list shows each
+        // ingredient once and the long-press tooltip carries the per-recipe
+        // amounts instead. Fuzzy match via ingredientMatchesList so
+        // "tomat"/"tomater" and matprat-imported variants land in one row.
+        let k = _normIngredient(name);
+        if (!totals[k]) {
+          const hit = Object.keys(totals).find(ek =>
+            ingredientMatchesList(name, [totals[ek].name]));
+          if (hit) k = hit;
         }
+        const entry = totals[k] ??= { name, cat, sources: {}, weeks: new Set() };
+        entry.weeks.add(weekKey);
+        // Per-recipe amounts: sum repeats of the same meal+unit (e.g. Taco
+        // planned twice), keep different units as separate lines.
+        const srcKey = `${mealLabel}||${unit}`;
+        const src = entry.sources[srcKey] ??= { label: mealLabel, qty: 0, unit };
+        src.qty += scaled;
       });
     });
   });
@@ -4968,13 +4943,6 @@ function _renderShoppingList({ preserveChecks = false } = {}) {
     <ul>${dayItemsHtml}</ul>
   `;
 
-  // Pin all same-name entries to the first-seen cat so "Spisspaprika 5 stk"
-  // and "Spisspaprika 1 pakke" land in the same block.
-  Object.values(totals).forEach(item => {
-    const pinned = primaryCatByName[item.name.toLowerCase()];
-    if (pinned) item.cat = pinned;
-  });
-
   const bycat = {};
   Object.values(totals).forEach(item => { (bycat[item.cat] ??= []).push(item); });
 
@@ -4993,12 +4961,16 @@ function _renderShoppingList({ preserveChecks = false } = {}) {
         <div class="cat-title">${CAT_LABELS[cat]}</div>
         <ul class="item-list">
           ${items.map(item => {
-            const qtyDisplay = _formatShoppingQty(item);
-            const sourcesJson = escHtml(JSON.stringify([...(item.sources || [])]));
-            // data-unit is the aggregation-key unit slot: actual unit for
-            // visible items, "__hidden__" for the collapsed volume bucket.
-            // Used by _snapshot/_restoreCheckedKeys to survive regeneration.
-            const dataUnit = item.hidden ? '__hidden__' : (item.unit || '');
+            // No qty on the row — units differ across recipes and can't be
+            // summed. data-sources carries {label, amount} pairs for the
+            // long-press tooltip so the user can judge amounts per recipe.
+            const sourceArr = Object.values(item.sources || {}).map(s => ({
+              label: s.label,
+              amount: s.qty > 0
+                ? `${formatQty(s.qty)} ${_pluralizeUnit(s.unit, s.qty)}`.trim()
+                : '',
+            }));
+            const sourcesJson = escHtml(JSON.stringify(sourceArr));
             // Build week tags for any contributing week that isn't the primary.
             // Sorted by week key so tags read left-to-right chronologically.
             const extraWeeks = [...(item.weeks || [])]
@@ -5008,12 +4980,11 @@ function _renderShoppingList({ preserveChecks = false } = {}) {
               `<span class="item-week-tag">Uke ${weekLabelFor(w).week}</span>`
             ).join('');
             return `
-            <li onclick="toggleItem(this)" data-ingredient="${escHtml(item.name)}" data-unit="${escHtml(dataUnit)}" data-sources="${sourcesJson}">
+            <li onclick="toggleItem(this)" data-ingredient="${escHtml(item.name)}" data-sources="${sourcesJson}">
               <input type="checkbox">
               <span class="item-cb"></span>
               <span class="item-name">${escHtml(capFirst(item.name))}</span>
               ${weekTags}
-              <span class="item-qty">${qtyDisplay}</span>
               <button class="oda-btn" onclick="event.stopPropagation();odaSearch('${escHtml(item.name)}',this)" title="Søk på Oda.com">Finn på Oda</button>
             </li>`;
           }).join('')}
@@ -7224,13 +7195,12 @@ function addRecipeIngredientsToShoppingList(recipeId, opts = {}) {
   }
   let added = 0, skippedStaples = 0;
   ings.forEach(ing => {
-    const { name, qty, unit } = ing;
+    const { name } = ing;
     if (isStaple(name)) { skippedStaples++; return; }
-    const display = qty
-      ? `${formatQty(Number(qty) || 1)} ${unit || ''} ${name}`.replace(/\s+/g,' ').trim()
-      : name;
-    if (!manualItems.some(i => i.name.toLowerCase() === display.toLowerCase())) {
-      manualItems.push({ name: display, checked: false });
+    // One row per name (no qty baked into the name) — same fuzzy dedup rule
+    // as the generated list, so re-adding the recipe can't create duplicates.
+    if (!ingredientMatchesList(name, manualItems.map(i => i.name))) {
+      manualItems.push({ name, checked: false });
       added++;
     }
   });
@@ -7277,8 +7247,9 @@ function addManualItem() {
   if (!input) return;
   const name = input.value.trim();
   if (!name) { input.focus(); return; }
-  // Avoid duplicates (case-insensitive)
-  if (!manualItems.some(i => i.name.toLowerCase() === name.toLowerCase())) {
+  // One row per name — same fuzzy rule as the generated list, so
+  // "tomat"/"tomater" don't become two rows.
+  if (!ingredientMatchesList(name, manualItems.map(i => i.name))) {
     manualItems.push({ name, checked: false });
     saveManualItems();
     renderManualItems();
