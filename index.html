@@ -935,6 +935,34 @@ html[data-theme="dark"] .item-week-tag{background:#1A2A1A;color:#7AB87A}
   white-space:nowrap;
 }
 .item-list li.checked .item-name{text-decoration:line-through;color:var(--t4)}
+/* Inline amount — only for ingredients used in a single recipe (no ambiguity) */
+.item-qty-inline{
+  font-size:.8rem;
+  color:var(--t4);
+  font-weight:600;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.item-list li.checked .item-qty-inline{opacity:.45}
+/* Multi-recipe indicator — tappable count pill that opens the per-recipe
+   detail (same popup as long-press) */
+.item-multi{
+  display:inline-flex;
+  align-items:center;
+  gap:3px;
+  font-size:.74rem;
+  font-weight:700;
+  color:#2D5A2D;
+  background:var(--g100);
+  padding:4px 9px;
+  border-radius:999px;
+  white-space:nowrap;
+  flex-shrink:0;
+  cursor:pointer;
+}
+.item-multi svg{width:12px;height:12px}
+.item-list li.checked .item-multi{opacity:.45}
+html[data-theme="dark"] .item-multi{color:var(--g);background:#1E2E1E}
 .item-list li.have{background:var(--g50)}
 .item-list li.have .item-name{color:var(--g)}
 
@@ -3201,6 +3229,7 @@ const ICON_SVG = {
   shield:      `<svg ${_SVG_ATTR}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
   warning:     `<svg ${_SVG_ATTR}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
   cloud:       `<svg ${_SVG_ATTR}><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>`,
+  layers:      `<svg ${_SVG_ATTR}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>`,
 };
 function icon(name){ return ICON_SVG[name] || ''; }
 
@@ -4961,9 +4990,8 @@ function _renderShoppingList({ preserveChecks = false } = {}) {
         <div class="cat-title">${CAT_LABELS[cat]}</div>
         <ul class="item-list">
           ${items.map(item => {
-            // No qty on the row — units differ across recipes and can't be
-            // summed. data-sources carries {label, amount} pairs for the
-            // long-press tooltip so the user can judge amounts per recipe.
+            // data-sources carries {label, amount} pairs for the long-press /
+            // indicator detail so the user can judge amounts per recipe.
             const sourceArr = Object.values(item.sources || {}).map(s => ({
               label: s.label,
               amount: s.qty > 0
@@ -4971,6 +4999,19 @@ function _renderShoppingList({ preserveChecks = false } = {}) {
                 : '',
             }));
             const sourcesJson = escHtml(JSON.stringify(sourceArr));
+            // Single recipe → no ambiguity, show its amount inline (muted).
+            // Multiple recipes → units may differ and can't be summed; show a
+            // tappable count indicator that opens the per-recipe detail.
+            const recipeCount = new Set(sourceArr.map(s => s.label)).size;
+            let midSlot = '';
+            if (sourceArr.length > 1) {
+              midSlot = `<span class="item-multi" role="button" tabindex="0"
+                aria-label="Brukes i ${recipeCount} retter — trykk for detaljer"
+                onclick="event.stopPropagation();_showIngredientTooltip(this.closest('li'))"
+                >${ICON_SVG.layers}${recipeCount}</span>`;
+            } else if (sourceArr[0]?.amount) {
+              midSlot = `<span class="item-qty-inline">${escHtml(sourceArr[0].amount)}</span>`;
+            }
             // Build week tags for any contributing week that isn't the primary.
             // Sorted by week key so tags read left-to-right chronologically.
             const extraWeeks = [...(item.weeks || [])]
@@ -4985,6 +5026,7 @@ function _renderShoppingList({ preserveChecks = false } = {}) {
               <span class="item-cb"></span>
               <span class="item-name">${escHtml(capFirst(item.name))}</span>
               ${weekTags}
+              ${midSlot}
               <button class="oda-btn" onclick="event.stopPropagation();odaSearch('${escHtml(item.name)}',this)" title="Søk på Oda.com">Finn på Oda</button>
             </li>`;
           }).join('')}
